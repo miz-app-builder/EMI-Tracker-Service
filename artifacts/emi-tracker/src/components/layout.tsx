@@ -241,7 +241,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
                 <div className="md:hidden">
                   <DropdownMenuSeparator />
-                  {navItems.map((item) => (
+                  {navGroups.flatMap((g) => g.items).map((item) => (
                     <Link key={item.href} href={item.href}>
                       <DropdownMenuItem className="gap-2 cursor-pointer">
                         <item.icon className="h-4 w-4" />
