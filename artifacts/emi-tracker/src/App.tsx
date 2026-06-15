@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
@@ -13,6 +13,7 @@ import Shops from "@/pages/shops";
 import EmiOrders from "@/pages/emi-orders/index";
 import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
+import CompleteProfile from "@/pages/complete-profile";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,9 +103,19 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+// Context to share profile-complete state across components
+import { createContext, useContext } from "react";
+const ProfileCtx = createContext<{ profileCompleted: boolean; setProfileCompleted: (v: boolean) => void }>({
+  profileCompleted: true,
+  setProfileCompleted: () => {},
+});
+export function useProfile() { return useContext(ProfileCtx); }
+
 function UserSyncer() {
   const { user, isLoaded } = useUser();
+  const [, setLocation] = useLocation();
   const syncedRef = useRef<string | null>(null);
+  const { setProfileCompleted } = useProfile();
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -119,8 +130,18 @@ function UserSyncer() {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ email, name }),
-    }).catch(() => {});
-  }, [isLoaded, user]);
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.profileCompleted) {
+          setProfileCompleted(false);
+          setLocation("/complete-profile");
+        } else {
+          setProfileCompleted(true);
+        }
+      })
+      .catch(() => {});
+  }, [isLoaded, user, setLocation, setProfileCompleted]);
 
   return null;
 }
@@ -146,6 +167,7 @@ function ClerkQueryClientCacheInvalidator() {
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
+  const [profileCompleted, setProfileCompleted] = useState(true);
 
   return (
     <ClerkProvider
@@ -158,22 +180,34 @@ function ClerkProviderWithRoutes() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
-        <UserSyncer />
-        <ClerkQueryClientCacheInvalidator />
-        <TooltipProvider>
-          <Switch>
-            <Route path="/" component={HomeRedirect} />
-            <Route path="/sign-in/*?" component={SignInPage} />
-            <Route path="/sign-up/*?" component={SignUpPage} />
-            <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
-            <Route path="/shops" component={() => <ProtectedRoute component={Shops} />} />
-            <Route path="/emi-orders" component={() => <ProtectedRoute component={EmiOrders} />} />
-            <Route path="/emi-orders/new" component={() => <ProtectedRoute component={NewEmiOrder} />} />
-            <Route path="/emi-orders/:id" component={() => <ProtectedRoute component={EmiOrderDetail} />} />
-            <Route component={NotFound} />
-          </Switch>
-          <Toaster />
-        </TooltipProvider>
+        <ProfileCtx.Provider value={{ profileCompleted, setProfileCompleted }}>
+          <UserSyncer />
+          <ClerkQueryClientCacheInvalidator />
+          <TooltipProvider>
+            <Switch>
+              <Route path="/" component={HomeRedirect} />
+              <Route path="/sign-in/*?" component={SignInPage} />
+              <Route path="/sign-up/*?" component={SignUpPage} />
+              <Route path="/complete-profile" component={() => (
+                <>
+                  <Show when="signed-in">
+                    <CompleteProfile onComplete={() => { setProfileCompleted(true); setLocation("/dashboard"); }} />
+                  </Show>
+                  <Show when="signed-out">
+                    <Redirect to="/sign-in" />
+                  </Show>
+                </>
+              )} />
+              <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+              <Route path="/shops" component={() => <ProtectedRoute component={Shops} />} />
+              <Route path="/emi-orders" component={() => <ProtectedRoute component={EmiOrders} />} />
+              <Route path="/emi-orders/new" component={() => <ProtectedRoute component={NewEmiOrder} />} />
+              <Route path="/emi-orders/:id" component={() => <ProtectedRoute component={EmiOrderDetail} />} />
+              <Route component={NotFound} />
+            </Switch>
+            <Toaster />
+          </TooltipProvider>
+        </ProfileCtx.Provider>
       </QueryClientProvider>
     </ClerkProvider>
   );
