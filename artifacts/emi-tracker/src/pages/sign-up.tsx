@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSignUp } from "@clerk/react";
+import { useSignUp } from "@clerk/react/legacy";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
