@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SmsPastePanel } from "@/components/SmsPastePanel";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText,
@@ -195,6 +195,14 @@ export default function EmiOrderDetail() {
   const [editPayment, setEditPayment] = useState<EmiPayment | null>(null);
   const [editForm, setEditForm] = useState<PaymentFormData>(emptyPaymentForm());
 
+  // ── Confirm dialog ──
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
+    open: false, title: "", message: "", onConfirm: () => {},
+  });
+  const openConfirm = (title: string, message: string, onConfirm: () => void) =>
+    setConfirmDialog({ open: true, title, message, onConfirm });
+  const closeConfirm = () => setConfirmDialog((p) => ({ ...p, open: false }));
+
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetEmiOrderQueryKey(orderId) });
     queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
@@ -265,25 +273,32 @@ export default function EmiOrderDetail() {
   };
 
   const handleDelete = (payment: EmiPayment) => {
-    if (!confirm(`Delete this payment of ${formatCurrency(payment.amount)}? This cannot be undone.`)) return;
-    deletePayment.mutate(
-      { paymentId: payment.id },
-      {
-        onSuccess: () => {
-          invalidate();
-          toast({ title: "Payment deleted" });
-        },
-        onError: () => toast({ title: "Failed to delete payment", variant: "destructive" }),
+    openConfirm(
+      "Delete Payment",
+      `Delete this payment of ${formatCurrency(payment.amount)}? This cannot be undone.`,
+      () => {
+        deletePayment.mutate(
+          { paymentId: payment.id },
+          {
+            onSuccess: () => { invalidate(); toast({ title: "Payment deleted" }); },
+            onError: () => toast({ title: "Failed to delete payment", variant: "destructive" }),
+          }
+        );
       }
     );
   };
 
   const handleStatusComplete = () => {
-    if (!confirm("Mark this EMI as completed?")) return;
-    updateOrder.mutate(
-      { id: orderId, data: { status: "completed" } },
-      {
-        onSuccess: () => { invalidate(); toast({ title: "EMI marked as completed" }); },
+    openConfirm(
+      "Mark as Completed",
+      "Mark this EMI as completed? This will change the order status to completed.",
+      () => {
+        updateOrder.mutate(
+          { id: orderId, data: { status: "completed" } },
+          {
+            onSuccess: () => { invalidate(); toast({ title: "EMI marked as completed" }); },
+          }
+        );
       }
     );
   };
@@ -384,6 +399,20 @@ export default function EmiOrderDetail() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Confirm dialog ── */}
+      <Dialog open={confirmDialog.open} onOpenChange={(open) => { if (!open) closeConfirm(); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmDialog.title}</DialogTitle>
+            <DialogDescription>{confirmDialog.message}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button variant="outline" onClick={closeConfirm}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { confirmDialog.onConfirm(); closeConfirm(); }}>Confirm</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
