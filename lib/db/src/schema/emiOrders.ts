@@ -10,6 +10,7 @@ export const emiOrdersTable = pgTable("emi_orders", {
   productId: integer("product_id").references(() => productsTable.id),
   productName: text("product_name").notNull(),
   totalPrice: numeric("total_price", { precision: 12, scale: 2 }).notNull(),
+  discount: numeric("discount", { precision: 12, scale: 2 }).notNull().default("0"),
   downPayment: numeric("down_payment", { precision: 12, scale: 2 }).notNull().default("0"),
   emiMonths: integer("emi_months").notNull(),
   monthlyAmount: numeric("monthly_amount", { precision: 12, scale: 2 }).notNull(),

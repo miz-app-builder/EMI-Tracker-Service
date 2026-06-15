@@ -255,6 +255,9 @@ export default function EmiOrderDetail() {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">মোট দাম</p>
                 <p className="font-bold text-xl">{formatCurrency(order.totalPrice)}</p>
+                {(order.discount ?? 0) > 0 && (
+                  <p className="text-xs text-green-600 font-medium">ছাড়: -{formatCurrency(order.discount ?? 0)}</p>
+                )}
               </div>
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">ডাউন পেমেন্ট</p>

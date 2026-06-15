@@ -442,6 +442,8 @@ components:
           type: string
         totalPrice:
           type: number
+        discount:
+          type: number
         downPayment:
           type: number
         emiMonths:
@@ -479,6 +481,8 @@ components:
           type: string
           minLength: 1
         totalPrice:
+          type: number
+        discount:
           type: number
         downPayment:
           type: number
@@ -520,6 +524,8 @@ components:
         productName:
           type: string
         totalPrice:
+          type: number
+        discount:
           type: number
         downPayment:
           type: number

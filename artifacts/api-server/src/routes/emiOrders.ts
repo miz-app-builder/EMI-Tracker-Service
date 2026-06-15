@@ -38,10 +38,12 @@ function calcNextDueDate(
 
 function formatOrder(order: Record<string, unknown>, totalPaid: number, installmentsPaid: number) {
   const totalPrice = Number(order.totalPrice);
+  const discount = Number(order.discount ?? 0);
   const downPayment = Number(order.downPayment);
   const emiMonths = Number(order.emiMonths);
   const dueDayOfMonth = order.dueDayOfMonth as number | null | undefined;
-  const emiTotal = totalPrice - downPayment;
+  const effectivePrice = totalPrice - discount;
+  const emiTotal = effectivePrice - downPayment;
   const remaining = Math.max(0, emiTotal - totalPaid);
   const remainingMonths = Math.max(0, emiMonths - installmentsPaid);
 
@@ -55,6 +57,7 @@ function formatOrder(order: Record<string, unknown>, totalPaid: number, installm
   return {
     ...order,
     totalPrice,
+    discount,
     downPayment,
     monthlyAmount: Number(order.monthlyAmount),
     dueDayOfMonth: dueDayOfMonth ?? null,
@@ -76,6 +79,7 @@ router.get("/emi-orders", async (req, res) => {
       productId: emiOrdersTable.productId,
       productName: emiOrdersTable.productName,
       totalPrice: emiOrdersTable.totalPrice,
+      discount: emiOrdersTable.discount,
       downPayment: emiOrdersTable.downPayment,
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
@@ -121,8 +125,10 @@ router.get("/emi-orders", async (req, res) => {
 router.post("/emi-orders", async (req, res) => {
   const body = CreateEmiOrderBody.parse(req.body);
 
-  // Auto-calculate monthly amount from total, down payment, and months
-  const emiTotal = body.totalPrice - body.downPayment;
+  // Auto-calculate monthly amount: (totalPrice - discount - downPayment) / months
+  const discount = body.discount ?? 0;
+  const effectivePrice = body.totalPrice - discount;
+  const emiTotal = effectivePrice - body.downPayment;
   const monthlyAmount = body.emiMonths > 0 ? Math.ceil(emiTotal / body.emiMonths) : 0;
 
   const [order] = await db
@@ -132,6 +138,7 @@ router.post("/emi-orders", async (req, res) => {
       productId: body.productId ?? null,
       productName: body.productName,
       totalPrice: String(body.totalPrice),
+      discount: String(discount),
       downPayment: String(body.downPayment),
       emiMonths: body.emiMonths,
       monthlyAmount: String(monthlyAmount),
@@ -162,6 +169,7 @@ router.get("/emi-orders/:id", async (req, res) => {
       productId: emiOrdersTable.productId,
       productName: emiOrdersTable.productName,
       totalPrice: emiOrdersTable.totalPrice,
+      discount: emiOrdersTable.discount,
       downPayment: emiOrdersTable.downPayment,
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,

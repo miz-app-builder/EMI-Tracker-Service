@@ -13,6 +13,7 @@ export interface EmiOrder {
   productId?: number | null;
   productName: string;
   totalPrice: number;
+  discount?: number;
   downPayment: number;
   emiMonths: number;
   monthlyAmount: number;

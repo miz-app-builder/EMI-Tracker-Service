@@ -53,6 +53,7 @@ export interface EmiOrder {
   productId?: number | null;
   productName: string;
   totalPrice: number;
+  discount?: number;
   downPayment: number;
   emiMonths: number;
   monthlyAmount: number;
@@ -77,6 +78,7 @@ export interface EmiOrderInput {
   /** @minLength 1 */
   productName: string;
   totalPrice: number;
+  discount?: number;
   downPayment: number;
   emiMonths: number;
   /** @nullable */
@@ -111,6 +113,7 @@ export interface EmiOrderDetail {
   productId?: number | null;
   productName: string;
   totalPrice: number;
+  discount?: number;
   downPayment: number;
   emiMonths: number;
   monthlyAmount: number;

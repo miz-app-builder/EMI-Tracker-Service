@@ -160,6 +160,7 @@ export const CreateEmiOrderBody = zod.object({
   "productId": zod.number().nullish(),
   "productName": zod.string().min(1),
   "totalPrice": zod.number(),
+  "discount": zod.number().optional(),
   "downPayment": zod.number(),
   "emiMonths": zod.number(),
   "dueDayOfMonth": zod.number().min(1).max(31).nullish(),

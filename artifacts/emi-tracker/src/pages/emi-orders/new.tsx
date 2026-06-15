@@ -24,6 +24,7 @@ export default function NewEmiOrder() {
     productId: "",
     productName: "",
     totalPrice: "",
+    discount: "",
     downPayment: "",
     emiMonths: "",
     dueDayOfMonth: "",
@@ -62,7 +63,9 @@ export default function NewEmiOrder() {
   };
 
   // Auto-calculate monthly amount (same logic as server)
-  const principal = Math.max(0, (Number(formData.totalPrice) || 0) - (Number(formData.downPayment) || 0));
+  const discountAmt = Number(formData.discount) || 0;
+  const effectivePrice = Math.max(0, (Number(formData.totalPrice) || 0) - discountAmt);
+  const principal = Math.max(0, effectivePrice - (Number(formData.downPayment) || 0));
   const months = Number(formData.emiMonths) || 0;
   const autoMonthlyAmount = months > 0 ? Math.ceil(principal / months) : 0;
 
@@ -80,6 +83,7 @@ export default function NewEmiOrder() {
           productId: formData.productId ? Number(formData.productId) : null,
           productName: formData.productName,
           totalPrice: Number(formData.totalPrice),
+          discount: discountAmt || 0,
           downPayment: Number(formData.downPayment) || 0,
           emiMonths: Number(formData.emiMonths),
           dueDayOfMonth: formData.dueDayOfMonth ? Number(formData.dueDayOfMonth) : null,
@@ -182,7 +186,7 @@ export default function NewEmiOrder() {
                 </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label htmlFor="totalPrice">মোট দাম (টাকা) <span className="text-destructive">*</span></Label>
                   <Input
@@ -192,6 +196,21 @@ export default function NewEmiOrder() {
                     onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value })}
                     placeholder="০"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="discount">ছাড় / Discount (টাকা)</Label>
+                  <Input
+                    id="discount"
+                    type="number"
+                    value={formData.discount}
+                    onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                    placeholder="০"
+                  />
+                  {discountAmt > 0 && Number(formData.totalPrice) > 0 && (
+                    <p className="text-xs text-green-600 font-medium">
+                      কার্যকর দাম: {formatCurrency(effectivePrice)}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="downPayment">ডাউন পেমেন্ট (টাকা)</Label>

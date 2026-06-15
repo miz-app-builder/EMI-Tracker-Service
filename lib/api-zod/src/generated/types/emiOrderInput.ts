@@ -13,6 +13,7 @@ export interface EmiOrderInput {
   /** @minLength 1 */
   productName: string;
   totalPrice: number;
+  discount?: number;
   downPayment: number;
   emiMonths: number;
   /** @nullable */
