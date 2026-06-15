@@ -139,6 +139,54 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## ✅ Completed Tasks
 
+- [x] **T01 — Monthly Report Page** _(2026-06-15)_
+  - **No new backend needed** — uses existing `GET /api/dashboard/monthly-spending` and `GET /api/dashboard/shop-stats` endpoints.
+  - **New page** `pages/reports.tsx` — 3-stat summary cards (total paid all time, total outstanding, active EMIs), bar chart of monthly payments (last N months, reversed chronologically), pie chart of total paid broken down by shop.
+  - **Charts** — Recharts `BarChart` + `PieChart` with custom Bengali-currency tooltips; Y-axis auto-formats to K/L notation.
+  - **Sidebar** — "Reports" nav link added.
+  - **Router** — `/reports` route added as a protected route.
+
+- [x] **T03 — Spending Trends Chart** _(2026-06-15)_
+  - **No new backend needed** — uses existing `GET /api/dashboard/monthly-spending`.
+  - **New component** `components/SpendingTrendChart.tsx` — Recharts `AreaChart` with gradient fill, custom tooltip, Y-axis formatted as K/L; shows last N months of EMI spend.
+  - **Dashboard** — SpendingTrendChart embedded on the dashboard page below the summary cards.
+
+- [x] **T05 — In-App Notification Center** _(2026-06-15)_
+  - **No new backend needed** — uses `GET /api/dashboard/due-this-month`.
+  - **New component** `components/NotificationBell.tsx` — bell icon in the header; red badge shows overdue count, yellow badge shows upcoming-this-month count; clicking opens a Popover listing each overdue/upcoming EMI with days-until label and "Pay Now" link.
+  - **Layout** — `NotificationBell` added to the top-right header area.
+
+- [x] **T11 — Dark Mode Toggle** _(2026-06-15)_
+  - **New hook** `hooks/useTheme.ts` — reads initial theme from `user.themePreference` (server), persists choice to `localStorage`, and applies/removes the `dark` class on `<html>`.
+  - **Layout** — Sun/Moon icon button in the header calls `toggleTheme()`; tooltip switches label between "Switch to light mode" and "Switch to dark mode".
+  - **No backend changes needed** — theme preference stored client-side in localStorage; server preference used only as the initial value on first load.
+
+- [x] **T12 — Quick Pay from Dashboard** _(2026-06-15)_
+  - **No new backend needed** — uses existing `POST /api/emi-orders/:id/payments`.
+  - **New component** `components/QuickPayDialog.tsx` — dialog with amount, payment date, payment method (Cash/Bank Transfer/bKash/Nagad/Rocket), optional bank name/account/transaction ID/notes fields; pre-fills `nextMonthlyAmount` as the default amount.
+  - **Dashboard** — "Pay Now" button on each due-this-month order card; clicking opens the QuickPayDialog pre-loaded with that order. On success, invalidates `listEmiOrders`, `dashboardSummary`, and `dueThisMonth` query keys.
+
+- [x] **T13 — Calendar View** _(2026-06-15)_
+  - **No new backend needed** — uses `GET /api/emi-orders`.
+  - **New page** `pages/calendar.tsx` — 7-column monthly calendar grid; due dates shown as colored dots (red = overdue, primary = due); clicking a day opens a detail panel listing all EMIs due that day with amount and "Pay Now" button.
+  - **Due date calculation** — computed from `purchaseDate + n months` (where n = installment number for the viewed month) using `dueDayOfMonth` or purchase day as the anchor; correctly shows dues for any past/future month, not just `nextDueDate`.
+  - **Sidebar** — "Calendar" nav link added.
+  - **Router** — `/calendar` route added as a protected route.
+
+- [x] **T15 — EMI Calculator (Standalone)** _(2026-06-15)_
+  - **Pure frontend, no backend** — all calculations done client-side.
+  - **New page** `pages/calculator.tsx` — inputs for total price, discount, down payment, and months (with slider); live output shows monthly installment, total EMI amount, total payment, and effective interest rate.
+  - **CTA** — "Create EMI Order" button links to `/emi-orders/new` pre-filling nothing (user can copy values manually).
+  - **Sidebar** — "Calculator" nav link added.
+  - **Router** — `/calculator` route added as a protected route.
+
+- [x] **T17 — Total Debt Overview** _(2026-06-15)_
+  - **No new backend needed** — uses `GET /api/emi-orders` and `GET /api/dashboard/summary`.
+  - **New page** `pages/debt-overview.tsx` — summary banner (total outstanding, total active EMIs, projected last payoff date); lists all active EMI orders with per-card progress bar, months left, remaining amount, and next due date.
+  - **Sorting** — three sort modes: Most Remaining (by outstanding amount), Finishing Soon (by months left ascending), Most Paid (by installments paid descending).
+  - **Sidebar** — "Debt Overview" nav link added.
+  - **Router** — `/debt-overview` route added as a protected route.
+
 - [x] **T18 — Overdue Summary Page** _(2026-06-15)_
   - **No new backend needed** — filters `GET /api/emi-orders?status=active` on frontend for `nextDueDate < today`.
   - **New page** `pages/overdue.tsx` — lists overdue EMIs sorted by days overdue (most late first), with 3-stat summary banner (count, this month's installments due, total remaining), per-card progress bar, and "Pay Now" button linking to detail page. Green "All clear!" empty state when none overdue.
