@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, CreditCard } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, CreditCard, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/search": "Search",
   "/bulk-pay": "Bulk Payment",
   "/profile": "Profile Settings",
+  "/export": "Export My Data",
 };
 
 function getPageTitle(location: string) {
@@ -160,6 +161,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuItem className="gap-2 cursor-pointer">
                     <Settings className="h-4 w-4" />
                     Profile Settings
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/export">
+                  <DropdownMenuItem className="gap-2 cursor-pointer">
+                    <Download className="h-4 w-4" />
+                    Export My Data
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator />

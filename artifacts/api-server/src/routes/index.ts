@@ -6,6 +6,7 @@ import shopsRouter from "./shops";
 import productsRouter from "./products";
 import emiOrdersRouter from "./emiOrders";
 import dashboardRouter from "./dashboard";
+import exportRouter from "./export";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -17,5 +18,6 @@ router.use(requireAuth, shopsRouter);
 router.use(requireAuth, productsRouter);
 router.use(requireAuth, emiOrdersRouter);
 router.use(requireAuth, dashboardRouter);
+router.use(requireAuth, exportRouter);
 
 export default router;

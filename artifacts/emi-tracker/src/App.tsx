@@ -21,6 +21,7 @@ import CalendarPage from "@/pages/calendar";
 import SearchPage from "@/pages/search";
 import BulkPayPage from "@/pages/bulk-pay";
 import ReceiptPage from "@/pages/receipt";
+import ExportPage from "@/pages/export";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ function Routes() {
       <Route path="/search" component={() => <ProtectedRoute component={SearchPage} />} />
       <Route path="/bulk-pay" component={() => <ProtectedRoute component={BulkPayPage} />} />
       <Route path="/emi-orders/:id/payments/:paymentId/receipt" component={() => <ProtectedRoute component={ReceiptPage} />} />
+      <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

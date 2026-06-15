@@ -96,7 +96,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T19 — Session Management**
   View and revoke active login sessions from profile settings.
 
-- [ ] **T20 — Data Export (My Data)**
+- [x] **T20 — Data Export (My Data)**
   Download all personal data (orders, payments, shops) as JSON or CSV.
 
 ---
