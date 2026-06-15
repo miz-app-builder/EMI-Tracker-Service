@@ -28,25 +28,6 @@ export interface ShopInput {
   address?: string | null;
 }
 
-export interface Customer {
-  id: number;
-  name: string;
-  /** @nullable */
-  phone?: string | null;
-  /** @nullable */
-  address?: string | null;
-  createdAt?: string;
-}
-
-export interface CustomerInput {
-  /** @minLength 1 */
-  name: string;
-  /** @nullable */
-  phone?: string | null;
-  /** @nullable */
-  address?: string | null;
-}
-
 export interface Product {
   id: number;
   name: string;
@@ -67,7 +48,6 @@ export interface ProductInput {
 
 export interface EmiOrder {
   id: number;
-  customerId: number;
   shopId: number;
   /** @nullable */
   productId?: number | null;
@@ -78,16 +58,16 @@ export interface EmiOrder {
   monthlyAmount: number;
   totalPaid?: number;
   remainingAmount?: number;
+  installmentsPaid?: number;
+  /** @nullable */
+  nextDueDate?: string | null;
   status: string;
   purchaseDate: string;
-  /** @nullable */
-  customerName?: string | null;
   /** @nullable */
   shopName?: string | null;
 }
 
 export interface EmiOrderInput {
-  customerId: number;
   shopId: number;
   /** @nullable */
   productId?: number | null;
@@ -122,7 +102,6 @@ export interface EmiPayment {
 
 export interface EmiOrderDetail {
   id: number;
-  customerId: number;
   shopId: number;
   /** @nullable */
   productId?: number | null;
@@ -133,10 +112,11 @@ export interface EmiOrderDetail {
   monthlyAmount: number;
   totalPaid?: number;
   remainingAmount?: number;
+  installmentsPaid?: number;
+  /** @nullable */
+  nextDueDate?: string | null;
   status: string;
   purchaseDate: string;
-  /** @nullable */
-  customerName?: string | null;
   /** @nullable */
   shopName?: string | null;
   payments: EmiPayment[];
@@ -158,6 +138,8 @@ export interface DashboardSummary {
   totalPaidAmount: number;
   overdueOrders: number;
   thisMonthCollected?: number;
+  /** @nullable */
+  nextPaymentDate?: string | null;
 }
 
 export interface ShopStat {
@@ -180,10 +162,6 @@ export type ListEmiOrdersParams = {
  * @nullable
  */
 shopId?: number | null;
-/**
- * @nullable
- */
-customerId?: number | null;
 /**
  * @nullable
  */

@@ -7,12 +7,9 @@ import NotFound from "@/pages/not-found";
 
 import Dashboard from "@/pages/dashboard";
 import Shops from "@/pages/shops";
-import Customers from "@/pages/customers";
-import Products from "@/pages/products";
 import EmiOrders from "@/pages/emi-orders/index";
 import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
-import Payments from "@/pages/payments";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,12 +26,9 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/shops" component={Shops} />
-        <Route path="/customers" component={Customers} />
-        <Route path="/products" component={Products} />
         <Route path="/emi-orders" component={EmiOrders} />
         <Route path="/emi-orders/new" component={NewEmiOrder} />
         <Route path="/emi-orders/:id" component={EmiOrderDetail} />
-        <Route path="/payments" component={Payments} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

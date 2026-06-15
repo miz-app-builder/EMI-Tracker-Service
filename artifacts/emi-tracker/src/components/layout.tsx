@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, Users, Package, FileText, CreditCard } from "lucide-react";
+import { LayoutDashboard, Store, FileText } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -7,19 +7,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/shops", label: "Shops", icon: Store },
-    { href: "/customers", label: "Customers", icon: Users },
-    { href: "/products", label: "Products", icon: Package },
-    { href: "/emi-orders", label: "EMI Orders", icon: FileText },
-    { href: "/payments", label: "Payments", icon: CreditCard },
+    { href: "/emi-orders", label: "My EMIs", icon: FileText },
   ];
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      {/* Sidebar */}
       <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex flex-col hidden md:flex">
         <div className="p-6">
           <h1 className="text-xl font-bold text-sidebar-primary tracking-tight">EMI Tracker</h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-1">Showroom Management</p>
+          <p className="text-xs text-sidebar-foreground/60 mt-1">আমার কিস্তির হিসাব</p>
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => {
@@ -32,7 +28,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }`}
-                  data-testid={`nav-${item.label.toLowerCase().replace(" ", "-")}`}
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
@@ -43,9 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border">
           <h1 className="text-lg font-bold text-primary">EMI Tracker</h1>
         </header>

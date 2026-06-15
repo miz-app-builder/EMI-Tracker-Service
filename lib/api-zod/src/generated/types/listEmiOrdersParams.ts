@@ -14,9 +14,5 @@ shopId?: number | null;
 /**
  * @nullable
  */
-customerId?: number | null;
-/**
- * @nullable
- */
 status?: string | null;
 };

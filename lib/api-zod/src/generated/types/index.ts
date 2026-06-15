@@ -6,8 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './customer';
-export * from './customerInput';
 export * from './dashboardSummary';
 export * from './emiOrder';
 export * from './emiOrderDetail';

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, emiOrdersTable, emiPaymentsTable, shopsTable, customersTable } from "@workspace/db";
+import { db, emiOrdersTable, emiPaymentsTable, shopsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 
 const router = Router();
@@ -17,18 +17,22 @@ router.get("/dashboard/summary", async (req, res) => {
     })
     .from(emiOrdersTable);
 
-  const paymentTotals = await db
+  const paymentStats = await db
     .select({
       emiOrderId: emiPaymentsTable.emiOrderId,
       total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)`,
+      count: sql<string>`COUNT(*)`,
     })
     .from(emiPaymentsTable)
     .groupBy(emiPaymentsTable.emiOrderId);
 
   const paidMap: Record<number, number> = {};
-  paymentTotals.forEach((p) => { paidMap[p.emiOrderId] = Number(p.total); });
+  const countMap: Record<number, number> = {};
+  paymentStats.forEach((p) => {
+    paidMap[p.emiOrderId] = Number(p.total);
+    countMap[p.emiOrderId] = Number(p.count);
+  });
 
-  // This month payments
   const now = new Date();
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -44,9 +48,11 @@ router.get("/dashboard/summary", async (req, res) => {
   let totalDueAmount = 0;
   let totalPaidAmount = 0;
   let overdueOrders = 0;
+  let nextPaymentDate: string | null = null;
 
   for (const order of orders) {
     const totalPaid = paidMap[order.id] ?? 0;
+    const installmentsPaid = countMap[order.id] ?? 0;
     const emiTotal = Number(order.totalPrice) - Number(order.downPayment);
     const remaining = Math.max(0, emiTotal - totalPaid);
     totalPaidAmount += totalPaid;
@@ -54,11 +60,22 @@ router.get("/dashboard/summary", async (req, res) => {
     if (order.status === "active") {
       totalActiveOrders++;
       totalDueAmount += remaining;
-      // Check if overdue: purchase date + emi months < today
+
       const purchaseDate = new Date(order.purchaseDate);
-      const dueDate = new Date(purchaseDate);
-      dueDate.setMonth(dueDate.getMonth() + order.emiMonths);
-      if (dueDate < now && remaining > 0) overdueOrders++;
+      const planEndDate = new Date(purchaseDate);
+      planEndDate.setMonth(planEndDate.getMonth() + order.emiMonths);
+      if (planEndDate < now && remaining > 0) overdueOrders++;
+
+      // Calculate next due date for this order
+      if (installmentsPaid < order.emiMonths) {
+        const nextInstallment = installmentsPaid + 1;
+        const nd = new Date(order.purchaseDate);
+        nd.setMonth(nd.getMonth() + nextInstallment);
+        const ndStr = nd.toISOString().split("T")[0];
+        if (!nextPaymentDate || ndStr < nextPaymentDate) {
+          nextPaymentDate = ndStr;
+        }
+      }
     } else {
       totalCompletedOrders++;
     }
@@ -72,6 +89,7 @@ router.get("/dashboard/summary", async (req, res) => {
     totalPaidAmount,
     overdueOrders,
     thisMonthCollected: Number(thisMonthPayments[0]?.total ?? 0),
+    nextPaymentDate,
   });
 });
 
@@ -81,7 +99,6 @@ router.get("/dashboard/due-this-month", async (req, res) => {
   const rows = await db
     .select({
       id: emiOrdersTable.id,
-      customerId: emiOrdersTable.customerId,
       shopId: emiOrdersTable.shopId,
       productId: emiOrdersTable.productId,
       productName: emiOrdersTable.productName,
@@ -91,45 +108,60 @@ router.get("/dashboard/due-this-month", async (req, res) => {
       monthlyAmount: emiOrdersTable.monthlyAmount,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
-      customerName: customersTable.name,
       shopName: shopsTable.name,
     })
     .from(emiOrdersTable)
-    .leftJoin(customersTable, eq(emiOrdersTable.customerId, customersTable.id))
     .leftJoin(shopsTable, eq(emiOrdersTable.shopId, shopsTable.id))
     .where(eq(emiOrdersTable.status, "active"));
 
-  const paymentTotals = await db
+  const paymentStats = await db
     .select({
       emiOrderId: emiPaymentsTable.emiOrderId,
       total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)`,
+      count: sql<string>`COUNT(*)`,
     })
     .from(emiPaymentsTable)
     .groupBy(emiPaymentsTable.emiOrderId);
 
   const paidMap: Record<number, number> = {};
-  paymentTotals.forEach((p) => { paidMap[p.emiOrderId] = Number(p.total); });
+  const countMap: Record<number, number> = {};
+  paymentStats.forEach((p) => {
+    paidMap[p.emiOrderId] = Number(p.total);
+    countMap[p.emiOrderId] = Number(p.count);
+  });
 
-  // Filter orders where the current month's installment is due
   const dueOrders = rows.filter((order) => {
     const purchaseDate = new Date(order.purchaseDate);
-    const monthsPassed = (now.getFullYear() - purchaseDate.getFullYear()) * 12 + (now.getMonth() - purchaseDate.getMonth());
+    const monthsPassed =
+      (now.getFullYear() - purchaseDate.getFullYear()) * 12 +
+      (now.getMonth() - purchaseDate.getMonth());
     return monthsPassed >= 0 && monthsPassed < order.emiMonths;
   });
 
-  res.json(dueOrders.map((order) => {
-    const totalPaid = paidMap[order.id] ?? 0;
-    const emiTotal = Number(order.totalPrice) - Number(order.downPayment);
-    const remaining = Math.max(0, emiTotal - totalPaid);
-    return {
-      ...order,
-      totalPrice: Number(order.totalPrice),
-      downPayment: Number(order.downPayment),
-      monthlyAmount: Number(order.monthlyAmount),
-      totalPaid,
-      remainingAmount: remaining,
-    };
-  }));
+  res.json(
+    dueOrders.map((order) => {
+      const totalPaid = paidMap[order.id] ?? 0;
+      const installmentsPaid = countMap[order.id] ?? 0;
+      const emiTotal = Number(order.totalPrice) - Number(order.downPayment);
+      const remaining = Math.max(0, emiTotal - totalPaid);
+
+      const nextInstallment = installmentsPaid + 1;
+      const nd = new Date(order.purchaseDate);
+      nd.setMonth(nd.getMonth() + nextInstallment);
+      const nextDueDate = installmentsPaid >= order.emiMonths ? null : nd.toISOString().split("T")[0];
+
+      return {
+        ...order,
+        totalPrice: Number(order.totalPrice),
+        downPayment: Number(order.downPayment),
+        monthlyAmount: Number(order.monthlyAmount),
+        totalPaid,
+        remainingAmount: remaining,
+        installmentsPaid,
+        nextDueDate,
+      };
+    })
+  );
 });
 
 router.get("/dashboard/shop-stats", async (req, res) => {
@@ -153,7 +185,9 @@ router.get("/dashboard/shop-stats", async (req, res) => {
     .groupBy(emiPaymentsTable.emiOrderId);
 
   const paidMap: Record<number, number> = {};
-  paymentTotals.forEach((p) => { paidMap[p.emiOrderId] = Number(p.total); });
+  paymentTotals.forEach((p) => {
+    paidMap[p.emiOrderId] = Number(p.total);
+  });
 
   const stats = shops.map((shop) => {
     const shopOrders = orders.filter((o) => o.shopId === shop.id);

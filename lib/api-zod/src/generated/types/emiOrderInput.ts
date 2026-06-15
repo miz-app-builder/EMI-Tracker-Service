@@ -7,7 +7,6 @@
  */
 
 export interface EmiOrderInput {
-  customerId: number;
   shopId: number;
   /** @nullable */
   productId?: number | null;

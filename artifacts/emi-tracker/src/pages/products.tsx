@@ -17,7 +17,8 @@ export default function Products() {
   const [selectedShopId, setSelectedShopId] = useState<string>("all");
   
   const { data: products, isLoading } = useListProducts(
-    { query: { queryKey: getListProductsQueryKey(selectedShopId !== "all" ? { shopId: Number(selectedShopId) } : {}) } },
+    selectedShopId !== "all" ? { shopId: Number(selectedShopId) } : undefined,
+    { query: { queryKey: getListProductsQueryKey(selectedShopId !== "all" ? { shopId: Number(selectedShopId) } : {}) } }
   );
   const { data: shops } = useListShops({ query: { queryKey: getListShopsQueryKey() } });
   

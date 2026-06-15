@@ -92,73 +92,6 @@ export const DeleteShopParams = zod.object({
 
 
 /**
- * @summary List all customers
- */
-export const ListCustomersResponseItem = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "phone": zod.string().nullish(),
-  "address": zod.string().nullish(),
-  "createdAt": zod.string().optional()
-})
-export const ListCustomersResponse = zod.array(ListCustomersResponseItem)
-
-
-/**
- * @summary Create a new customer
- */
-
-
-
-export const CreateCustomerBody = zod.object({
-  "name": zod.string().min(1),
-  "phone": zod.string().nullish(),
-  "address": zod.string().nullish()
-})
-
-
-/**
- * @summary Get customer by ID
- */
-export const GetCustomerParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const GetCustomerResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "phone": zod.string().nullish(),
-  "address": zod.string().nullish(),
-  "createdAt": zod.string().optional()
-})
-
-
-/**
- * @summary Update customer
- */
-export const UpdateCustomerParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-
-
-
-export const UpdateCustomerBody = zod.object({
-  "name": zod.string().min(1),
-  "phone": zod.string().nullish(),
-  "address": zod.string().nullish()
-})
-
-export const UpdateCustomerResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "phone": zod.string().nullish(),
-  "address": zod.string().nullish(),
-  "createdAt": zod.string().optional()
-})
-
-
-/**
  * @summary List all products
  */
 export const ListProductsQueryParams = zod.object({
@@ -193,13 +126,11 @@ export const CreateProductBody = zod.object({
  */
 export const ListEmiOrdersQueryParams = zod.object({
   "shopId": zod.coerce.number().nullish(),
-  "customerId": zod.coerce.number().nullish(),
   "status": zod.coerce.string().nullish()
 })
 
 export const ListEmiOrdersResponseItem = zod.object({
   "id": zod.number(),
-  "customerId": zod.number(),
   "shopId": zod.number(),
   "productId": zod.number().nullish(),
   "productName": zod.string(),
@@ -209,9 +140,10 @@ export const ListEmiOrdersResponseItem = zod.object({
   "monthlyAmount": zod.number(),
   "totalPaid": zod.number().optional(),
   "remainingAmount": zod.number().optional(),
+  "installmentsPaid": zod.number().optional(),
+  "nextDueDate": zod.string().nullish(),
   "status": zod.string(),
   "purchaseDate": zod.string(),
-  "customerName": zod.string().nullish(),
   "shopName": zod.string().nullish()
 })
 export const ListEmiOrdersResponse = zod.array(ListEmiOrdersResponseItem)
@@ -224,7 +156,6 @@ export const ListEmiOrdersResponse = zod.array(ListEmiOrdersResponseItem)
 
 
 export const CreateEmiOrderBody = zod.object({
-  "customerId": zod.number(),
   "shopId": zod.number(),
   "productId": zod.number().nullish(),
   "productName": zod.string().min(1),
@@ -245,7 +176,6 @@ export const GetEmiOrderParams = zod.object({
 
 export const GetEmiOrderResponse = zod.object({
   "id": zod.number(),
-  "customerId": zod.number(),
   "shopId": zod.number(),
   "productId": zod.number().nullish(),
   "productName": zod.string(),
@@ -255,9 +185,10 @@ export const GetEmiOrderResponse = zod.object({
   "monthlyAmount": zod.number(),
   "totalPaid": zod.number().optional(),
   "remainingAmount": zod.number().optional(),
+  "installmentsPaid": zod.number().optional(),
+  "nextDueDate": zod.string().nullish(),
   "status": zod.string(),
   "purchaseDate": zod.string(),
-  "customerName": zod.string().nullish(),
   "shopName": zod.string().nullish(),
   "payments": zod.array(zod.object({
   "id": zod.number(),
@@ -289,7 +220,6 @@ export const UpdateEmiOrderBody = zod.object({
 
 export const UpdateEmiOrderResponse = zod.object({
   "id": zod.number(),
-  "customerId": zod.number(),
   "shopId": zod.number(),
   "productId": zod.number().nullish(),
   "productName": zod.string(),
@@ -299,9 +229,10 @@ export const UpdateEmiOrderResponse = zod.object({
   "monthlyAmount": zod.number(),
   "totalPaid": zod.number().optional(),
   "remainingAmount": zod.number().optional(),
+  "installmentsPaid": zod.number().optional(),
+  "nextDueDate": zod.string().nullish(),
   "status": zod.string(),
   "purchaseDate": zod.string(),
-  "customerName": zod.string().nullish(),
   "shopName": zod.string().nullish()
 })
 
@@ -365,7 +296,8 @@ export const GetDashboardSummaryResponse = zod.object({
   "totalDueAmount": zod.number(),
   "totalPaidAmount": zod.number(),
   "overdueOrders": zod.number(),
-  "thisMonthCollected": zod.number().optional()
+  "thisMonthCollected": zod.number().optional(),
+  "nextPaymentDate": zod.string().nullish()
 })
 
 
@@ -374,7 +306,6 @@ export const GetDashboardSummaryResponse = zod.object({
  */
 export const GetDueThisMonthResponseItem = zod.object({
   "id": zod.number(),
-  "customerId": zod.number(),
   "shopId": zod.number(),
   "productId": zod.number().nullish(),
   "productName": zod.string(),
@@ -384,9 +315,10 @@ export const GetDueThisMonthResponseItem = zod.object({
   "monthlyAmount": zod.number(),
   "totalPaid": zod.number().optional(),
   "remainingAmount": zod.number().optional(),
+  "installmentsPaid": zod.number().optional(),
+  "nextDueDate": zod.string().nullish(),
   "status": zod.string(),
   "purchaseDate": zod.string(),
-  "customerName": zod.string().nullish(),
   "shopName": zod.string().nullish()
 })
 export const GetDueThisMonthResponse = zod.array(GetDueThisMonthResponseItem)

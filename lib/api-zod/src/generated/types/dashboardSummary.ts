@@ -14,4 +14,6 @@ export interface DashboardSummary {
   totalPaidAmount: number;
   overdueOrders: number;
   thisMonthCollected?: number;
+  /** @nullable */
+  nextPaymentDate?: string | null;
 }

@@ -12,8 +12,6 @@ tags:
     description: Health operations
   - name: shops
     description: Shop/Showroom management
-  - name: customers
-    description: Customer management
   - name: products
     description: Product management
   - name: emi-orders
@@ -126,82 +124,6 @@ paths:
         "204":
           description: Deleted
 
-  /customers:
-    get:
-      operationId: listCustomers
-      tags: [customers]
-      summary: List all customers
-      responses:
-        "200":
-          description: List of customers
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Customer"
-    post:
-      operationId: createCustomer
-      tags: [customers]
-      summary: Create a new customer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CustomerInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Customer"
-
-  /customers/{id}:
-    get:
-      operationId: getCustomer
-      tags: [customers]
-      summary: Get customer by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Customer
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Customer"
-        "404":
-          description: Not found
-    put:
-      operationId: updateCustomer
-      tags: [customers]
-      summary: Update customer
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CustomerInput"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Customer"
-
   /products:
     get:
       operationId: listProducts
@@ -247,11 +169,6 @@ paths:
       summary: List all EMI orders
       parameters:
         - name: shopId
-          in: query
-          required: false
-          schema:
-            type: ["integer", "null"]
-        - name: customerId
           in: query
           required: false
           schema:
@@ -484,33 +401,6 @@ components:
         address:
           type: ["string", "null"]
 
-    Customer:
-      type: object
-      required: [id, name]
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        phone:
-          type: ["string", "null"]
-        address:
-          type: ["string", "null"]
-        createdAt:
-          type: string
-
-    CustomerInput:
-      type: object
-      required: [name]
-      properties:
-        name:
-          type: string
-          minLength: 1
-        phone:
-          type: ["string", "null"]
-        address:
-          type: ["string", "null"]
-
     Product:
       type: object
       required: [id, name, shopId]
@@ -540,11 +430,9 @@ components:
 
     EmiOrder:
       type: object
-      required: [id, customerId, shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, status, purchaseDate]
+      required: [id, shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, status, purchaseDate]
       properties:
         id:
-          type: integer
-        customerId:
           type: integer
         shopId:
           type: integer
@@ -564,21 +452,21 @@ components:
           type: number
         remainingAmount:
           type: number
+        installmentsPaid:
+          type: integer
+        nextDueDate:
+          type: ["string", "null"]
         status:
           type: string
         purchaseDate:
           type: string
-        customerName:
-          type: ["string", "null"]
         shopName:
           type: ["string", "null"]
 
     EmiOrderInput:
       type: object
-      required: [customerId, shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, purchaseDate]
+      required: [shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, purchaseDate]
       properties:
-        customerId:
-          type: integer
         shopId:
           type: integer
         productId:
@@ -617,11 +505,9 @@ components:
 
     EmiOrderDetail:
       type: object
-      required: [id, customerId, shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, status, purchaseDate, payments]
+      required: [id, shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, status, purchaseDate, payments]
       properties:
         id:
-          type: integer
-        customerId:
           type: integer
         shopId:
           type: integer
@@ -641,12 +527,14 @@ components:
           type: number
         remainingAmount:
           type: number
+        installmentsPaid:
+          type: integer
+        nextDueDate:
+          type: ["string", "null"]
         status:
           type: string
         purchaseDate:
           type: string
-        customerName:
-          type: ["string", "null"]
         shopName:
           type: ["string", "null"]
         payments:
@@ -702,6 +590,8 @@ components:
           type: integer
         thisMonthCollected:
           type: number
+        nextPaymentDate:
+          type: ["string", "null"]
 
     ShopStat:
       type: object

@@ -9,7 +9,6 @@ import type { EmiPayment } from './emiPayment';
 
 export interface EmiOrderDetail {
   id: number;
-  customerId: number;
   shopId: number;
   /** @nullable */
   productId?: number | null;
@@ -20,10 +19,11 @@ export interface EmiOrderDetail {
   monthlyAmount: number;
   totalPaid?: number;
   remainingAmount?: number;
+  installmentsPaid?: number;
+  /** @nullable */
+  nextDueDate?: string | null;
   status: string;
   purchaseDate: string;
-  /** @nullable */
-  customerName?: string | null;
   /** @nullable */
   shopName?: string | null;
   payments: EmiPayment[];

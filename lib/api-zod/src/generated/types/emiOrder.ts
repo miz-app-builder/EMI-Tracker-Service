@@ -8,7 +8,6 @@
 
 export interface EmiOrder {
   id: number;
-  customerId: number;
   shopId: number;
   /** @nullable */
   productId?: number | null;
@@ -19,10 +18,11 @@ export interface EmiOrder {
   monthlyAmount: number;
   totalPaid?: number;
   remainingAmount?: number;
+  installmentsPaid?: number;
+  /** @nullable */
+  nextDueDate?: string | null;
   status: string;
   purchaseDate: string;
-  /** @nullable */
-  customerName?: string | null;
   /** @nullable */
   shopName?: string | null;
 }
