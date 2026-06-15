@@ -51,57 +51,51 @@ export default function EmiOrders() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Filter row + New EMI button — all in one line */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by product or shop..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={selectedShopId} onValueChange={setSelectedShopId}>
+            <SelectTrigger className="w-[160px]">
+              <Store className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="All Shops" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Shops</SelectItem>
+              {shops?.map((shop) => (
+                <SelectItem key={shop.id} value={shop.id.toString()}>
+                  {shop.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Link href="/emi-orders/new">
-          <Button className="shrink-0">
-            <Plus className="mr-2 h-4 w-4" /> New EMI
-          </Button>
-        </Link>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Link href="/emi-orders/new">
+            <Button className="shrink-0">
+              <Plus className="mr-2 h-4 w-4" /> New EMI
+            </Button>
+          </Link>
+        </div>
       </div>
-
-      <Card className="bg-muted/30 border-dashed">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by product or shop..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={selectedShopId} onValueChange={setSelectedShopId}>
-                <SelectTrigger className="w-[180px] bg-background">
-                  <Store className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="All Shops" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Shops</SelectItem>
-                  {shops?.map((shop) => (
-                    <SelectItem key={shop.id} value={shop.id.toString()}>
-                      {shop.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[150px] bg-background">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <div className="space-y-3">
         {isLoading ? (
