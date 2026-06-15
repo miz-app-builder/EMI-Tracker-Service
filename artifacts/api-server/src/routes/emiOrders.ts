@@ -302,6 +302,20 @@ router.post("/emi-orders/:id/payments", async (req, res) => {
     return;
   }
 
+  const [{ count: paidCount }] = await db
+    .select({ count: sql<string>`COUNT(*)` })
+    .from(emiPaymentsTable)
+    .where(eq(emiPaymentsTable.emiOrderId, id));
+  const installmentsPaid = Number(paidCount ?? 0);
+  const nextDueDate = calcNextDueDate(order.purchaseDate, Number(order.emiMonths), installmentsPaid, order.dueDayOfMonth);
+  if (nextDueDate) {
+    const firstOfDueMonth = nextDueDate.substring(0, 7) + "-01";
+    if (body.paymentDate < firstOfDueMonth) {
+      res.status(400).json({ error: `This installment can only be paid from ${firstOfDueMonth}. It is due on ${nextDueDate}.` });
+      return;
+    }
+  }
+
   const [payment] = await db
     .insert(emiPaymentsTable)
     .values({

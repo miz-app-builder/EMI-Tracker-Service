@@ -79,9 +79,11 @@ function paymentToForm(p: EmiPayment): PaymentFormData {
 function PaymentFormFields({
   data,
   setData,
+  minDate,
 }: {
   data: PaymentFormData;
   setData: React.Dispatch<React.SetStateAction<PaymentFormData>>;
+  minDate?: string;
 }) {
   const set = (key: keyof PaymentFormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -111,7 +113,7 @@ function PaymentFormFields({
         </div>
         <div className="space-y-2">
           <Label htmlFor="pf-date">Date</Label>
-          <Input id="pf-date" type="date" value={data.paymentDate} onChange={set("paymentDate")} required />
+          <Input id="pf-date" type="date" value={data.paymentDate} onChange={set("paymentDate")} required min={minDate} />
         </div>
       </div>
 
@@ -214,6 +216,10 @@ export default function EmiOrderDetail() {
     if (!addForm.amount) return;
     if (order.purchaseDate && addForm.paymentDate < order.purchaseDate) {
       toast({ title: "Invalid payment date", description: `Payment date cannot be before purchase date (${formatDate(order.purchaseDate)}).`, variant: "destructive" });
+      return;
+    }
+    if (nextDueMonthStart && addForm.paymentDate < nextDueMonthStart) {
+      toast({ title: "Too early", description: `This installment can only be paid from ${formatDate(nextDueMonthStart)}.`, variant: "destructive" });
       return;
     }
     createPayment.mutate(
@@ -322,6 +328,10 @@ export default function EmiOrderDetail() {
   const progress = Math.min(100, Math.round(((order.totalPaid ?? 0) / emiTotal) * 100));
   const nextDueBadge = getNextDueBadge(order.nextDueDate, order.status);
 
+  const TODAY = new Date().toISOString().split("T")[0];
+  const nextDueMonthStart = order.nextDueDate ? order.nextDueDate.substring(0, 7) + "-01" : null;
+  const canPayThisMonth = !nextDueMonthStart || TODAY >= nextDueMonthStart;
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* ── Header ── */}
@@ -352,34 +362,42 @@ export default function EmiOrderDetail() {
               <Button variant="outline" onClick={handleStatusComplete} className="text-green-600 border-green-200 hover:bg-green-50">
                 <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Complete
               </Button>
-              <Dialog open={addOpen} onOpenChange={setAddOpen}>
-                <DialogTrigger asChild>
+              <div className="flex flex-col items-end gap-1">
+                <Dialog open={addOpen} onOpenChange={setAddOpen}>
                   <Button
-                    onClick={() => setAddForm(emptyPaymentForm({ amount: String(order.nextMonthlyAmount ?? order.monthlyAmount) }))}
+                    disabled={!canPayThisMonth}
+                    onClick={() => {
+                      if (!canPayThisMonth) return;
+                      setAddForm(emptyPaymentForm({ amount: String(order.nextMonthlyAmount ?? order.monthlyAmount) }));
+                      setAddOpen(true);
+                    }}
                   >
                     <CreditCard className="mr-2 h-4 w-4" /> Pay Installment
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Record Payment</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleAdd} className="space-y-4 pt-2">
-                    <p className="text-xs text-muted-foreground">
-                      Suggested: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
-                      {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
-                        <span className="ml-1">(original: {formatCurrency(order.monthlyAmount)})</span>
-                      )}
-                    </p>
-                    <PaymentFormFields data={addForm} setData={setAddForm} />
-                    <div className="flex justify-end pt-2">
-                      <Button type="submit" disabled={createPayment.isPending}>
-                        {createPayment.isPending ? "Saving..." : "Save Payment"}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record Payment</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleAdd} className="space-y-4 pt-2">
+                      <p className="text-xs text-muted-foreground">
+                        Suggested: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
+                        {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+                          <span className="ml-1">(original: {formatCurrency(order.monthlyAmount)})</span>
+                        )}
+                      </p>
+                      <PaymentFormFields data={addForm} setData={setAddForm} minDate={nextDueMonthStart ?? undefined} />
+                      <div className="flex justify-end pt-2">
+                        <Button type="submit" disabled={createPayment.isPending}>
+                          {createPayment.isPending ? "Saving..." : "Save Payment"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                {!canPayThisMonth && nextDueMonthStart && (
+                  <p className="text-xs text-muted-foreground">Available from {formatDate(nextDueMonthStart)}</p>
+                )}
+              </div>
             </>
           )}
         </div>
