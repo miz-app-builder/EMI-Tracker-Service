@@ -80,10 +80,12 @@ function PaymentFormFields({
   data,
   setData,
   minDate,
+  readOnlyDate,
 }: {
   data: PaymentFormData;
   setData: React.Dispatch<React.SetStateAction<PaymentFormData>>;
   minDate?: string;
+  readOnlyDate?: boolean;
 }) {
   const set = (key: keyof PaymentFormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -113,7 +115,16 @@ function PaymentFormFields({
         </div>
         <div className="space-y-2">
           <Label htmlFor="pf-date">Date</Label>
-          <Input id="pf-date" type="date" value={data.paymentDate} onChange={set("paymentDate")} required min={minDate} />
+          <Input
+            id="pf-date"
+            type="date"
+            value={data.paymentDate}
+            onChange={readOnlyDate ? undefined : set("paymentDate")}
+            required
+            min={minDate}
+            readOnly={readOnlyDate}
+            className={readOnlyDate ? "bg-muted text-muted-foreground cursor-not-allowed pointer-events-none" : ""}
+          />
         </div>
       </div>
 
@@ -410,7 +421,7 @@ export default function EmiOrderDetail() {
             <DialogTitle>Edit Payment</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4 pt-2">
-            <PaymentFormFields data={editForm} setData={setEditForm} />
+            <PaymentFormFields data={editForm} setData={setEditForm} readOnlyDate />
             <div className="flex justify-end pt-2">
               <Button type="submit" disabled={updatePayment.isPending}>
                 {updatePayment.isPending ? "Saving..." : "Save Changes"}
