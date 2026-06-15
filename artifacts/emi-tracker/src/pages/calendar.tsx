@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle, CheckCircle2, Clock } from "lucide-react";
-import { useGetEmiOrders } from "@workspace/api-client-react";
+import { useListEmiOrders } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -37,7 +37,7 @@ export default function CalendarPage() {
   const [viewDate, setViewDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<number | null>(() => today.getDate());
 
-  const { data: orders, isLoading } = useGetEmiOrders({});
+  const { data: orders, isLoading } = useListEmiOrders({});
 
   // Map: day-of-month → list of EMIs due on that day in viewDate's month
   const dayMap = useMemo(() => {
