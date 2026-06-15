@@ -12,6 +12,7 @@ import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { QuickPayDialog } from "@/components/QuickPayDialog";
+import { SpendingTrendChart } from "@/components/SpendingTrendChart";
 
 function getDaysUntil(dateStr: string | null | undefined) {
   if (!dateStr) return null;
@@ -134,6 +135,8 @@ export default function Dashboard() {
           </Card>
         </Link>
       </div>
+
+      <SpendingTrendChart />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">

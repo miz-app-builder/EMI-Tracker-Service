@@ -1435,6 +1435,47 @@ export function useGetDueThisMonth<TData = Awaited<ReturnType<typeof getDueThisM
 
 
 
+export type MonthlySpending = {
+  month: string;
+  label: string;
+  totalPaid: number;
+};
+
+export const getGetMonthlySpendingUrl = () => {
+  return `/api/dashboard/monthly-spending`;
+};
+
+export const getMonthlySpending = async (options?: RequestInit): Promise<MonthlySpending[]> => {
+  return customFetch<MonthlySpending[]>(getGetMonthlySpendingUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetMonthlySpendingQueryKey = () => {
+  return [`/api/dashboard/monthly-spending`] as const;
+};
+
+export const getGetMonthlySpendingQueryOptions = <TData = Awaited<ReturnType<typeof getMonthlySpending>>, TError = ErrorType<unknown>>(
+  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getMonthlySpending>>, TError, TData>; request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetMonthlySpendingQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthlySpending>>> = ({ signal }) => getMonthlySpending({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getMonthlySpending>>, TError, TData> & { queryKey: QueryKey };
+};
+
+export type GetMonthlySpendingQueryResult = NonNullable<Awaited<ReturnType<typeof getMonthlySpending>>>;
+export type GetMonthlySpendingQueryError = ErrorType<unknown>;
+
+export function useGetMonthlySpending<TData = Awaited<ReturnType<typeof getMonthlySpending>>, TError = ErrorType<unknown>>(
+  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getMonthlySpending>>, TError, TData>; request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMonthlySpendingQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 export const getGetShopStatsUrl = () => {
 
 

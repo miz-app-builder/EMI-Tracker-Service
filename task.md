@@ -21,7 +21,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T02 — Export to PDF / Excel**
   Download payment history or full EMI summary as a PDF or Excel file.
 
-- [ ] **T03 — Spending Trends Chart**
+- [x] **T03 — Spending Trends Chart**
   Line chart on dashboard showing EMI spend trend month-over-month.
 
 ---

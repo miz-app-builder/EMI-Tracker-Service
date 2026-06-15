@@ -246,4 +246,45 @@ router.get("/dashboard/shop-stats", async (req, res) => {
   }));
 });
 
+router.get("/dashboard/monthly-spending", async (req, res) => {
+  const userId = await resolveUserId((req as any).userId);
+  if (!userId) { res.status(401).json({ error: "User not found" }); return; }
+
+  const orderIds = await db
+    .select({ id: emiOrdersTable.id })
+    .from(emiOrdersTable)
+    .where(eq(emiOrdersTable.userId, userId));
+
+  if (orderIds.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const ids = orderIds.map((o) => o.id);
+
+  const rows = await db
+    .select({
+      month: sql<string>`TO_CHAR(${emiPaymentsTable.paymentDate}, 'YYYY-MM')`,
+      totalPaid: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)`,
+    })
+    .from(emiPaymentsTable)
+    .where(sql`${emiPaymentsTable.emiOrderId} = ANY(ARRAY[${sql.raw(ids.join(","))}]::int[])`)
+    .groupBy(sql`TO_CHAR(${emiPaymentsTable.paymentDate}, 'YYYY-MM')`)
+    .orderBy(sql`TO_CHAR(${emiPaymentsTable.paymentDate}, 'YYYY-MM')`);
+
+  const paidByMonth: Record<string, number> = {};
+  rows.forEach((r) => { paidByMonth[r.month] = Number(r.totalPaid); });
+
+  const now = new Date();
+  const result = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleString("en-US", { month: "short", year: "2-digit" });
+    result.push({ month: key, label, totalPaid: paidByMonth[key] ?? 0 });
+  }
+
+  res.json(result);
+});
+
 export default router;
