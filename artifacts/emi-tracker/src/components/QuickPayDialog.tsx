@@ -20,6 +20,7 @@ import {
 import { CreditCard, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/format";
+import { SmsPastePanel } from "@/components/SmsPastePanel";
 
 const PAYMENT_METHODS = ["Cash", "Bank Transfer", "bKash", "Nagad", "Rocket"];
 
@@ -126,6 +127,18 @@ export function QuickPayDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <SmsPastePanel
+            onApply={(parsed) =>
+              setForm((p) => ({
+                ...p,
+                ...(parsed.paymentMethod ? { paymentMethod: parsed.paymentMethod, bankName: "", accountNumber: "", transactionId: "" } : {}),
+                ...(parsed.amount !== null ? { amount: String(parsed.amount) } : {}),
+                ...(parsed.accountNumber ? { accountNumber: parsed.accountNumber } : {}),
+                ...(parsed.transactionId ? { transactionId: parsed.transactionId } : {}),
+              }))
+            }
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="qp-amount">

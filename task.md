@@ -126,7 +126,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 🌐 Integration Ideas
 
-- [ ] **T26 — bKash / Nagad SMS Parser**
+- [x] **T26 — bKash / Nagad SMS Parser**
   Paste a payment SMS and the app auto-fills amount and transaction ID in the payment form.
 
 - [ ] **T27 — WhatsApp Reminder**
@@ -138,6 +138,13 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 ---
 
 ## ✅ Completed Tasks
+
+- [x] **T26 — bKash / Nagad SMS Parser** _(2026-06-15)_
+  - **Pure frontend** — no backend changes. Regex parser in `lib/smsParser.ts`.
+  - **Detects**: bKash / Nagad / Rocket (from SMS text); amount (`Tk`, `Taka`, `৳`); transaction ID (`TrxID`, `Ref`, or `AB1234...` patterns); phone number (`01[3-9]XXXXXXXX`).
+  - **Reusable component** `components/SmsPastePanel.tsx` — collapsible "SMS থেকে auto-fill করুন" panel; paste SMS → shows detected fields as badges → "Form-এ apply করুন" button fills the form.
+  - **Added to QuickPayDialog** (from due-this-month / overdue screens) and **PaymentFormFields in detail.tsx** (EMI order detail payment section).
+  - Apply only patches detected fields; undetected fields remain unchanged.
 
 - [x] **T06 — Bulk Payment** _(2026-06-15)_
   - **No new backend needed** — uses existing `POST /api/emi-orders/:id/payments` sequentially for each selected order.

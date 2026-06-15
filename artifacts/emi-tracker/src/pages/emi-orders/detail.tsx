@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { SmsPastePanel } from "@/components/SmsPastePanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -91,6 +92,18 @@ function PaymentFormFields({
 
   return (
     <div className="space-y-4">
+      <SmsPastePanel
+        onApply={(parsed) =>
+          setData((p) => ({
+            ...p,
+            ...(parsed.paymentMethod ? { paymentMethod: parsed.paymentMethod, bankName: "", accountNumber: "", transactionId: "" } : {}),
+            ...(parsed.amount !== null ? { amount: String(parsed.amount) } : {}),
+            ...(parsed.accountNumber ? { accountNumber: parsed.accountNumber } : {}),
+            ...(parsed.transactionId ? { transactionId: parsed.transactionId } : {}),
+          }))
+        }
+      />
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="pf-amount">Amount (BDT) <span className="text-destructive">*</span></Label>
