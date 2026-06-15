@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, emiOrdersTable, emiPaymentsTable, shopsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import {
   CreateEmiOrderBody,
   UpdateEmiOrderBody,
@@ -28,7 +28,6 @@ function calcNextDueDate(
   date.setMonth(date.getMonth() + next);
 
   if (dueDayOfMonth) {
-    // Clamp to last day of that month (e.g. 31 in February → 28/29)
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     date.setDate(Math.min(dueDayOfMonth, lastDay));
   }
@@ -47,7 +46,6 @@ function formatOrder(order: Record<string, unknown>, totalPaid: number, installm
   const remaining = Math.max(0, emiTotal - totalPaid);
   const remainingMonths = Math.max(0, emiMonths - installmentsPaid);
 
-  // Dynamic next monthly amount: remaining balance divided by remaining months
   const nextMonthlyAmount = remainingMonths > 0 ? Math.ceil(remaining / remainingMonths) : 0;
 
   const nextDueDate = order.status === "completed"
@@ -70,6 +68,7 @@ function formatOrder(order: Record<string, unknown>, totalPaid: number, installm
 }
 
 router.get("/emi-orders", async (req, res) => {
+  const userId = (req as any).userId;
   const query = ListEmiOrdersQueryParams.parse(req.query);
 
   const rows = await db
@@ -90,6 +89,7 @@ router.get("/emi-orders", async (req, res) => {
     })
     .from(emiOrdersTable)
     .leftJoin(shopsTable, eq(emiOrdersTable.shopId, shopsTable.id))
+    .where(eq(emiOrdersTable.userId, userId))
     .orderBy(emiOrdersTable.id);
 
   const filtered = rows.filter((r) => {
@@ -123,9 +123,9 @@ router.get("/emi-orders", async (req, res) => {
 });
 
 router.post("/emi-orders", async (req, res) => {
+  const userId = (req as any).userId;
   const body = CreateEmiOrderBody.parse(req.body);
 
-  // Auto-calculate monthly amount: (totalPrice - discount - downPayment) / months
   const discount = body.discount ?? 0;
   const effectivePrice = body.totalPrice - discount;
   const emiTotal = effectivePrice - body.downPayment;
@@ -134,6 +134,7 @@ router.post("/emi-orders", async (req, res) => {
   const [order] = await db
     .insert(emiOrdersTable)
     .values({
+      userId,
       shopId: body.shopId,
       productId: body.productId ?? null,
       productName: body.productName,
@@ -160,6 +161,7 @@ router.post("/emi-orders", async (req, res) => {
 });
 
 router.get("/emi-orders/:id", async (req, res) => {
+  const userId = (req as any).userId;
   const { id } = GetEmiOrderParams.parse({ id: Number(req.params.id) });
 
   const [order] = await db
@@ -180,7 +182,7 @@ router.get("/emi-orders/:id", async (req, res) => {
     })
     .from(emiOrdersTable)
     .leftJoin(shopsTable, eq(emiOrdersTable.shopId, shopsTable.id))
-    .where(eq(emiOrdersTable.id, id));
+    .where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)));
 
   if (!order) {
     res.status(404).json({ error: "EMI order not found" });
@@ -209,6 +211,7 @@ router.get("/emi-orders/:id", async (req, res) => {
 });
 
 router.put("/emi-orders/:id", async (req, res) => {
+  const userId = (req as any).userId;
   const { id } = UpdateEmiOrderParams.parse({ id: Number(req.params.id) });
   const body = UpdateEmiOrderBody.parse(req.body);
 
@@ -221,12 +224,11 @@ router.put("/emi-orders/:id", async (req, res) => {
   if (body.status !== undefined) updateData.status = body.status;
   if (body.purchaseDate !== undefined) updateData.purchaseDate = body.purchaseDate;
 
-  // If price/down payment/months changed, recalculate monthlyAmount
   if (
     (body.totalPrice !== undefined || body.downPayment !== undefined || body.emiMonths !== undefined) &&
     body.monthlyAmount === undefined
   ) {
-    const [existing] = await db.select().from(emiOrdersTable).where(eq(emiOrdersTable.id, id));
+    const [existing] = await db.select().from(emiOrdersTable).where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)));
     if (existing) {
       const totalPrice = body.totalPrice ?? Number(existing.totalPrice);
       const downPayment = body.downPayment ?? Number(existing.downPayment);
@@ -239,7 +241,7 @@ router.put("/emi-orders/:id", async (req, res) => {
   const [order] = await db
     .update(emiOrdersTable)
     .set(updateData)
-    .where(eq(emiOrdersTable.id, id))
+    .where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)))
     .returning();
   if (!order) {
     res.status(404).json({ error: "EMI order not found" });
@@ -260,14 +262,23 @@ router.put("/emi-orders/:id", async (req, res) => {
 });
 
 router.delete("/emi-orders/:id", async (req, res) => {
+  const userId = (req as any).userId;
   const { id } = DeleteEmiOrderParams.parse({ id: Number(req.params.id) });
+  // Verify ownership before deleting
+  const [order] = await db.select({ id: emiOrdersTable.id }).from(emiOrdersTable).where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)));
+  if (!order) { res.status(404).json({ error: "EMI order not found" }); return; }
   await db.delete(emiPaymentsTable).where(eq(emiPaymentsTable.emiOrderId, id));
   await db.delete(emiOrdersTable).where(eq(emiOrdersTable.id, id));
   res.status(204).send();
 });
 
 router.get("/emi-orders/:id/payments", async (req, res) => {
+  const userId = (req as any).userId;
   const { id } = ListEmiPaymentsParams.parse({ id: Number(req.params.id) });
+  // Verify ownership
+  const [order] = await db.select({ id: emiOrdersTable.id }).from(emiOrdersTable).where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)));
+  if (!order) { res.status(404).json({ error: "EMI order not found" }); return; }
+
   const payments = await db
     .select()
     .from(emiPaymentsTable)
@@ -284,8 +295,13 @@ router.get("/emi-orders/:id/payments", async (req, res) => {
 });
 
 router.post("/emi-orders/:id/payments", async (req, res) => {
+  const userId = (req as any).userId;
   const { id } = CreateEmiPaymentParams.parse({ id: Number(req.params.id) });
   const body = CreateEmiPaymentBody.parse(req.body);
+
+  // Verify ownership
+  const [order] = await db.select().from(emiOrdersTable).where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)));
+  if (!order) { res.status(404).json({ error: "EMI order not found" }); return; }
 
   const [payment] = await db
     .insert(emiPaymentsTable)
@@ -301,19 +317,14 @@ router.post("/emi-orders/:id/payments", async (req, res) => {
     })
     .returning();
 
-  const [order] = await db.select().from(emiOrdersTable).where(eq(emiOrdersTable.id, id));
-  if (order) {
-    const totals = await db
-      .select({
-        total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)`,
-      })
-      .from(emiPaymentsTable)
-      .where(eq(emiPaymentsTable.emiOrderId, id));
-    const totalPaid = Number(totals[0]?.total ?? 0);
-    const emiTotal = Number(order.totalPrice) - Number(order.downPayment);
-    if (totalPaid >= emiTotal && order.status !== "completed") {
-      await db.update(emiOrdersTable).set({ status: "completed" }).where(eq(emiOrdersTable.id, id));
-    }
+  const totals = await db
+    .select({ total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)` })
+    .from(emiPaymentsTable)
+    .where(eq(emiPaymentsTable.emiOrderId, id));
+  const totalPaid = Number(totals[0]?.total ?? 0);
+  const emiTotal = Number(order.totalPrice) - Number(order.discount ?? 0) - Number(order.downPayment);
+  if (totalPaid >= emiTotal && order.status !== "completed") {
+    await db.update(emiOrdersTable).set({ status: "completed" }).where(eq(emiOrdersTable.id, id));
   }
 
   res.status(201).json({
@@ -324,7 +335,14 @@ router.post("/emi-orders/:id/payments", async (req, res) => {
 });
 
 router.delete("/payments/:paymentId", async (req, res) => {
+  const userId = (req as any).userId;
   const { paymentId } = DeleteEmiPaymentParams.parse({ paymentId: Number(req.params.paymentId) });
+  // Verify ownership via join
+  const [payment] = await db.select({ id: emiPaymentsTable.id })
+    .from(emiPaymentsTable)
+    .innerJoin(emiOrdersTable, and(eq(emiPaymentsTable.emiOrderId, emiOrdersTable.id), eq(emiOrdersTable.userId, userId)))
+    .where(eq(emiPaymentsTable.id, paymentId));
+  if (!payment) { res.status(404).json({ error: "Payment not found" }); return; }
   await db.delete(emiPaymentsTable).where(eq(emiPaymentsTable.id, paymentId));
   res.status(204).send();
 });
