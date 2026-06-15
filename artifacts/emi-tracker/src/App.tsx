@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -102,6 +102,29 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+function UserSyncer() {
+  const { user, isLoaded } = useUser();
+  const syncedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    if (syncedRef.current === user.id) return;
+    syncedRef.current = user.id;
+
+    const email = user.primaryEmailAddress?.emailAddress ?? "";
+    const name = user.fullName ?? user.firstName ?? "";
+
+    fetch(`${basePath}/api/users/me`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, name }),
+    }).catch(() => {});
+  }, [isLoaded, user]);
+
+  return null;
+}
+
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
   const qc = useQueryClient();
@@ -135,6 +158,7 @@ function ClerkProviderWithRoutes() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <UserSyncer />
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <Switch>
