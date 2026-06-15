@@ -22,8 +22,12 @@ export const HealthCheckResponse = zod.object({
 export const ListShopsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "branch": zod.string().nullish(),
   "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "contactPerson": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 export const ListShopsResponse = zod.array(ListShopsResponseItem)
@@ -37,8 +41,12 @@ export const ListShopsResponse = zod.array(ListShopsResponseItem)
 
 export const CreateShopBody = zod.object({
   "name": zod.string().min(1),
+  "branch": zod.string().nullish(),
   "phone": zod.string().nullish(),
-  "address": zod.string().nullish()
+  "email": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "contactPerson": zod.string().nullish()
 })
 
 
@@ -52,8 +60,12 @@ export const GetShopParams = zod.object({
 export const GetShopResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "branch": zod.string().nullish(),
   "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "contactPerson": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 
@@ -70,15 +82,23 @@ export const UpdateShopParams = zod.object({
 
 export const UpdateShopBody = zod.object({
   "name": zod.string().min(1),
+  "branch": zod.string().nullish(),
   "phone": zod.string().nullish(),
-  "address": zod.string().nullish()
+  "email": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "contactPerson": zod.string().nullish()
 })
 
 export const UpdateShopResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "branch": zod.string().nullish(),
   "phone": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "address": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "contactPerson": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 

@@ -13,9 +13,17 @@ export interface Shop {
   id: number;
   name: string;
   /** @nullable */
+  branch?: string | null;
+  /** @nullable */
   phone?: string | null;
   /** @nullable */
+  email?: string | null;
+  /** @nullable */
   address?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
+  contactPerson?: string | null;
   createdAt?: string;
 }
 
@@ -23,9 +31,17 @@ export interface ShopInput {
   /** @minLength 1 */
   name: string;
   /** @nullable */
+  branch?: string | null;
+  /** @nullable */
   phone?: string | null;
   /** @nullable */
+  email?: string | null;
+  /** @nullable */
   address?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
+  contactPerson?: string | null;
 }
 
 export interface Product {
