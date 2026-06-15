@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
+import { useEffect, useRef, useState, createContext, useContext } from "react";
+import { ClerkProvider, SignIn, Show, useClerk, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +14,7 @@ import EmiOrders from "@/pages/emi-orders/index";
 import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
 import CompleteProfile from "@/pages/complete-profile";
+import CustomSignUp from "@/pages/sign-up";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,18 +64,6 @@ function SignInPage() {
   );
 }
 
-function SignUpPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <SignUp
-        routing="path"
-        path={`${basePath}/sign-up`}
-        signInUrl={`${basePath}/sign-in`}
-      />
-    </div>
-  );
-}
-
 function HomeRedirect() {
   return (
     <>
@@ -103,13 +92,17 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
-// Context to share profile-complete state across components
-import { createContext, useContext } from "react";
-const ProfileCtx = createContext<{ profileCompleted: boolean; setProfileCompleted: (v: boolean) => void }>({
+const ProfileCtx = createContext<{
+  profileCompleted: boolean;
+  setProfileCompleted: (v: boolean) => void;
+}>({
   profileCompleted: true,
   setProfileCompleted: () => {},
 });
-export function useProfile() { return useContext(ProfileCtx); }
+
+export function useProfile() {
+  return useContext(ProfileCtx);
+}
 
 function UserSyncer() {
   const { user, isLoaded } = useUser();
@@ -187,17 +180,25 @@ function ClerkProviderWithRoutes() {
             <Switch>
               <Route path="/" component={HomeRedirect} />
               <Route path="/sign-in/*?" component={SignInPage} />
-              <Route path="/sign-up/*?" component={SignUpPage} />
-              <Route path="/complete-profile" component={() => (
-                <>
-                  <Show when="signed-in">
-                    <CompleteProfile onComplete={() => { setProfileCompleted(true); setLocation("/dashboard"); }} />
-                  </Show>
-                  <Show when="signed-out">
-                    <Redirect to="/sign-in" />
-                  </Show>
-                </>
-              )} />
+              <Route path="/sign-up/*?" component={CustomSignUp} />
+              <Route
+                path="/complete-profile"
+                component={() => (
+                  <>
+                    <Show when="signed-in">
+                      <CompleteProfile
+                        onComplete={() => {
+                          setProfileCompleted(true);
+                          setLocation("/dashboard");
+                        }}
+                      />
+                    </Show>
+                    <Show when="signed-out">
+                      <Redirect to="/sign-in" />
+                    </Show>
+                  </>
+                )}
+              />
               <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
               <Route path="/shops" component={() => <ProtectedRoute component={Shops} />} />
               <Route path="/emi-orders" component={() => <ProtectedRoute component={EmiOrders} />} />
