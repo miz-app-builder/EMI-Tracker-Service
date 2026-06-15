@@ -16,6 +16,7 @@ import LandingPage from "@/pages/landing";
 import OverduePage from "@/pages/overdue";
 import ReportsPage from "@/pages/reports";
 import DebtOverviewPage from "@/pages/debt-overview";
+import CalculatorPage from "@/pages/calculator";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function Routes() {
       <Route path="/overdue" component={() => <ProtectedRoute component={OverduePage} />} />
       <Route path="/reports" component={() => <ProtectedRoute component={ReportsPage} />} />
       <Route path="/debt-overview" component={() => <ProtectedRoute component={DebtOverviewPage} />} />
+      <Route path="/calculator" component={() => <ProtectedRoute component={CalculatorPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

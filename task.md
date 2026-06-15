@@ -73,7 +73,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T14 — Global Search**
   Search bar that searches across all shops, products, and payments at once.
 
-- [ ] **T15 — EMI Calculator (Standalone)**
+- [x] **T15 — EMI Calculator (Standalone)**
   A tool page: enter total price, down payment, months → see monthly amount instantly.
 
 ---
