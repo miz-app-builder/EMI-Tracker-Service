@@ -16,6 +16,7 @@ import {
   UpdateEmiPaymentBody,
 } from "@workspace/api-zod";
 import { resolveUserId } from "../lib/resolveUserId";
+import { logActivity } from "../lib/logActivity";
 
 const router = Router();
 
@@ -156,6 +157,7 @@ router.post("/emi-orders", async (req, res) => {
     .returning();
 
   const [shop] = await db.select().from(shopsTable).where(eq(shopsTable.id, order.shopId));
+  logActivity(userId, "order_created", `Created EMI order: ${order.productName}`);
   res.status(201).json(
     formatOrder({ ...order, shopName: shop?.name ?? null } as Record<string, unknown>, 0, 0)
   );
@@ -340,6 +342,7 @@ router.post("/emi-orders/:id/payments", async (req, res) => {
     await db.update(emiOrdersTable).set({ status: "completed" }).where(eq(emiOrdersTable.id, id));
   }
 
+  logActivity(userId, "payment_recorded", `Payment of ৳${body.amount} recorded for order #${id}`);
   res.status(201).json({ ...payment, amount: Number(payment.amount), createdAt: payment.createdAt.toISOString() });
 });
 
@@ -356,6 +359,7 @@ router.delete("/payments/:paymentId", async (req, res) => {
   if (!row) { res.status(404).json({ error: "Payment not found" }); return; }
 
   await db.delete(emiPaymentsTable).where(eq(emiPaymentsTable.id, paymentId));
+  logActivity(userId, "payment_deleted", `Payment #${paymentId} deleted`);
 
   // Revert order status to active if total paid drops below threshold
   const [order] = await db.select().from(emiOrdersTable).where(eq(emiOrdersTable.id, row.emiOrderId));

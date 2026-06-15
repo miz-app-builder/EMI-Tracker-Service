@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { logActivity } from "../lib/logActivity";
 
 const router = Router();
 const objectStorageService = new ObjectStorageService();
@@ -43,6 +44,7 @@ router.patch("/users/me", async (req, res) => {
     .where(eq(usersTable.id, userId))
     .returning(USER_SELECT);
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  logActivity(userId, "profile_updated", "Profile information updated");
   res.json(user);
 });
 
@@ -77,6 +79,7 @@ router.post("/users/me/change-password", async (req, res) => {
     .set({ passwordHash, passwordChangedAt: new Date() })
     .where(eq(usersTable.id, userId));
 
+  logActivity(userId, "password_changed", "Password changed");
   res.json({ ok: true });
 });
 

@@ -4,11 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Store, FileText, CreditCard } from "lucide-react";
+import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Store, FileText, CreditCard, Shield, Clock, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { usePinLock } from "@/hooks/usePinLock";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -419,6 +421,162 @@ export default function ProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      <PinSettingsCard />
+      <AutoLogoutCard />
     </div>
+  );
+}
+
+function PinSettingsCard() {
+  const { hasPin, setPin, removePin } = usePinLock();
+  const [mode, setMode] = useState<"idle" | "set" | "change" | "remove">("idle");
+  const [step, setStep] = useState<"enter" | "confirm">("enter");
+  const [pin1, setPin1] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  function reset() { setMode("idle"); setStep("enter"); setPin1(""); setPin2(""); setError(""); }
+
+  function handleSubmit() {
+    if (mode === "remove") {
+      const ok = removePin(pin1);
+      if (!ok) { setError("ভুল PIN"); return; }
+      setSuccess("PIN সরিয়ে দেওয়া হয়েছে।"); reset(); return;
+    }
+    if (step === "enter") {
+      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("৪-ডিজিটের সংখ্যা দিন"); return; }
+      setStep("confirm"); setPin2(""); setError(""); return;
+    }
+    if (pin1 !== pin2) { setError("PIN দুটো মিলছে না"); setPin2(""); return; }
+    setPin(pin1);
+    setSuccess("PIN সফলভাবে সেট হয়েছে!");
+    reset();
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Shield className="h-4 w-4 text-primary" />
+          PIN Lock
+        </CardTitle>
+        <CardDescription>
+          অ্যাপ খোলার সময় ৪-ডিজিটের PIN দিয়ে সুরক্ষিত রাখুন।{" "}
+          {hasPin ? <span className="text-green-600 font-medium">PIN সক্রিয় আছে ✓</span> : <span className="text-muted-foreground">PIN সেট নেই</span>}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
+
+        {mode === "idle" ? (
+          <div className="flex flex-wrap gap-2">
+            {!hasPin && (
+              <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("set"); setSuccess(""); }}>
+                <Shield className="h-4 w-4" /> PIN সেট করুন
+              </Button>
+            )}
+            {hasPin && (
+              <>
+                <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("change"); setSuccess(""); }}>
+                  <KeyRound className="h-4 w-4" /> PIN পরিবর্তন
+                </Button>
+                <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("remove"); setSuccess(""); }}>
+                  <Trash2 className="h-4 w-4" /> PIN সরিয়ে দিন
+                </Button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3 max-w-xs">
+            <Label>
+              {mode === "remove"
+                ? "বর্তমান PIN দিন"
+                : step === "enter"
+                ? mode === "change" ? "নতুন PIN দিন" : "PIN দিন (৪ সংখ্যা)"
+                : "PIN নিশ্চিত করুন"}
+            </Label>
+            <Input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="••••"
+              value={mode === "remove" ? pin1 : step === "enter" ? pin1 : pin2}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                if (mode === "remove" || step === "enter") setPin1(v); else setPin2(v);
+              }}
+              className="tracking-widest text-center text-lg"
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSubmit}>
+                {mode === "remove" ? "সরিয়ে দিন" : step === "enter" ? "পরবর্তী" : "সংরক্ষণ"}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={reset}>বাতিল</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+const AUTO_LOGOUT_OPTIONS = [
+  { label: "বন্ধ (Auto logout নেই)", value: "0" },
+  { label: "৫ মিনিট", value: "5" },
+  { label: "১০ মিনিট", value: "10" },
+  { label: "১৫ মিনিট", value: "15" },
+  { label: "৩০ মিনিট", value: "30" },
+  { label: "১ ঘণ্টা", value: "60" },
+];
+
+function AutoLogoutCard() {
+  const stored = parseInt(localStorage.getItem("emi_auto_logout_minutes") ?? "0", 10) || 0;
+  const [minutes, setMinutes] = useState(String(stored));
+  const [saved, setSaved] = useState(false);
+
+  function save() {
+    localStorage.setItem("emi_auto_logout_minutes", minutes);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Clock className="h-4 w-4 text-primary" />
+          Auto Logout
+        </CardTitle>
+        <CardDescription>
+          নির্দিষ্ট সময় নিষ্ক্রিয় থাকলে স্বয়ংক্রিয়ভাবে logout হবে।
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Select value={minutes} onValueChange={setMinutes}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="সময় বেছে নিন" />
+            </SelectTrigger>
+            <SelectContent>
+              {AUTO_LOGOUT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={save} className="gap-2">
+            {saved ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <Save className="h-4 w-4" />}
+            {saved ? "সংরক্ষিত!" : "সংরক্ষণ"}
+          </Button>
+        </div>
+        {minutes !== "0" && (
+          <p className="text-xs text-muted-foreground">
+            {minutes} মিনিট নিষ্ক্রিয় থাকলে স্বয়ংক্রিয়ভাবে logout হবে এবং ৩০ সেকেন্ড আগে সতর্কতা দেখাবে।
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

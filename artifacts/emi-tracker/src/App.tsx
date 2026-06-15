@@ -22,6 +22,9 @@ import SearchPage from "@/pages/search";
 import BulkPayPage from "@/pages/bulk-pay";
 import ReceiptPage from "@/pages/receipt";
 import ExportPage from "@/pages/export";
+import ActivityLogPage from "@/pages/activity-log";
+import { PinLockScreen } from "@/components/PinLockScreen";
+import { usePinLock } from "@/hooks/usePinLock";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,9 +74,16 @@ function Routes() {
       <Route path="/bulk-pay" component={() => <ProtectedRoute component={BulkPayPage} />} />
       <Route path="/emi-orders/:id/payments/:paymentId/receipt" component={() => <ProtectedRoute component={ReceiptPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
+      <Route path="/activity-log" component={() => <ProtectedRoute component={ActivityLogPage} />} />
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+function PinGate({ children }: { children: React.ReactNode }) {
+  const { unlocked, verifyPin } = usePinLock();
+  if (!unlocked) return <PinLockScreen onUnlock={verifyPin} />;
+  return <>{children}</>;
 }
 
 function App() {
@@ -82,8 +92,10 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <Routes />
-            <Toaster />
+            <PinGate>
+              <Routes />
+              <Toaster />
+            </PinGate>
           </TooltipProvider>
         </QueryClientProvider>
       </AuthProvider>

@@ -113,13 +113,13 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 🔐 Security & Trust
 
-- [ ] **T23 — PIN Lock**
+- [x] **T23 — PIN Lock**
   4-digit PIN to open the app (protects sensitive financial data from others who have phone access).
 
-- [ ] **T24 — Activity Log**
+- [x] **T24 — Activity Log**
   History of all important actions: login, payment recorded, order created, profile changed — with timestamp.
 
-- [ ] **T25 — Auto Logout**
+- [x] **T25 — Auto Logout**
   Automatically log out after a configurable period of inactivity (e.g. 15 min, 30 min, 1 hour).
 
 ---

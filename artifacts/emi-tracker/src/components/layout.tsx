@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, CreditCard, Download } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, CreditCard, Activity, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,10 +10,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetDashboardSummary, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useTheme } from "@/hooks/useTheme";
+import { useAutoLogout } from "@/hooks/useAutoLogout";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -30,6 +39,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/bulk-pay": "Bulk Payment",
   "/profile": "Profile Settings",
   "/export": "Export My Data",
+  "/activity-log": "Activity Log",
 };
 
 function getPageTitle(location: string) {
@@ -54,10 +64,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/calendar", label: "Calendar", icon: CalendarDays },
     { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
     { href: "/bulk-pay", label: "Bulk Payment", icon: CreditCard },
+    { href: "/activity-log", label: "Activity Log", icon: Activity },
   ];
 
   const { theme, toggle: toggleTheme } = useTheme(user?.themePreference);
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
+
+  const handleAutoLogout = useCallback(() => { logout(); }, [logout]);
+  const { warningVisible, secondsLeft, dismiss } = useAutoLogout(handleAutoLogout);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -75,6 +89,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const photoSrc = user?.profilePhotoUrl ? `${basePath}/api/users/me/photo` : undefined;
 
   return (
+    <>
+    <Dialog open={warningVisible} onOpenChange={() => dismiss()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-amber-600">
+            <ShieldAlert className="h-5 w-5" />
+            Auto Logout সতর্কতা
+          </DialogTitle>
+          <DialogDescription>
+            দীর্ঘ সময় নিষ্ক্রিয় থাকার কারণে{" "}
+            <span className="font-bold text-foreground">{secondsLeft}</span> সেকেন্ডের মধ্যে আপনাকে logout করা হবে।
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={dismiss}>
+            সক্রিয় আছি — থাকুন
+          </Button>
+          <Button variant="destructive" onClick={logout}>
+            এখনই Logout
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <div className="min-h-screen flex w-full bg-background print:block print:h-auto">
       <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex-col hidden md:flex print:hidden">
         <div className="p-6">
@@ -200,5 +238,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
     </div>
+    </>
   );
 }

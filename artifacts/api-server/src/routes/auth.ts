@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { logActivity } from "../lib/logActivity";
 
 const router = Router();
 const COOKIE_NAME = "emi_token";
@@ -47,6 +48,7 @@ router.post("/auth/signup", async (req, res) => {
 
   const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
+  logActivity(user.id, "signup", "Account created");
   res.status(201).json({ id: user.id, email: user.email, name: user.name });
 });
 
@@ -75,10 +77,21 @@ router.post("/auth/login", async (req, res) => {
   await db.update(usersTable).set({ lastActiveAt: new Date() }).where(eq(usersTable.email, email.toLowerCase()));
   const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
+  logActivity(user.id, "login", "Logged in");
   res.json({ id: user.id, email: user.email, name: user.name });
 });
 
-router.post("/auth/logout", (_req, res) => {
+router.post("/auth/logout", (req, res) => {
+  const secret = process.env.SESSION_SECRET;
+  if (secret) {
+    try {
+      const token = (req as any).cookies?.[COOKIE_NAME];
+      if (token) {
+        const payload = jwt.verify(token, secret) as { userId: string };
+        logActivity(payload.userId, "logout", "Logged out");
+      }
+    } catch {}
+  }
   res.clearCookie(COOKIE_NAME);
   res.json({ ok: true });
 });
