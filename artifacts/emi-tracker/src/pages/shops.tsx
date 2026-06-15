@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Store, Plus, MapPin, Phone, Trash2, User2, Mail, Globe, Pencil, Building2 } from "lucide-react";
+import { Store, Plus, MapPin, Phone, Trash2, User2, Mail, Globe, Pencil, Building2, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +114,7 @@ function ShopForm({
 
 export default function Shops() {
   const { data: shops, isLoading } = useListShops({ query: { queryKey: getListShopsQueryKey() } });
+  const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editShop, setEditShop] = useState<Shop | null>(null);
   const queryClient = useQueryClient();
@@ -202,10 +203,27 @@ export default function Shops() {
     );
   };
 
+  const filteredShops = shops?.filter((s) => {
+    const q = search.toLowerCase();
+    return (
+      s.name?.toLowerCase().includes(q) ||
+      s.branch?.toLowerCase().includes(q) ||
+      s.contactPerson?.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search shops..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
@@ -256,14 +274,14 @@ export default function Shops() {
               </CardContent>
             </Card>
           ))
-        ) : shops?.length === 0 ? (
+        ) : filteredShops?.length === 0 ? (
           <div className="col-span-full py-12 text-center border rounded-lg bg-muted/20">
             <Store className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
             <h3 className="text-lg font-medium">No shops yet</h3>
             <p className="text-muted-foreground text-sm mt-1">Add your first shop to start tracking EMIs.</p>
           </div>
         ) : (
-          shops?.map((shop) => (
+          filteredShops?.map((shop) => (
             <Card key={shop.id} className="overflow-hidden group hover:shadow-md transition-shadow">
               <CardHeader className="bg-muted/30 pb-4 border-b">
                 <div className="flex items-start justify-between gap-2">
