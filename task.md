@@ -83,7 +83,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T16 — Early Payoff Calculator**
   Shows how much you save if you pay off the remaining balance today.
 
-- [ ] **T17 — Total Debt Overview**
+- [x] **T17 — Total Debt Overview**
   One-screen summary of all active EMIs combined: total owed, months left, projected payoff date.
 
 - [x] **T18 — Overdue Summary Page**
