@@ -61,7 +61,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 📱 UX / Convenience
 
-- [ ] **T11 — Dark Mode Toggle**
+- [x] **T11 — Dark Mode Toggle**
   Light/dark mode switch accessible from profile or header.
 
 - [x] **T12 — Quick Pay from Dashboard**

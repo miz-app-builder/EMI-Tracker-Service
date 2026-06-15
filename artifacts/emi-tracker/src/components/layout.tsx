@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetDashboardSummary, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { useTheme } from "@/hooks/useTheme";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -48,6 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
   ];
 
+  const { theme, toggle: toggleTheme } = useTheme();
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
   const photoSrc = user?.profilePhotoUrl ? `${basePath}/api/users/me/photo` : undefined;
 
@@ -94,6 +96,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4 text-yellow-400 transition-transform duration-300 rotate-0" />
+              ) : (
+                <Moon className="h-4 w-4 text-muted-foreground transition-transform duration-300" />
+              )}
+            </Button>
             <NotificationBell />
 
             <DropdownMenu>
