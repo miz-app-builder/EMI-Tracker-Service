@@ -67,7 +67,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [x] **T12 — Quick Pay from Dashboard**
   Record a payment directly from the dashboard card without going to the detail page.
 
-- [ ] **T13 — Calendar View**
+- [x] **T13 — Calendar View**
   Monthly calendar showing which EMIs are due on which days.
 
 - [ ] **T14 — Global Search**
