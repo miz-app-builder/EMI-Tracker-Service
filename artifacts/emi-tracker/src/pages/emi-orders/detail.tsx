@@ -204,6 +204,10 @@ export default function EmiOrderDetail() {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!addForm.amount) return;
+    if (order.purchaseDate && addForm.paymentDate < order.purchaseDate) {
+      toast({ title: "Invalid payment date", description: `Payment date cannot be before purchase date (${formatDate(order.purchaseDate)}).`, variant: "destructive" });
+      return;
+    }
     createPayment.mutate(
       {
         id: orderId,
@@ -232,6 +236,10 @@ export default function EmiOrderDetail() {
   const handleEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editPayment || !editForm.amount) return;
+    if (order.purchaseDate && editForm.paymentDate < order.purchaseDate) {
+      toast({ title: "Invalid payment date", description: `Payment date cannot be before purchase date (${formatDate(order.purchaseDate)}).`, variant: "destructive" });
+      return;
+    }
     updatePayment.mutate(
       {
         paymentId: editPayment.id,
@@ -295,7 +303,8 @@ export default function EmiOrderDetail() {
 
   if (!order) return <div>Order not found</div>;
 
-  const progress = Math.min(100, Math.round(((order.totalPaid ?? 0) / order.totalPrice) * 100));
+  const emiTotal = Math.max(1, order.totalPrice - (order.discount ?? 0) - order.downPayment);
+  const progress = Math.min(100, Math.round(((order.totalPaid ?? 0) / emiTotal) * 100));
   const nextDueBadge = getNextDueBadge(order.nextDueDate, order.status);
 
   return (

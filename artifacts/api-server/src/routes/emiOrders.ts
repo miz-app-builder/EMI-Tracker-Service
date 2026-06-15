@@ -297,6 +297,11 @@ router.post("/emi-orders/:id/payments", async (req, res) => {
   const [order] = await db.select().from(emiOrdersTable).where(and(eq(emiOrdersTable.id, id), eq(emiOrdersTable.userId, userId)));
   if (!order) { res.status(404).json({ error: "EMI order not found" }); return; }
 
+  if (body.paymentDate < order.purchaseDate) {
+    res.status(400).json({ error: `Payment date cannot be before purchase date (${order.purchaseDate}).` });
+    return;
+  }
+
   const [payment] = await db
     .insert(emiPaymentsTable)
     .values({
@@ -362,11 +367,16 @@ router.patch("/payments/:paymentId", async (req, res) => {
   const body = UpdateEmiPaymentBody.parse(req.body);
 
   const [row] = await db
-    .select({ id: emiPaymentsTable.id, emiOrderId: emiPaymentsTable.emiOrderId })
+    .select({ id: emiPaymentsTable.id, emiOrderId: emiPaymentsTable.emiOrderId, purchaseDate: emiOrdersTable.purchaseDate })
     .from(emiPaymentsTable)
     .innerJoin(emiOrdersTable, and(eq(emiPaymentsTable.emiOrderId, emiOrdersTable.id), eq(emiOrdersTable.userId, userId)))
     .where(eq(emiPaymentsTable.id, paymentId));
   if (!row) { res.status(404).json({ error: "Payment not found" }); return; }
+
+  if (body.paymentDate !== undefined && body.paymentDate < row.purchaseDate) {
+    res.status(400).json({ error: `Payment date cannot be before purchase date (${row.purchaseDate}).` });
+    return;
+  }
 
   const updateData: Record<string, unknown> = {};
   if (body.amount !== undefined) updateData.amount = String(body.amount);
