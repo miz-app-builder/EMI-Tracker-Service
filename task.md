@@ -139,6 +139,13 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## ✅ Completed Tasks
 
+- [x] **T02 — Export to PDF / Excel** _(2026-06-15)_
+  - **New utility** `lib/exportExcel.ts` — `buildWorkbook`, `downloadWorkbook`, `downloadSheetAsExcel` helpers using SheetJS (`xlsx`).
+  - **Export My Data page** (`/export`) upgraded: each card now has both **Excel** and **CSV** buttons; "Download All" dropdown offers **one `.xlsx` with 3 sheets** (Shops · EMI Orders · Payments) or 3 separate CSV files.
+  - **Reports page** (`/reports`) — new **Export dropdown** in header with 4 options: Full Report (.xlsx, 2 sheets), Monthly Payments (.xlsx), Shop Breakdown (.xlsx), and Print / Save as PDF (`window.print()`).
+  - **EMI Order Detail page** — **Export Excel** button added to Payment History card header; exports all installments (including down payment row) for that order as a `.xlsx` file.
+  - No backend changes needed — all export logic is pure frontend using loaded API data.
+
 - [x] **T07 — Payment Receipt (Printable)** _(2026-06-15)_
   - **New page** `pages/receipt.tsx` — route `/emi-orders/:id/payments/:paymentId/receipt`.
   - Loads order via `useGetEmiOrder`; finds the specific payment by `paymentId` from the payments array.
