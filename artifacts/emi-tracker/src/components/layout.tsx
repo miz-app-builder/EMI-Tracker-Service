@@ -26,25 +26,24 @@ import { useAutoLogout } from "@/hooks/useAutoLogout";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/shops": "Shops",
-  "/emi-orders": "My EMIs",
-  "/reports": "Reports",
-  "/debt-overview": "Debt Overview",
-  "/calculator": "EMI Calculator",
-  "/calendar": "Calendar View",
-  "/overdue": "Overdue",
-  "/search": "Search",
-  "/profile": "Profile Settings",
-  "/export": "Export My Data",
-  "/activity-log": "Activity Log",
+const PAGE_META: Record<string, { title: string; subtitle: string }> = {
+  "/dashboard":    { title: "Dashboard",        subtitle: "Summary of all your EMI installments" },
+  "/shops":        { title: "Shops",             subtitle: "Manage your shops and showrooms" },
+  "/emi-orders":   { title: "My EMIs",           subtitle: "All your active and completed EMI orders" },
+  "/reports":      { title: "Reports",           subtitle: "Spending trends and analytics" },
+  "/debt-overview":{ title: "Debt Overview",     subtitle: "Total outstanding and loan breakdown" },
+  "/calculator":   { title: "EMI Calculator",    subtitle: "Calculate monthly installments instantly" },
+  "/calendar":     { title: "Calendar View",     subtitle: "Upcoming payment schedule" },
+  "/overdue":      { title: "Overdue",           subtitle: "Payments that are past their due date" },
+  "/search":       { title: "Search",            subtitle: "Find orders, shops, and payments" },
+  "/profile":      { title: "Profile Settings",  subtitle: "Manage your account and preferences" },
+  "/activity-log": { title: "Activity Log",      subtitle: "Recent actions and changes" },
 };
 
-function getPageTitle(location: string) {
-  if (location.startsWith("/emi-orders/new")) return "New EMI Order";
-  if (location.startsWith("/emi-orders/")) return "EMI Order Detail";
-  return PAGE_TITLES[location] ?? "EMI Tracker";
+function getPageMeta(location: string): { title: string; subtitle: string } {
+  if (location.startsWith("/emi-orders/new")) return { title: "New EMI Order", subtitle: "Add a new installment order" };
+  if (location.startsWith("/emi-orders/"))   return { title: "EMI Order Detail", subtitle: "View and manage this order" };
+  return PAGE_META[location] ?? { title: "EMI Tracker", subtitle: "" };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -176,10 +175,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden print:h-auto print:overflow-visible">
         <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-card border-b border-border shrink-0 print:hidden">
-          <div className="flex items-center gap-3">
-            <span className="text-base font-semibold text-foreground">
-              {getPageTitle(location)}
+          <div className="flex flex-col">
+            <span className="text-base font-semibold text-foreground leading-tight">
+              {getPageMeta(location).title}
             </span>
+            {getPageMeta(location).subtitle && (
+              <span className="text-xs text-muted-foreground leading-tight">
+                {getPageMeta(location).subtitle}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1">
