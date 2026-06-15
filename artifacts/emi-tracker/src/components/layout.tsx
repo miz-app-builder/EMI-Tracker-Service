@@ -177,8 +177,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden print:h-auto print:overflow-visible">
         <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-card border-b border-border shrink-0 print:hidden">
           <div className="flex items-center gap-3">
-            <span className="md:hidden text-base font-bold text-primary">EMI Tracker</span>
-            <span className="hidden md:block text-base font-semibold text-foreground">
+            <span className="text-base font-semibold text-foreground">
               {getPageTitle(location)}
             </span>
           </div>
