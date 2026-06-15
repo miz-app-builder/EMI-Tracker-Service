@@ -13,6 +13,7 @@ export const emiOrdersTable = pgTable("emi_orders", {
   downPayment: numeric("down_payment", { precision: 12, scale: 2 }).notNull().default("0"),
   emiMonths: integer("emi_months").notNull(),
   monthlyAmount: numeric("monthly_amount", { precision: 12, scale: 2 }).notNull(),
+  dueDayOfMonth: integer("due_day_of_month"),
   status: text("status").notNull().default("active"),
   purchaseDate: date("purchase_date", { mode: "string" }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

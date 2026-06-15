@@ -18,6 +18,8 @@ export interface EmiOrderDetail {
   emiMonths: number;
   monthlyAmount: number;
   nextMonthlyAmount?: number;
+  /** @nullable */
+  dueDayOfMonth?: number | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;

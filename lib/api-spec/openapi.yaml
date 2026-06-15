@@ -450,6 +450,8 @@ components:
           type: number
         nextMonthlyAmount:
           type: number
+        dueDayOfMonth:
+          type: ["integer", "null"]
         totalPaid:
           type: number
         remainingAmount:
@@ -482,6 +484,8 @@ components:
           type: number
         emiMonths:
           type: integer
+        dueDayOfMonth:
+          type: ["integer", "null"]
         purchaseDate:
           type: string
 
@@ -525,6 +529,8 @@ components:
           type: number
         nextMonthlyAmount:
           type: number
+        dueDayOfMonth:
+          type: ["integer", "null"]
         totalPaid:
           type: number
         remainingAmount:

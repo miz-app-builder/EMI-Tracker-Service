@@ -26,6 +26,7 @@ export default function NewEmiOrder() {
     totalPrice: "",
     downPayment: "",
     emiMonths: "",
+    dueDayOfMonth: "",
     purchaseDate: new Date().toISOString().split("T")[0],
   });
 
@@ -81,6 +82,7 @@ export default function NewEmiOrder() {
           totalPrice: Number(formData.totalPrice),
           downPayment: Number(formData.downPayment) || 0,
           emiMonths: Number(formData.emiMonths),
+          dueDayOfMonth: formData.dueDayOfMonth ? Number(formData.dueDayOfMonth) : null,
           purchaseDate: formData.purchaseDate,
         },
       },
@@ -222,19 +224,42 @@ export default function NewEmiOrder() {
               </h3>
 
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-4">
-                <div className="space-y-2 max-w-xs">
-                  <Label htmlFor="emiMonths" className="text-primary font-semibold">
-                    কত মাসের কিস্তি <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="emiMonths"
-                    type="number"
-                    min="1"
-                    value={formData.emiMonths}
-                    onChange={(e) => setFormData({ ...formData, emiMonths: e.target.value })}
-                    className="border-primary/30"
-                    placeholder="যেমন: 12"
-                  />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="emiMonths" className="text-primary font-semibold">
+                      কত মাসের কিস্তি <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="emiMonths"
+                      type="number"
+                      min="1"
+                      value={formData.emiMonths}
+                      onChange={(e) => setFormData({ ...formData, emiMonths: e.target.value })}
+                      className="border-primary/30"
+                      placeholder="যেমন: 12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dueDayOfMonth" className="font-semibold">
+                      প্রতি মাসের কত তারিখে? (ঐচ্ছিক)
+                    </Label>
+                    <Input
+                      id="dueDayOfMonth"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={formData.dueDayOfMonth}
+                      onChange={(e) => setFormData({ ...formData, dueDayOfMonth: e.target.value })}
+                      placeholder="যেমন: 10 (না দিলে কেনার তারিখ)"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      না দিলে কেনার তারিখ (
+                      {formData.purchaseDate
+                        ? new Date(formData.purchaseDate).getDate()
+                        : "—"}
+                      ) অনুযায়ী due date হবে।
+                    </p>
+                  </div>
                 </div>
 
                 {/* Auto-calculated preview */}

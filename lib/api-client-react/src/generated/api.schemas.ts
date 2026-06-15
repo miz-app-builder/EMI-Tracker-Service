@@ -57,6 +57,8 @@ export interface EmiOrder {
   emiMonths: number;
   monthlyAmount: number;
   nextMonthlyAmount?: number;
+  /** @nullable */
+  dueDayOfMonth?: number | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;
@@ -77,6 +79,8 @@ export interface EmiOrderInput {
   totalPrice: number;
   downPayment: number;
   emiMonths: number;
+  /** @nullable */
+  dueDayOfMonth?: number | null;
   purchaseDate: string;
 }
 
@@ -111,6 +115,8 @@ export interface EmiOrderDetail {
   emiMonths: number;
   monthlyAmount: number;
   nextMonthlyAmount?: number;
+  /** @nullable */
+  dueDayOfMonth?: number | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;

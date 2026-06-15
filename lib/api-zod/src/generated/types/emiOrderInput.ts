@@ -15,5 +15,7 @@ export interface EmiOrderInput {
   totalPrice: number;
   downPayment: number;
   emiMonths: number;
+  /** @nullable */
+  dueDayOfMonth?: number | null;
   purchaseDate: string;
 }

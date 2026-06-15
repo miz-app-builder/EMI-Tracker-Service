@@ -16,11 +16,23 @@ import {
 
 const router = Router();
 
-function calcNextDueDate(purchaseDate: string, emiMonths: number, installmentsPaid: number): string | null {
+function calcNextDueDate(
+  purchaseDate: string,
+  emiMonths: number,
+  installmentsPaid: number,
+  dueDayOfMonth?: number | null,
+): string | null {
   if (installmentsPaid >= emiMonths) return null;
   const next = installmentsPaid + 1;
   const date = new Date(purchaseDate);
   date.setMonth(date.getMonth() + next);
+
+  if (dueDayOfMonth) {
+    // Clamp to last day of that month (e.g. 31 in February → 28/29)
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    date.setDate(Math.min(dueDayOfMonth, lastDay));
+  }
+
   return date.toISOString().split("T")[0];
 }
 
@@ -28,6 +40,7 @@ function formatOrder(order: Record<string, unknown>, totalPaid: number, installm
   const totalPrice = Number(order.totalPrice);
   const downPayment = Number(order.downPayment);
   const emiMonths = Number(order.emiMonths);
+  const dueDayOfMonth = order.dueDayOfMonth as number | null | undefined;
   const emiTotal = totalPrice - downPayment;
   const remaining = Math.max(0, emiTotal - totalPaid);
   const remainingMonths = Math.max(0, emiMonths - installmentsPaid);
@@ -37,13 +50,14 @@ function formatOrder(order: Record<string, unknown>, totalPaid: number, installm
 
   const nextDueDate = order.status === "completed"
     ? null
-    : calcNextDueDate(order.purchaseDate as string, emiMonths, installmentsPaid);
+    : calcNextDueDate(order.purchaseDate as string, emiMonths, installmentsPaid, dueDayOfMonth);
 
   return {
     ...order,
     totalPrice,
     downPayment,
     monthlyAmount: Number(order.monthlyAmount),
+    dueDayOfMonth: dueDayOfMonth ?? null,
     totalPaid,
     remainingAmount: remaining,
     installmentsPaid,
@@ -65,6 +79,7 @@ router.get("/emi-orders", async (req, res) => {
       downPayment: emiOrdersTable.downPayment,
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
+      dueDayOfMonth: emiOrdersTable.dueDayOfMonth,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
       shopName: shopsTable.name,
@@ -120,6 +135,7 @@ router.post("/emi-orders", async (req, res) => {
       downPayment: String(body.downPayment),
       emiMonths: body.emiMonths,
       monthlyAmount: String(monthlyAmount),
+      dueDayOfMonth: body.dueDayOfMonth ?? null,
       purchaseDate: body.purchaseDate,
       status: "active",
     })
@@ -149,6 +165,7 @@ router.get("/emi-orders/:id", async (req, res) => {
       downPayment: emiOrdersTable.downPayment,
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
+      dueDayOfMonth: emiOrdersTable.dueDayOfMonth,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
       shopName: shopsTable.name,
