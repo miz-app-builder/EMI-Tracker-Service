@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, CreditCard, Activity, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, Activity, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/calendar": "Calendar View",
   "/overdue": "Overdue",
   "/search": "Search",
-  "/bulk-pay": "Bulk Payment",
   "/profile": "Profile Settings",
   "/export": "Export My Data",
   "/activity-log": "Activity Log",
@@ -63,7 +62,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/calculator", label: "Calculator", icon: Calculator },
     { href: "/calendar", label: "Calendar", icon: CalendarDays },
     { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
-    { href: "/bulk-pay", label: "Bulk Payment", icon: CreditCard },
     { href: "/activity-log", label: "Activity Log", icon: Activity },
   ];
 

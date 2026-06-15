@@ -19,7 +19,6 @@ import DebtOverviewPage from "@/pages/debt-overview";
 import CalculatorPage from "@/pages/calculator";
 import CalendarPage from "@/pages/calendar";
 import SearchPage from "@/pages/search";
-import BulkPayPage from "@/pages/bulk-pay";
 import ReceiptPage from "@/pages/receipt";
 import ExportPage from "@/pages/export";
 import ActivityLogPage from "@/pages/activity-log";
@@ -71,7 +70,6 @@ function Routes() {
       <Route path="/calculator" component={() => <ProtectedRoute component={CalculatorPage} />} />
       <Route path="/calendar" component={() => <ProtectedRoute component={CalendarPage} />} />
       <Route path="/search" component={() => <ProtectedRoute component={SearchPage} />} />
-      <Route path="/bulk-pay" component={() => <ProtectedRoute component={BulkPayPage} />} />
       <Route path="/emi-orders/:id/payments/:paymentId/receipt" component={() => <ProtectedRoute component={ReceiptPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route path="/activity-log" component={() => <ProtectedRoute component={ActivityLogPage} />} />
