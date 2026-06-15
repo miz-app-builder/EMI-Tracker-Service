@@ -70,7 +70,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [x] **T13 — Calendar View**
   Monthly calendar showing which EMIs are due on which days.
 
-- [ ] **T14 — Global Search**
+- [x] **T14 — Global Search**
   Search bar that searches across all shops, products, and payments at once.
 
 - [x] **T15 — EMI Calculator (Standalone)**
@@ -138,6 +138,14 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 ---
 
 ## ✅ Completed Tasks
+
+- [x] **T14 — Global Search** _(2026-06-15)_
+  - **No new backend needed** — fetches `GET /api/emi-orders` and `GET /api/shops` on page load; all filtering done client-side in real-time.
+  - **New page** `pages/search.tsx` — large autofocus search input; results split into two sections (EMI Orders, Shops) with match count; matched text highlighted inline; clicking an EMI order goes to its detail page; Esc key navigates back to dashboard.
+  - **EMI Orders results** — shows product name, shop name, model number (when present), remaining amount, and status badge (Active / Overdue / Completed).
+  - **Shops results** — shows shop name and description.
+  - **Layout** — Search icon button added to the header (beside notification bell); pressing `/` from any page (outside an input) navigates to `/search` via keyboard shortcut.
+  - **Router** — `/search` route added as a protected route.
 
 - [x] **T01 — Monthly Report Page** _(2026-06-15)_
   - **No new backend needed** — uses existing `GET /api/dashboard/monthly-spending` and `GET /api/dashboard/shop-stats` endpoints.

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/calculator": "EMI Calculator",
   "/calendar": "Calendar View",
   "/overdue": "Overdue",
+  "/search": "Search",
   "/profile": "Profile Settings",
 };
 
@@ -35,7 +37,7 @@ function getPageTitle(location: string) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
   const { data: summary } = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
   const overdueCount = summary?.overdueOrders ?? 0;
@@ -53,6 +55,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const { theme, toggle: toggleTheme } = useTheme(user?.themePreference);
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        window.location.hash = "";
+        navigate("/search");
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate]);
   const photoSrc = user?.profilePhotoUrl ? `${basePath}/api/users/me/photo` : undefined;
 
   return (
@@ -98,6 +114,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-1">
+            <Link href="/search">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full"
+                title="Search (press /)"
+              >
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
