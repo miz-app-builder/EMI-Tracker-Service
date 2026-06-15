@@ -19,6 +19,7 @@ import DebtOverviewPage from "@/pages/debt-overview";
 import CalculatorPage from "@/pages/calculator";
 import CalendarPage from "@/pages/calendar";
 import SearchPage from "@/pages/search";
+import BulkPayPage from "@/pages/bulk-pay";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +66,7 @@ function Routes() {
       <Route path="/calculator" component={() => <ProtectedRoute component={CalculatorPage} />} />
       <Route path="/calendar" component={() => <ProtectedRoute component={CalendarPage} />} />
       <Route path="/search" component={() => <ProtectedRoute component={SearchPage} />} />
+      <Route path="/bulk-pay" component={() => <ProtectedRoute component={BulkPayPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

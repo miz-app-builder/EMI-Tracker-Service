@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/calendar": "Calendar View",
   "/overdue": "Overdue",
   "/search": "Search",
+  "/bulk-pay": "Bulk Payment",
   "/profile": "Profile Settings",
 };
 
@@ -51,6 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/calculator", label: "Calculator", icon: Calculator },
     { href: "/calendar", label: "Calendar", icon: CalendarDays },
     { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
+    { href: "/bulk-pay", label: "Bulk Payment", icon: CreditCard },
   ];
 
   const { theme, toggle: toggleTheme } = useTheme(user?.themePreference);

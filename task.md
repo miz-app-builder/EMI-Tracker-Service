@@ -38,7 +38,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 💰 Payment Management
 
-- [ ] **T06 — Bulk Payment**
+- [x] **T06 — Bulk Payment**
   Pay multiple EMIs at once from a single screen (useful at month-end).
 
 - [ ] **T07 — Payment Receipt (Printable)**
@@ -138,6 +138,16 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 ---
 
 ## ✅ Completed Tasks
+
+- [x] **T06 — Bulk Payment** _(2026-06-15)_
+  - **No new backend needed** — uses existing `POST /api/emi-orders/:id/payments` sequentially for each selected order.
+  - **New page** `pages/bulk-pay.tsx` — lists all active (non-completed) EMI orders sorted overdue-first; each row has a checkbox, editable amount field pre-filled with `nextMonthlyAmount`, and per-row payment method selector.
+  - **Global controls** — "Select All / Deselect All" toggle; global payment date picker; global payment method selector that applies to all rows at once.
+  - **Sticky footer** — summary bar showing selected count, total amount, and "Pay N EMI" button; appears only when at least one order is selected.
+  - **Confirm dialog** — lists each selected order with amount; shows total; requires explicit confirmation before submitting.
+  - **Submit flow** — payments sent sequentially; success/failure counts toasted; query cache invalidated for `listEmiOrders`, `dashboardSummary`, and `dueThisMonth` on completion.
+  - **Sidebar** — "Bulk Payment" nav link added with CreditCard icon.
+  - **Router** — `/bulk-pay` route added as a protected route.
 
 - [x] **T14 — Global Search** _(2026-06-15)_
   - **No new backend needed** — fetches `GET /api/emi-orders` and `GET /api/shops` on page load; all filtering done client-side in real-time.
