@@ -49,7 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
   ];
 
-  const { theme, toggle: toggleTheme } = useTheme();
+  const { theme, toggle: toggleTheme } = useTheme(user?.themePreference);
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
   const photoSrc = user?.profilePhotoUrl ? `${basePath}/api/users/me/photo` : undefined;
 

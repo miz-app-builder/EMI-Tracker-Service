@@ -9,6 +9,7 @@ export interface AuthUser {
   phone?: string | null;
   address?: string | null;
   profilePhotoUrl?: string | null;
+  themePreference?: string | null;
   emailVerifiedAt?: string | null;
   passwordChangedAt?: string | null;
   lastActiveAt?: string | null;

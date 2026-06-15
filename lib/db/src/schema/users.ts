@@ -8,6 +8,7 @@ export const usersTable = pgTable("users", {
   phone: text("phone"),
   address: text("address"),
   profilePhotoUrl: text("profile_photo_url"),
+  themePreference: text("theme_preference"),
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
   passwordChangedAt: timestamp("password_changed_at", { withTimezone: true }),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }),

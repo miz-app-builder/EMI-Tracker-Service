@@ -14,6 +14,7 @@ const USER_SELECT = {
   phone: usersTable.phone,
   address: usersTable.address,
   profilePhotoUrl: usersTable.profilePhotoUrl,
+  themePreference: usersTable.themePreference,
   emailVerifiedAt: usersTable.emailVerifiedAt,
   passwordChangedAt: usersTable.passwordChangedAt,
   lastActiveAt: usersTable.lastActiveAt,
@@ -29,7 +30,7 @@ router.get("/users/me", async (req, res) => {
 
 router.patch("/users/me", async (req, res) => {
   const userId = (req as any).userId;
-  const { name, phone, address, profilePhotoUrl } = req.body;
+  const { name, phone, address, profilePhotoUrl, themePreference } = req.body;
   const [user] = await db
     .update(usersTable)
     .set({
@@ -37,6 +38,7 @@ router.patch("/users/me", async (req, res) => {
       ...(phone !== undefined && { phone }),
       ...(address !== undefined && { address }),
       ...(profilePhotoUrl !== undefined && { profilePhotoUrl }),
+      ...(themePreference !== undefined && { themePreference }),
     })
     .where(eq(usersTable.id, userId))
     .returning(USER_SELECT);
