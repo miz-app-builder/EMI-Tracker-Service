@@ -5,6 +5,23 @@ import { resolveUserId } from "../lib/resolveUserId";
 
 const router = Router();
 
+function calcNextDueDate(
+  purchaseDate: string,
+  emiMonths: number,
+  installmentsPaid: number,
+  dueDayOfMonth?: number | null,
+): string | null {
+  if (installmentsPaid >= emiMonths) return null;
+  const next = installmentsPaid + 1;
+  const date = new Date(purchaseDate);
+  date.setMonth(date.getMonth() + next);
+  if (dueDayOfMonth) {
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    date.setDate(Math.min(dueDayOfMonth, lastDay));
+  }
+  return date.toISOString().split("T")[0];
+}
+
 router.get("/dashboard/summary", async (req, res) => {
   const userId = await resolveUserId((req as any).userId);
   if (!userId) { res.status(401).json({ error: "User not found" }); return; }
@@ -17,6 +34,7 @@ router.get("/dashboard/summary", async (req, res) => {
       downPayment: emiOrdersTable.downPayment,
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
+      dueDayOfMonth: emiOrdersTable.dueDayOfMonth,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
     })
@@ -65,22 +83,31 @@ router.get("/dashboard/summary", async (req, res) => {
     const totalPaid = paidMap[order.id] ?? 0;
     const installmentsPaid = countMap[order.id] ?? 0;
     const discount = Number(order.discount ?? 0);
-    const emiTotal = Number(order.totalPrice) - discount - Number(order.downPayment);
+    const downPayment = Number(order.downPayment);
+    const emiTotal = Number(order.totalPrice) - discount - downPayment;
     const remaining = Math.max(0, emiTotal - totalPaid);
-    totalPaidAmount += totalPaid;
+
+    // FIX 3: Total Paid includes down payment + all installments paid
+    totalPaidAmount += totalPaid + downPayment;
 
     if (order.status === "active") {
       totalActiveOrders++;
       totalDueAmount += remaining;
+
       const purchaseDate = new Date(order.purchaseDate);
       const planEndDate = new Date(purchaseDate);
       planEndDate.setMonth(planEndDate.getMonth() + order.emiMonths);
       if (planEndDate < now && remaining > 0) overdueOrders++;
+
+      // FIX 1: Use calcNextDueDate with dueDayOfMonth for accurate next payment date
       if (installmentsPaid < order.emiMonths) {
-        const nd = new Date(order.purchaseDate);
-        nd.setMonth(nd.getMonth() + installmentsPaid + 1);
-        const ndStr = nd.toISOString().split("T")[0];
-        if (!nextPaymentDate || ndStr < nextPaymentDate) nextPaymentDate = ndStr;
+        const ndStr = calcNextDueDate(
+          order.purchaseDate,
+          order.emiMonths,
+          installmentsPaid,
+          order.dueDayOfMonth,
+        );
+        if (ndStr && (!nextPaymentDate || ndStr < nextPaymentDate)) nextPaymentDate = ndStr;
       }
     } else {
       totalCompletedOrders++;
@@ -115,6 +142,7 @@ router.get("/dashboard/due-this-month", async (req, res) => {
       downPayment: emiOrdersTable.downPayment,
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
+      dueDayOfMonth: emiOrdersTable.dueDayOfMonth,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
       shopName: shopsTable.name,
@@ -139,37 +167,49 @@ router.get("/dashboard/due-this-month", async (req, res) => {
     countMap[p.emiOrderId] = Number(p.count);
   });
 
-  const dueOrders = rows.filter((order) => {
-    const purchaseDate = new Date(order.purchaseDate);
-    const monthsPassed =
-      (now.getFullYear() - purchaseDate.getFullYear()) * 12 +
-      (now.getMonth() - purchaseDate.getMonth());
-    return monthsPassed >= 0 && monthsPassed < order.emiMonths;
-  });
+  // End of current month
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  endOfMonth.setHours(23, 59, 59, 999);
 
-  res.json(
-    dueOrders.map((order) => {
+  // FIX 2: Only include orders where the next due date is on or before end of this month
+  // (i.e., this month's installment has NOT been paid yet, or is overdue from a past month)
+  const result = rows
+    .map((order) => {
       const totalPaid = paidMap[order.id] ?? 0;
       const installmentsPaid = countMap[order.id] ?? 0;
       const discount = Number(order.discount ?? 0);
-      const emiTotal = Number(order.totalPrice) - discount - Number(order.downPayment);
+      const downPayment = Number(order.downPayment);
+      const emiTotal = Number(order.totalPrice) - discount - downPayment;
       const remaining = Math.max(0, emiTotal - totalPaid);
-      const nd = new Date(order.purchaseDate);
-      nd.setMonth(nd.getMonth() + installmentsPaid + 1);
-      const nextDueDate = installmentsPaid >= order.emiMonths ? null : nd.toISOString().split("T")[0];
+      const remainingMonths = Math.max(0, order.emiMonths - installmentsPaid);
+      const nextMonthlyAmount = remainingMonths > 0 ? Math.ceil(remaining / remainingMonths) : 0;
+      const nextDueDate = calcNextDueDate(
+        order.purchaseDate,
+        order.emiMonths,
+        installmentsPaid,
+        order.dueDayOfMonth,
+      );
       return {
         ...order,
         totalPrice: Number(order.totalPrice),
         discount,
-        downPayment: Number(order.downPayment),
+        downPayment,
         monthlyAmount: Number(order.monthlyAmount),
+        nextMonthlyAmount,
         totalPaid,
         remainingAmount: remaining,
         installmentsPaid,
         nextDueDate,
       };
     })
-  );
+    .filter((order) => {
+      // Must have a pending due date and it must be <= end of this month
+      if (!order.nextDueDate) return false;
+      const dueDateObj = new Date(order.nextDueDate);
+      return dueDateObj <= endOfMonth;
+    });
+
+  res.json(result);
 });
 
 router.get("/dashboard/shop-stats", async (req, res) => {
@@ -178,7 +218,7 @@ router.get("/dashboard/shop-stats", async (req, res) => {
 
   const shops = await db.select().from(shopsTable).where(eq(shopsTable.userId, userId));
   const orders = await db
-    .select({ id: emiOrdersTable.id, shopId: emiOrdersTable.shopId, totalPrice: emiOrdersTable.totalPrice, downPayment: emiOrdersTable.downPayment })
+    .select({ id: emiOrdersTable.id, shopId: emiOrdersTable.shopId, totalPrice: emiOrdersTable.totalPrice, discount: emiOrdersTable.discount, downPayment: emiOrdersTable.downPayment })
     .from(emiOrdersTable)
     .where(eq(emiOrdersTable.userId, userId));
 
@@ -196,9 +236,11 @@ router.get("/dashboard/shop-stats", async (req, res) => {
     let totalPaid = 0;
     for (const order of shopOrders) {
       const paid = paidMap[order.id] ?? 0;
-      const emiTotal = Number(order.totalPrice) - Number(order.downPayment);
+      const discount = Number(order.discount ?? 0);
+      const downPayment = Number(order.downPayment);
+      const emiTotal = Number(order.totalPrice) - discount - downPayment;
       totalDue += Math.max(0, emiTotal - paid);
-      totalPaid += paid;
+      totalPaid += paid + downPayment;
     }
     return { shopId: shop.id, shopName: shop.name, totalOrders: shopOrders.length, totalDue, totalPaid };
   }));
