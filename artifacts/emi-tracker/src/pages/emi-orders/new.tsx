@@ -122,10 +122,6 @@ export default function NewEmiOrder() {
         <Button variant="outline" size="icon" onClick={() => setLocation("/emi-orders")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Add New EMI</h2>
-          <p className="text-muted-foreground mt-1">Where did you buy it, what did you buy, and how many months.</p>
-        </div>
       </div>
 
       {/* User info card */}

@@ -155,10 +155,6 @@ export default function ExportPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Package className="h-8 w-8 text-primary" />
-            Export My Data
-          </h2>
           <p className="text-muted-foreground mt-1">
             Download your data as CSV or Excel — open in Excel, Google Sheets, or any spreadsheet app.
           </p>

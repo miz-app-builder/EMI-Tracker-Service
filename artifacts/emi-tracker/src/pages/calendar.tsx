@@ -110,10 +110,6 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Calendar View</h2>
-          <p className="text-muted-foreground mt-1">See all your EMI due dates at a glance.</p>
-        </div>
         <div className="flex gap-2 text-sm">
           {totalOverdue > 0 && (
             <Badge variant="destructive" className="gap-1">

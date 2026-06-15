@@ -38,11 +38,7 @@ export default function OverduePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Overdue EMIs</h2>
-        <p className="text-muted-foreground mt-1">Installments that are past their due date.</p>
-      </div>
+
 
       {/* Summary banner */}
       {!isLoading && overdueOrders.length > 0 && (

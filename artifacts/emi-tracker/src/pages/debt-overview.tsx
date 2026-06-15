@@ -57,10 +57,7 @@ export default function DebtOverviewPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Total Debt Overview</h2>
-        <p className="text-muted-foreground mt-1">All your active EMIs in one place — see what's left and when you'll be free.</p>
-      </div>
+
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">

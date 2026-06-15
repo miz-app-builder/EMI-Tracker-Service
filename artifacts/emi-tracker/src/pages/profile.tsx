@@ -287,10 +287,6 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Profile Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Update your account information</p>
-      </div>
 
       {/* ── Photo card ── */}
       <Card>

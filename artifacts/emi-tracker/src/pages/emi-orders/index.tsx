@@ -52,10 +52,7 @@ export default function EmiOrders() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">My EMIs</h2>
-          <p className="text-muted-foreground mt-1">All your installment orders.</p>
-        </div>
+
         <Link href="/emi-orders/new">
           <Button className="shrink-0">
             <Plus className="mr-2 h-4 w-4" /> New EMI

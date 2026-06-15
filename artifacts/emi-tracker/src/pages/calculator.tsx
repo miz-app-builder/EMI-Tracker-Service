@@ -482,10 +482,7 @@ export default function CalculatorPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">EMI Calculator</h2>
-        <p className="text-muted-foreground mt-1">Plan your EMI or explore early payoff options.</p>
-      </div>
+
 
       {/* Tab switcher */}
       <div className="flex rounded-xl border border-border overflow-hidden w-fit">

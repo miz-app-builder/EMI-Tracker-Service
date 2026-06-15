@@ -124,10 +124,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Reports</h2>
-          <p className="text-muted-foreground mt-1">Overview of your EMI payment history and trends.</p>
-        </div>
+
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

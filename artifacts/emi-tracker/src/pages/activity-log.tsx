@@ -61,13 +61,6 @@ export default function ActivityLogPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
-            Activity Log
-          </h2>
-          <p className="text-muted-foreground mt-1">A history of all important activity on your account.</p>
-        </div>
       </div>
 
       <div className="relative">
