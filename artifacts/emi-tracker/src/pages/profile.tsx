@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, KeyRound, CheckCircle2, Loader2 } from "lucide-react";
+import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Store, FileText, CreditCard } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -16,8 +17,26 @@ function photoUrl(url: string | null | undefined): string | undefined {
   return `${basePath}/api/users/me/photo`;
 }
 
+function toCSV(rows: Record<string, unknown>[], headers: string[]): string {
+  const escape = (v: unknown) => {
+    const s = v == null ? "" : String(v);
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [headers.join(","), ...rows.map((r) => headers.map((h) => escape(r[h])).join(","))].join("\n");
+}
+
+function downloadCSV(csv: string, filename: string) {
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
 export default function ProfilePage() {
   const { user, refetch } = useAuth();
+  const { toast } = useToast();
 
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
   const photo = photoUrl(user?.profilePhotoUrl);
@@ -97,6 +116,38 @@ export default function ProfilePage() {
       setPwError("Something went wrong, please try again");
     } finally {
       setPwLoading(false);
+    }
+  }
+
+  // ── Export ──
+  const [exportLoading, setExportLoading] = useState(false);
+
+  async function fetchExportData() {
+    const res = await fetch(`${basePath}/api/export`, { credentials: "include" });
+    if (!res.ok) throw new Error("Failed");
+    return res.json();
+  }
+
+  async function handleExport(type: "shops" | "emiOrders" | "payments" | "all") {
+    setExportLoading(true);
+    try {
+      const d = await fetchExportData();
+      const date = new Date().toISOString().split("T")[0];
+      const dl = async (csv: string, name: string) => {
+        downloadCSV(csv, name);
+        await new Promise((r) => setTimeout(r, 300));
+      };
+      if (type === "shops" || type === "all")
+        await dl(toCSV(d.shops, ["id", "name", "description", "createdAt"]), `shops_${date}.csv`);
+      if (type === "emiOrders" || type === "all")
+        await dl(toCSV(d.emiOrders, ["id", "productName", "shopName", "totalPrice", "discount", "downPayment", "emiMonths", "monthlyAmount", "dueDayOfMonth", "modelNumber", "status", "purchaseDate"]), `emi_orders_${date}.csv`);
+      if (type === "payments" || type === "all")
+        await dl(toCSV(d.payments, ["id", "emiOrderId", "amount", "paymentDate", "paymentMethod", "bankName", "accountNumber", "transactionId", "notes", "createdAt"]), `payments_${date}.csv`);
+      toast({ title: type === "all" ? "All 3 files downloaded!" : "Downloaded!", description: "CSV file saved to your device." });
+    } catch {
+      toast({ title: "Export failed", description: "Could not load data. Please try again.", variant: "destructive" });
+    } finally {
+      setExportLoading(false);
     }
   }
 
@@ -272,6 +323,45 @@ export default function ProfilePage() {
               Save
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* ── Export card ── */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Export My Data</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Download your data as CSV — opens in Excel or Google Sheets</p>
+            </div>
+            <Button size="sm" onClick={() => handleExport("all")} disabled={exportLoading} className="gap-2 shrink-0">
+              {exportLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Download All
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { key: "shops" as const, label: "Shops", icon: Store, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30", desc: "id, name, description" },
+              { key: "emiOrders" as const, label: "EMI Orders", icon: FileText, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-950/30", desc: "product, price, status, date…" },
+              { key: "payments" as const, label: "Payments", icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30", desc: "amount, date, method…" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                onClick={() => handleExport(item.key)}
+                disabled={exportLoading}
+                className={`flex items-center gap-3 p-3 rounded-lg border ${item.bg} hover:opacity-80 transition-opacity text-left disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{item.label}</p>
+                  <p className="text-xs text-muted-foreground truncate">{item.desc}</p>
+                </div>
+                <Download className="h-3.5 w-3.5 ml-auto shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

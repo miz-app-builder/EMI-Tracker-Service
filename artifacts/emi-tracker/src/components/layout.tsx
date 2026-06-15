@@ -163,12 +163,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     Profile Settings
                   </DropdownMenuItem>
                 </Link>
-                <Link href="/export">
-                  <DropdownMenuItem className="gap-2 cursor-pointer">
-                    <Download className="h-4 w-4" />
-                    Export My Data
-                  </DropdownMenuItem>
-                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="gap-2 text-destructive focus:text-destructive cursor-pointer"
