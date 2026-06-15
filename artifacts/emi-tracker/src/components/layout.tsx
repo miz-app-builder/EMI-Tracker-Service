@@ -11,8 +11,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetDashboardSummary, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/shops": "Shops",
+  "/emi-orders": "My EMIs",
+  "/overdue": "Overdue",
+  "/profile": "Profile Settings",
+};
+
+function getPageTitle(location: string) {
+  if (location.startsWith("/emi-orders/new")) return "New EMI Order";
+  if (location.startsWith("/emi-orders/")) return "EMI Order Detail";
+  return PAGE_TITLES[location] ?? "EMI Tracker";
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -61,84 +76,69 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-
-        <div className="p-4 border-t border-sidebar-border">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground px-3">
-                <Avatar className="h-7 w-7">
-                  {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
-                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">{initials}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.name ?? user?.email ?? "User"}</p>
-                  <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email ?? ""}</p>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-56">
-              <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none">
-                <User className="h-4 w-4" />
-                <span className="truncate">{user?.email ?? ""}</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <Link href="/profile">
-                <DropdownMenuItem className="gap-2 cursor-pointer">
-                  <Settings className="h-4 w-4" />
-                  Profile Settings
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-                onClick={logout}
-              >
-                <LogOut className="h-4 w-4" />
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border">
-          <h1 className="text-lg font-bold text-primary">EMI Tracker</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Avatar className="h-8 w-8">
-                  {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
-                  <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href}>
+        <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-card border-b border-border shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="md:hidden text-base font-bold text-primary">EMI Tracker</span>
+            <span className="hidden md:block text-base font-semibold text-foreground">
+              {getPageTitle(location)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
+                    <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none">
+                  <User className="h-4 w-4" />
+                  <span className="truncate">{user?.email ?? ""}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <Link href="/profile">
                   <DropdownMenuItem className="gap-2 cursor-pointer">
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
+                    <Settings className="h-4 w-4" />
+                    Profile Settings
                   </DropdownMenuItem>
                 </Link>
-              ))}
-              <DropdownMenuSeparator />
-              <Link href="/profile">
-                <DropdownMenuItem className="gap-2 cursor-pointer">
-                  <Settings className="h-4 w-4" />
-                  Profile
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                  onClick={logout}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Log Out
                 </DropdownMenuItem>
-              </Link>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-                onClick={logout}
-              >
-                <LogOut className="h-4 w-4" />
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+                <div className="md:hidden">
+                  <DropdownMenuSeparator />
+                  {navItems.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <DropdownMenuItem className="gap-2 cursor-pointer">
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                        {"badge" in item && item.badge ? (
+                          <span className="ml-auto text-xs font-bold bg-destructive text-white px-1.5 py-0.5 rounded-full">
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </DropdownMenuItem>
+                    </Link>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
 
         <div className="flex-1 overflow-auto p-4 md:p-8">

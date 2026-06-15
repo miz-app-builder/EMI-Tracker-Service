@@ -31,7 +31,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T04 — Email Reminders**
   Automatic email N days before a payment is due. Configurable from profile settings.
 
-- [ ] **T05 — In-App Notification Center**
+- [x] **T05 — In-App Notification Center**
   Bell icon in header showing overdue and upcoming payment alerts.
 
 ---
