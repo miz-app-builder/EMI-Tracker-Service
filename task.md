@@ -18,7 +18,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
   Charts showing how much paid per month, per shop breakdown, outstanding balances over time.
   _Suggested: bar chart by month, pie chart by shop_
 
-- [ ] **T02 — Export to PDF / Excel**
+- [x] **T02 — Export to PDF / Excel**
   Download payment history or full EMI summary as a PDF or Excel file.
 
 - [x] **T03 — Spending Trends Chart**

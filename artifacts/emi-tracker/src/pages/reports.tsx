@@ -8,9 +8,14 @@ import {
   useGetDashboardSummary, getGetDashboardSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
-import { Wallet, Activity, TrendingUp, BarChart2 } from "lucide-react";
+import { buildWorkbook, downloadWorkbook, downloadSheetAsExcel } from "@/lib/exportExcel";
+import { Wallet, Activity, TrendingUp, BarChart2, Download, Table2, Printer, ChevronDown } from "lucide-react";
 
 const PIE_COLORS = [
   "hsl(var(--primary))",
@@ -73,11 +78,86 @@ export default function ReportsPage() {
   const maxPaid = Math.max(...(monthly ?? []).map((m) => m.totalPaid), 1);
   const reversedMonthly = [...(monthly ?? [])].reverse();
 
+  function handleExportMonthlyExcel() {
+    const date = new Date().toISOString().split("T")[0];
+    const rows = (monthly ?? []).map((m) => ({
+      Month: m.label,
+      "Total Paid (৳)": m.totalPaid,
+    }));
+    downloadSheetAsExcel(rows, "Monthly Payments", `monthly_payments_${date}.xlsx`);
+  }
+
+  function handleExportShopExcel() {
+    const date = new Date().toISOString().split("T")[0];
+    const rows = (shopStats ?? []).map((s) => ({
+      Shop: s.shopName,
+      "Total Paid (৳)": s.totalPaid,
+      "Total Outstanding (৳)": s.totalOutstanding,
+      "Active Orders": s.activeOrders,
+    }));
+    downloadSheetAsExcel(rows, "Shop Breakdown", `shop_breakdown_${date}.xlsx`);
+  }
+
+  function handleExportFullExcel() {
+    const date = new Date().toISOString().split("T")[0];
+    const monthlyRows = (monthly ?? []).map((m) => ({
+      Month: m.label,
+      "Total Paid (৳)": m.totalPaid,
+    }));
+    const shopRows = (shopStats ?? []).map((s) => ({
+      Shop: s.shopName,
+      "Total Paid (৳)": s.totalPaid,
+      "Total Outstanding (৳)": s.totalOutstanding,
+      "Active Orders": s.activeOrders,
+    }));
+    const wb = buildWorkbook([
+      { name: "Monthly Payments", rows: monthlyRows },
+      { name: "Shop Breakdown", rows: shopRows },
+    ]);
+    downloadWorkbook(wb, `reports_${date}.xlsx`);
+  }
+
+  function handlePrint() {
+    window.print();
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Reports</h2>
-        <p className="text-muted-foreground mt-1">Overview of your EMI payment history and trends.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Reports</h2>
+          <p className="text-muted-foreground mt-1">Overview of your EMI payment history and trends.</p>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="shrink-0">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleExportFullExcel}>
+              <Table2 className="mr-2 h-4 w-4 text-green-600" />
+              Full Report (.xlsx, 2 sheets)
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleExportMonthlyExcel}>
+              <Table2 className="mr-2 h-4 w-4 text-green-600" />
+              Monthly Payments (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportShopExcel}>
+              <Table2 className="mr-2 h-4 w-4 text-green-600" />
+              Shop Breakdown (.xlsx)
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4 text-muted-foreground" />
+              Print / Save as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Summary Cards */}

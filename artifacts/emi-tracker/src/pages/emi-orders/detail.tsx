@@ -18,10 +18,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText,
-  CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, Pencil, Trash2, Receipt,
+  CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, Pencil, Trash2, Receipt, Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { downloadSheetAsExcel } from "@/lib/exportExcel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -619,9 +620,48 @@ export default function EmiOrderDetail() {
 
       {/* ── Payment History ── */}
       <Card>
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-          <CardDescription>All installments recorded so far. Hover a row to edit or delete.</CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>Payment History</CardTitle>
+            <CardDescription>All installments recorded so far. Hover a row to edit or delete.</CardDescription>
+          </div>
+          {order.payments && order.payments.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => {
+                const date = new Date().toISOString().split("T")[0];
+                const rows: Record<string, unknown>[] = [];
+                if (order.downPayment > 0) {
+                  rows.push({
+                    "Installment #": "Down Payment",
+                    Date: order.purchaseDate,
+                    Method: "Initial",
+                    "Amount (৳)": order.downPayment,
+                    "Transaction ID": "",
+                    Notes: "",
+                  });
+                }
+                order.payments.forEach((p, idx) => {
+                  rows.push({
+                    "Installment #": idx + 1,
+                    Date: p.paymentDate,
+                    Method: p.paymentMethod,
+                    "Amount (৳)": p.amount,
+                    "Bank": p.bankName ?? "",
+                    "Account": p.accountNumber ?? "",
+                    "Transaction ID": p.transactionId ?? "",
+                    Notes: p.notes ?? "",
+                  });
+                });
+                downloadSheetAsExcel(rows, "Payments", `payments_${order.productName}_${date}.xlsx`);
+              }}
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Export Excel
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {order.payments && order.payments.length > 0 ? (
