@@ -252,8 +252,8 @@ function EarlyPayoffTab() {
     if (val === "manual") return;
     const order = activeOrders.find((o: any) => String(o.id) === val);
     if (!order) return;
-    const remaining = Math.max(0, (order.effectivePrice ?? order.totalPrice) - order.downPayment - (order.paidAmount ?? 0));
-    const monthsLeft = order.remainingInstallments ?? order.numberOfInstallments;
+    const remaining = Math.max(0, order.remainingAmount ?? 0);
+    const monthsLeft = Math.max(1, (order.emiMonths ?? 1) - (order.installmentsPaid ?? 0));
     setRemainingBalance(String(Math.round(remaining)));
     setMonthsRemaining(String(monthsLeft));
     setTargetMonths(Math.max(1, Math.floor(monthsLeft / 2)));
@@ -271,16 +271,19 @@ function EarlyPayoffTab() {
     const monthsSaved = mRemaining - mTarget;
     const extraPerMonth = newMonthly - originalMonthly;
 
-    // Month-by-month table
-    const schedule = [];
-    let bal = balance;
-    for (let i = 1; i <= mTarget; i++) {
-      const payment = i < mTarget ? newMonthly : bal;
-      bal = Math.max(0, bal - newMonthly);
-      schedule.push({ month: i, payment: Math.round(Math.min(newMonthly, payment + (i === mTarget ? Math.max(0, bal) : 0))), remaining: bal });
-    }
+    const schedule = (() => {
+      const rows = [];
+      let bal = balance;
+      for (let i = 1; i <= mTarget; i++) {
+        const isLast = i === mTarget;
+        const payment = isLast ? bal : newMonthly;
+        bal = Math.max(0, bal - payment);
+        rows.push({ month: i, payment: Math.round(payment), remaining: bal });
+      }
+      return rows;
+    })();
 
-    return { balance, mRemaining, mTarget, monthsSaved, originalMonthly, newMonthly, extraPerMonth };
+    return { balance, mRemaining, mTarget, monthsSaved, originalMonthly, newMonthly, extraPerMonth, schedule };
   }, [remainingBalance, monthsRemaining, targetMonths]);
 
   const maxTarget = Math.max(1, Math.round(parseNum(monthsRemaining)));
@@ -345,7 +348,7 @@ function EarlyPayoffTab() {
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Pay off in</Label>
                 <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
-                  {targetMonths} month{targetMonths !== 1 ? "s" : ""}
+                  {Math.min(targetMonths, maxTarget)} month{Math.min(targetMonths, maxTarget) !== 1 ? "s" : ""}
                 </span>
               </div>
               <Slider
@@ -451,22 +454,17 @@ function EarlyPayoffTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from({ length: calc.mTarget }, (_, i) => {
-                    const month = i + 1;
-                    const bal = Math.max(0, calc.balance - calc.newMonthly * month);
-                    const payment = month < calc.mTarget ? calc.newMonthly : calc.balance - calc.newMonthly * (calc.mTarget - 1);
-                    return (
-                      <tr key={month} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                        <td className="py-2 pr-4 font-medium">Month {month}</td>
-                        <td className="py-2 pr-4 text-right font-semibold text-primary">{formatCurrency(Math.max(0, payment))}</td>
-                        <td className="py-2 text-right">
-                          {bal <= 0
-                            ? <span className="text-green-600 font-semibold">✓ Paid off</span>
-                            : formatCurrency(bal)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {calc.schedule.map((row) => (
+                    <tr key={row.month} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="py-2 pr-4 font-medium">Month {row.month}</td>
+                      <td className="py-2 pr-4 text-right font-semibold text-primary">{formatCurrency(row.payment)}</td>
+                      <td className="py-2 text-right">
+                        {row.remaining <= 0
+                          ? <span className="text-green-600 font-semibold">✓ Paid off</span>
+                          : formatCurrency(row.remaining)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
