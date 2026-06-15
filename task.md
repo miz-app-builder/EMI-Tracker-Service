@@ -93,7 +93,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 🔒 Account & Security
 
-- [ ] **T19 — Session Management**
+- [x] **T19 — Session Management**
   View and revoke active login sessions from profile settings.
 
 - [x] **T20 — Data Export (My Data)**

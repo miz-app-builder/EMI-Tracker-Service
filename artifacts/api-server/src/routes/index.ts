@@ -8,6 +8,7 @@ import emiOrdersRouter from "./emiOrders";
 import dashboardRouter from "./dashboard";
 import exportRouter from "./export";
 import activityLogsRouter from "./activityLogs";
+import sessionsRouter from "./sessions";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -21,5 +22,6 @@ router.use(requireAuth, emiOrdersRouter);
 router.use(requireAuth, dashboardRouter);
 router.use(requireAuth, exportRouter);
 router.use(requireAuth, activityLogsRouter);
+router.use(requireAuth, sessionsRouter);
 
 export default router;

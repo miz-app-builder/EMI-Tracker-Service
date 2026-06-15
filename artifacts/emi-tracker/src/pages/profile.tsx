@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Store, FileText, CreditCard, Shield, Clock, Trash2 } from "lucide-react";
+import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { usePinLock } from "@/hooks/usePinLock";
@@ -424,6 +424,7 @@ export default function ProfilePage() {
 
       <PinSettingsCard />
       <AutoLogoutCard />
+      <SessionsCard />
     </div>
   );
 }
@@ -575,6 +576,158 @@ function AutoLogoutCard() {
           <p className="text-xs text-muted-foreground">
             {minutes} মিনিট নিষ্ক্রিয় থাকলে স্বয়ংক্রিয়ভাবে logout হবে এবং ৩০ সেকেন্ড আগে সতর্কতা দেখাবে।
           </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+type SessionRow = {
+  id: string;
+  deviceInfo: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+};
+
+function parseUA(ua: string | null | undefined): string {
+  if (!ua) return "Unknown device";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "iPhone / iPad";
+  if (/Android/i.test(ua)) return "Android device";
+  if (/Windows/i.test(ua)) return "Windows PC";
+  if (/Macintosh|Mac OS X/i.test(ua)) return "Mac";
+  if (/Linux/i.test(ua)) return "Linux PC";
+  return ua.slice(0, 60);
+}
+
+function getBrowser(ua: string | null | undefined): string {
+  if (!ua) return "";
+  if (/Edg\//i.test(ua)) return "Edge";
+  if (/OPR\//i.test(ua)) return "Opera";
+  if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) return "Chrome";
+  if (/Firefox\//i.test(ua)) return "Firefox";
+  if (/Safari\//i.test(ua)) return "Safari";
+  return "";
+}
+
+function SessionsCard() {
+  const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
+
+  function load() {
+    setLoading(true);
+    fetch(`${basePath}/api/sessions`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setSessions(Array.isArray(d) ? d : []))
+      .catch(() => setSessions([]))
+      .finally(() => setLoading(false));
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
+
+  async function revoke(sessionId: string) {
+    setRevoking(sessionId);
+    await fetch(`${basePath}/api/sessions/${sessionId}`, { method: "DELETE", credentials: "include" });
+    setSessions((s) => s.filter((r) => r.id !== sessionId));
+    setRevoking(null);
+  }
+
+  async function revokeOthers() {
+    setRevokingAll(true);
+    await fetch(`${basePath}/api/sessions`, { method: "DELETE", credentials: "include" });
+    setSessions((s) => s.filter((r) => r.isCurrent));
+    setRevokingAll(false);
+  }
+
+  const others = sessions.filter((s) => !s.isCurrent);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-primary" />
+              Active Sessions
+            </CardTitle>
+            <CardDescription className="mt-1">
+              সব device-এ আপনার account-এ active login session। যেকোনো session বন্ধ করতে Revoke করুন।
+            </CardDescription>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={load} disabled={loading}>
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            {others.length > 0 && (
+              <Button size="sm" variant="destructive" className="gap-1.5 h-8" onClick={revokeOthers} disabled={revokingAll}>
+                {revokingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+                অন্য সব বন্ধ করুন
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {loading ? (
+          <div className="px-6 pb-6 space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : sessions.length === 0 ? (
+          <p className="px-6 pb-6 text-sm text-muted-foreground">কোনো active session নেই।</p>
+        ) : (
+          <div className="divide-y">
+            {[...sessions].reverse().map((s) => {
+              const device = parseUA(s.deviceInfo);
+              const browser = getBrowser(s.deviceInfo);
+              return (
+                <div key={s.id} className="flex items-center gap-4 px-6 py-4 hover:bg-muted/30 transition-colors">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Monitor className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium">{device}{browser ? ` · ${browser}` : ""}</span>
+                      {s.isCurrent && (
+                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400 px-1.5 py-0.5 rounded-full font-medium">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                      {s.ipAddress && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />{s.ipAddress}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        Last active: {format(new Date(s.lastUsedAt), "dd MMM yyyy, hh:mm a")}
+                      </span>
+                    </div>
+                  </div>
+                  {!s.isCurrent && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 shrink-0 text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/30"
+                      onClick={() => revoke(s.id)}
+                      disabled={revoking === s.id}
+                    >
+                      {revoking === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      Revoke
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>

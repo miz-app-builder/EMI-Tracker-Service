@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, sessionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logActivity } from "../lib/logActivity";
 
@@ -15,6 +15,33 @@ function cookieOpts() {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV === "production",
   };
+}
+
+function getDeviceInfo(req: any): string {
+  const ua = req.headers["user-agent"] ?? "Unknown";
+  return ua.slice(0, 200);
+}
+
+function getIp(req: any): string {
+  return (
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    "Unknown"
+  );
+}
+
+async function createSession(userId: string, req: any): Promise<string> {
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const [session] = await db
+    .insert(sessionsTable)
+    .values({
+      userId,
+      deviceInfo: getDeviceInfo(req),
+      ipAddress: getIp(req),
+      expiresAt,
+    })
+    .returning({ id: sessionsTable.id });
+  return session.id;
 }
 
 router.post("/auth/signup", async (req, res) => {
@@ -46,7 +73,8 @@ router.post("/auth/signup", async (req, res) => {
     })
     .returning();
 
-  const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: "7d" });
+  const sessionId = await createSession(user.id, req);
+  const token = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
   logActivity(user.id, "signup", "Account created");
   res.status(201).json({ id: user.id, email: user.email, name: user.name });
@@ -75,20 +103,27 @@ router.post("/auth/login", async (req, res) => {
   }
 
   await db.update(usersTable).set({ lastActiveAt: new Date() }).where(eq(usersTable.email, email.toLowerCase()));
-  const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: "7d" });
+  const sessionId = await createSession(user.id, req);
+  const token = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
   logActivity(user.id, "login", "Logged in");
   res.json({ id: user.id, email: user.email, name: user.name });
 });
 
-router.post("/auth/logout", (req, res) => {
+router.post("/auth/logout", async (req, res) => {
   const secret = process.env.SESSION_SECRET;
   if (secret) {
     try {
       const token = (req as any).cookies?.[COOKIE_NAME];
       if (token) {
-        const payload = jwt.verify(token, secret) as { userId: string };
+        const payload = jwt.verify(token, secret) as { userId: string; sessionId?: string };
         logActivity(payload.userId, "logout", "Logged out");
+        if (payload.sessionId) {
+          await db
+            .update(sessionsTable)
+            .set({ isRevoked: true })
+            .where(eq(sessionsTable.id, payload.sessionId));
+        }
       }
     } catch {}
   }
