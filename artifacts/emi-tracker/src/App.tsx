@@ -20,6 +20,7 @@ import CalculatorPage from "@/pages/calculator";
 import CalendarPage from "@/pages/calendar";
 import SearchPage from "@/pages/search";
 import BulkPayPage from "@/pages/bulk-pay";
+import ReceiptPage from "@/pages/receipt";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +68,7 @@ function Routes() {
       <Route path="/calendar" component={() => <ProtectedRoute component={CalendarPage} />} />
       <Route path="/search" component={() => <ProtectedRoute component={SearchPage} />} />
       <Route path="/bulk-pay" component={() => <ProtectedRoute component={BulkPayPage} />} />
+      <Route path="/emi-orders/:id/payments/:paymentId/receipt" component={() => <ProtectedRoute component={ReceiptPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

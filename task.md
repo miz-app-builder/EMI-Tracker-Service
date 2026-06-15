@@ -41,7 +41,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [x] **T06 — Bulk Payment**
   Pay multiple EMIs at once from a single screen (useful at month-end).
 
-- [ ] **T07 — Payment Receipt (Printable)**
+- [x] **T07 — Payment Receipt (Printable)**
   Each recorded payment gets a printable/downloadable receipt page.
 
 - [x] **T08 — Edit / Delete Payment**
@@ -138,6 +138,14 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 ---
 
 ## ✅ Completed Tasks
+
+- [x] **T07 — Payment Receipt (Printable)** _(2026-06-15)_
+  - **New page** `pages/receipt.tsx` — route `/emi-orders/:id/payments/:paymentId/receipt`.
+  - Loads order via `useGetEmiOrder`; finds the specific payment by `paymentId` from the payments array.
+  - **Receipt layout**: teal branded header with receipt number (`orderId-paymentId`), "PAID" green badge, product/shop details, payment fields (method, account/TxnID/bank based on type), amount highlight block with total paid + remaining, 3-col summary bar (purchase date, down payment, monthly amount).
+  - **Print support**: `window.print()` button; `@media print` CSS injected via `<style>` tag hides nav/back/print buttons and removes card border for clean paper output.
+  - **Detail page**: Receipt 🧾 icon button added to each payment history row (appears on hover), links to the receipt page.
+  - **Router**: `/emi-orders/:id/payments/:paymentId/receipt` added as a protected route.
 
 - [x] **T26 — bKash / Nagad SMS Parser** _(2026-06-15)_
   - **Pure frontend** — no backend changes. Regex parser in `lib/smsParser.ts`.

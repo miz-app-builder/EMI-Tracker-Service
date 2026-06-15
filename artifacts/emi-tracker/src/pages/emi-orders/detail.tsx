@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText,
-  CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, Pencil, Trash2,
+  CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, Pencil, Trash2, Receipt,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -609,6 +609,15 @@ export default function EmiOrderDetail() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-teal-600"
+                            title="View Receipt"
+                            onClick={() => navigate(`/emi-orders/${orderId}/payments/${payment.id}/receipt`)}
+                          >
+                            <Receipt className="h-3.5 w-3.5" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
