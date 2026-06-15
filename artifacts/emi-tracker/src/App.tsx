@@ -11,8 +11,6 @@ import Shops from "@/pages/shops";
 import EmiOrders from "@/pages/emi-orders/index";
 import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
-import SignUpPage from "@/pages/sign-up";
-import SignInPage from "@/pages/sign-in";
 import LandingPage from "@/pages/landing";
 
 export const queryClient = new QueryClient({
@@ -36,7 +34,7 @@ function HomeRedirect() {
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (!user) return <Redirect to="/sign-in" />;
+  if (!user) return <Redirect to="/" />;
   return (
     <Layout>
       <Component />
@@ -44,19 +42,10 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
-function GuestRoute({ component: Component }: { component: React.ComponentType }) {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (user) return <Redirect to="/dashboard" />;
-  return <Component />;
-}
-
 function Routes() {
   return (
     <Switch>
       <Route path="/" component={HomeRedirect} />
-      <Route path="/sign-in" component={() => <GuestRoute component={SignInPage} />} />
-      <Route path="/sign-up" component={() => <GuestRoute component={SignUpPage} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/shops" component={() => <ProtectedRoute component={Shops} />} />
       <Route path="/emi-orders" component={() => <ProtectedRoute component={EmiOrders} />} />

@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetch(`${basePath}/api/auth/logout`, { method: "POST", credentials: "include" });
     } catch {}
     setUser(null);
-    window.location.href = `${basePath}/sign-in`;
+    window.location.href = `${basePath}/`;
   }
 
   useEffect(() => {
