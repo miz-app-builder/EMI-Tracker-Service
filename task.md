@@ -80,7 +80,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 📈 Smart Features
 
-- [ ] **T16 — Early Payoff Calculator**
+- [x] **T16 — Early Payoff Calculator**
   Shows how much you save if you pay off the remaining balance today.
 
 - [x] **T17 — Total Debt Overview**
