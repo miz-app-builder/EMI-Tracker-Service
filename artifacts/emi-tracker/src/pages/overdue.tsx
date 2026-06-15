@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { useListEmiOrders, getListEmiOrdersQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle2, Store, Calendar, CreditCard, ArrowRight, TrendingDown } from "lucide-react";
+import { AlertCircle, CheckCircle2, Store, Calendar, CreditCard, ArrowRight, TrendingDown, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { QuickPayDialog } from "@/components/QuickPayDialog";
 
 function getDaysOverdue(nextDueDate: string): number {
   const today = new Date();
@@ -19,6 +21,7 @@ export default function OverduePage() {
     { status: "active" },
     { query: { queryKey: getListEmiOrdersQueryKey({ status: "active" }) } }
   );
+  const [quickPayOrder, setQuickPayOrder] = useState<{ id: number; productName: string; shopName: string; amount: number } | null>(null);
 
   const overdueOrders = (orders ?? [])
     .filter((o) => o.nextDueDate && getDaysOverdue(o.nextDueDate) > 0)
@@ -170,11 +173,27 @@ export default function OverduePage() {
                         </div>
                       </div>
 
-                      <Link href={`/emi-orders/${order.id}`}>
-                        <Button size="sm" variant="destructive" className="gap-2 shrink-0">
-                          Pay Now <ArrowRight className="h-4 w-4" />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="gap-2 shrink-0"
+                          onClick={() => setQuickPayOrder({
+                            id: order.id,
+                            productName: order.productName,
+                            shopName: order.shopName,
+                            amount: order.nextMonthlyAmount ?? order.monthlyAmount,
+                          })}
+                        >
+                          <CreditCard className="h-4 w-4" />
+                          Pay Now
                         </Button>
-                      </Link>
+                        <Link href={`/emi-orders/${order.id}`}>
+                          <Button size="sm" variant="outline" className="gap-1.5 shrink-0">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -183,6 +202,17 @@ export default function OverduePage() {
           })
         )}
       </div>
+
+      {quickPayOrder && (
+        <QuickPayDialog
+          orderId={quickPayOrder.id}
+          productName={quickPayOrder.productName}
+          shopName={quickPayOrder.shopName}
+          amountDue={quickPayOrder.amount}
+          open={!!quickPayOrder}
+          onOpenChange={(open) => { if (!open) setQuickPayOrder(null); }}
+        />
+      )}
     </div>
   );
 }

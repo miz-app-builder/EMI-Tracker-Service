@@ -64,7 +64,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T11 — Dark Mode Toggle**
   Light/dark mode switch accessible from profile or header.
 
-- [ ] **T12 — Quick Pay from Dashboard**
+- [x] **T12 — Quick Pay from Dashboard**
   Record a payment directly from the dashboard card without going to the detail page.
 
 - [ ] **T13 — Calendar View**

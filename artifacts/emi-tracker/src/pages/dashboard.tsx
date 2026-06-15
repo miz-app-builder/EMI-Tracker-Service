@@ -1,14 +1,17 @@
+import { useState } from "react";
 import {
   useGetDashboardSummary, getGetDashboardSummaryQueryKey,
   useGetDueThisMonth, getGetDueThisMonthQueryKey,
   useGetShopStats, getGetShopStatsQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { Activity, Wallet, AlertCircle, Calendar, Clock, ArrowRight } from "lucide-react";
+import { Activity, Wallet, AlertCircle, Calendar, Clock, ArrowRight, CreditCard, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { QuickPayDialog } from "@/components/QuickPayDialog";
 
 function getDaysUntil(dateStr: string | null | undefined) {
   if (!dateStr) return null;
@@ -23,6 +26,7 @@ export default function Dashboard() {
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
   const { data: dueThisMonth, isLoading: loadingDue } = useGetDueThisMonth({ query: { queryKey: getGetDueThisMonthQueryKey() } });
   const { data: shopStats, isLoading: loadingStats } = useGetShopStats({ query: { queryKey: getGetShopStatsQueryKey() } });
+  const [quickPayOrder, setQuickPayOrder] = useState<{ id: number; productName: string; shopName: string; amount: number } | null>(null);
 
   const nextPayDays = getDaysUntil(summary?.nextPaymentDate);
 
@@ -146,32 +150,58 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {dueThisMonth.map((order) => {
                   const days = getDaysUntil(order.nextDueDate);
+                  const isOverdue = days !== null && days < 0;
+                  const isUrgent = days !== null && days >= 0 && days <= 7;
                   return (
-                    <Link key={order.id} href={`/emi-orders/${order.id}`}>
-                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors mb-2">
-                        <div className="flex-1">
-                          <p className="font-semibold">{order.productName}</p>
-                          <p className="text-sm text-muted-foreground">{order.shopName}</p>
-                          {order.nextDueDate && (
-                            <p className={`text-xs mt-1 ${days !== null && days < 0 ? "text-destructive" : days !== null && days <= 7 ? "text-orange-600" : "text-muted-foreground"}`}>
-                              Due: {formatDate(order.nextDueDate)}
-                              {days !== null && days < 0 && ` (${Math.abs(days)} day(s) ago)`}
-                              {days !== null && days === 0 && " (Today!)"}
-                              {days !== null && days > 0 && days <= 7 && ` (${days} day(s) left)`}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-primary">{formatCurrency(order.monthlyAmount)}</p>
+                    <div
+                      key={order.id}
+                      className={`flex items-center justify-between p-4 border rounded-lg transition-colors mb-2 ${isOverdue ? "border-destructive/30 bg-destructive/[0.02]" : "hover:bg-muted/30"}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{order.productName}</p>
+                        <p className="text-sm text-muted-foreground">{order.shopName}</p>
+                        {order.nextDueDate && (
+                          <p className={`text-xs mt-1 ${isOverdue ? "text-destructive" : isUrgent ? "text-orange-600" : "text-muted-foreground"}`}>
+                            Due: {formatDate(order.nextDueDate)}
+                            {isOverdue && ` (${Math.abs(days!)} day(s) ago)`}
+                            {days === 0 && " (Today!)"}
+                            {isUrgent && days! > 0 && ` (${days} day(s) left)`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 ml-3 shrink-0">
+                        <div className="text-right mr-2">
+                          <p className={`font-bold ${isOverdue ? "text-destructive" : "text-primary"}`}>
+                            {formatCurrency(order.monthlyAmount)}
+                          </p>
                           <Badge
                             variant="outline"
-                            className={`mt-1 text-xs ${days !== null && days < 0 ? "border-destructive text-destructive" : days !== null && days <= 7 ? "border-orange-400 text-orange-600" : ""}`}
+                            className={`mt-1 text-xs ${isOverdue ? "border-destructive text-destructive" : isUrgent ? "border-orange-400 text-orange-600" : ""}`}
                           >
-                            {days !== null && days < 0 ? "Overdue" : "Due"}
+                            {isOverdue ? "Overdue" : "Due"}
                           </Badge>
                         </div>
+                        <Button
+                          size="sm"
+                          variant={isOverdue ? "destructive" : "default"}
+                          className="gap-1.5"
+                          onClick={() => setQuickPayOrder({
+                            id: order.id,
+                            productName: order.productName,
+                            shopName: order.shopName,
+                            amount: order.monthlyAmount,
+                          })}
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          Pay
+                        </Button>
+                        <Link href={`/emi-orders/${order.id}`}>
+                          <Button size="sm" variant="ghost" className="gap-1.5 text-muted-foreground">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -224,6 +254,17 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {quickPayOrder && (
+        <QuickPayDialog
+          orderId={quickPayOrder.id}
+          productName={quickPayOrder.productName}
+          shopName={quickPayOrder.shopName}
+          amountDue={quickPayOrder.amount}
+          open={!!quickPayOrder}
+          onOpenChange={(open) => { if (!open) setQuickPayOrder(null); }}
+        />
+      )}
     </div>
   );
 }
