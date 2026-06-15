@@ -61,14 +61,44 @@ export default function ReceiptPage() {
     <>
       {/* Print styles injected inline */}
       <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 12mm 14mm;
+        }
         @media print {
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
-          body { background: white !important; }
-          .receipt-card {
-            border: none !important;
-            box-shadow: none !important;
-            max-width: 100% !important;
+          html, body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
+          .receipt-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .receipt-card {
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: none !important;
+            max-width: 148mm !important;
+            width: 148mm !important;
+            page-break-inside: avoid;
+            overflow: visible !important;
+            border-radius: 8px !important;
+          }
+          .receipt-card .px-6 { padding-left: 14px !important; padding-right: 14px !important; }
+          .receipt-card .py-5 { padding-top: 10px !important; padding-bottom: 10px !important; }
+          .receipt-card .space-y-5 > * + * { margin-top: 10px !important; }
+          .receipt-card .space-y-2\\.5 > * + * { margin-top: 6px !important; }
+          .receipt-card .text-3xl { font-size: 1.4rem !important; }
+          .receipt-card .text-xl { font-size: 1rem !important; }
+          .receipt-card .text-lg { font-size: 0.95rem !important; }
+          .receipt-card .p-4 { padding: 10px !important; }
+          .receipt-card .p-3 { padding: 7px !important; }
+          .receipt-card .gap-3 { gap: 8px !important; }
         }
       `}</style>
 
