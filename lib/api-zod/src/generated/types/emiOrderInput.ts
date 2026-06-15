@@ -15,6 +15,5 @@ export interface EmiOrderInput {
   totalPrice: number;
   downPayment: number;
   emiMonths: number;
-  monthlyAmount: number;
   purchaseDate: string;
 }

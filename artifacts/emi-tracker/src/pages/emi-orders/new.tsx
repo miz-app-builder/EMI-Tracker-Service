@@ -26,7 +26,6 @@ export default function NewEmiOrder() {
     totalPrice: "",
     downPayment: "",
     emiMonths: "",
-    monthlyAmount: "",
     purchaseDate: new Date().toISOString().split("T")[0],
   });
 
@@ -36,17 +35,6 @@ export default function NewEmiOrder() {
   );
 
   const createOrder = useCreateEmiOrder();
-
-  const calculateEMI = () => {
-    const total = Number(formData.totalPrice) || 0;
-    const down = Number(formData.downPayment) || 0;
-    const months = Number(formData.emiMonths) || 0;
-    if (total > 0 && months > 0) {
-      const remaining = Math.max(0, total - down);
-      const monthly = Math.ceil(remaining / months);
-      setFormData((prev) => ({ ...prev, monthlyAmount: monthly.toString() }));
-    }
-  };
 
   const handleProductSelect = (val: string) => {
     if (val === "custom") {
@@ -72,9 +60,14 @@ export default function NewEmiOrder() {
     return d.toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" });
   };
 
+  // Auto-calculate monthly amount (same logic as server)
+  const principal = Math.max(0, (Number(formData.totalPrice) || 0) - (Number(formData.downPayment) || 0));
+  const months = Number(formData.emiMonths) || 0;
+  const autoMonthlyAmount = months > 0 ? Math.ceil(principal / months) : 0;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.shopId || !formData.productName || !formData.totalPrice || !formData.emiMonths || !formData.monthlyAmount || !formData.purchaseDate) {
+    if (!formData.shopId || !formData.productName || !formData.totalPrice || !formData.emiMonths || !formData.purchaseDate) {
       toast({ title: "সব required field পূরণ করুন", variant: "destructive" });
       return;
     }
@@ -88,7 +81,6 @@ export default function NewEmiOrder() {
           totalPrice: Number(formData.totalPrice),
           downPayment: Number(formData.downPayment) || 0,
           emiMonths: Number(formData.emiMonths),
-          monthlyAmount: Number(formData.monthlyAmount),
           purchaseDate: formData.purchaseDate,
         },
       },
@@ -104,8 +96,6 @@ export default function NewEmiOrder() {
       }
     );
   };
-
-  const principal = Math.max(0, (Number(formData.totalPrice) || 0) - (Number(formData.downPayment) || 0));
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -198,7 +188,6 @@ export default function NewEmiOrder() {
                     type="number"
                     value={formData.totalPrice}
                     onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value })}
-                    onBlur={calculateEMI}
                     placeholder="০"
                   />
                 </div>
@@ -209,7 +198,6 @@ export default function NewEmiOrder() {
                     type="number"
                     value={formData.downPayment}
                     onChange={(e) => setFormData({ ...formData, downPayment: e.target.value })}
-                    onBlur={calculateEMI}
                     placeholder="০"
                   />
                 </div>
@@ -234,56 +222,42 @@ export default function NewEmiOrder() {
               </h3>
 
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-4">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="emiMonths" className="text-primary font-semibold">
-                      কত মাসের কিস্তি <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="emiMonths"
-                      type="number"
-                      min="1"
-                      value={formData.emiMonths}
-                      onChange={(e) => setFormData({ ...formData, emiMonths: e.target.value })}
-                      onBlur={calculateEMI}
-                      className="border-primary/30"
-                      placeholder="যেমন: 12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="monthlyAmount" className="text-primary font-semibold">
-                        মাসিক কিস্তি (টাকা) <span className="text-destructive">*</span>
-                      </Label>
-                      <Button type="button" variant="link" size="sm" onClick={calculateEMI} className="h-auto p-0 text-primary text-xs">
-                        Auto Calculate
-                      </Button>
-                    </div>
-                    <Input
-                      id="monthlyAmount"
-                      type="number"
-                      value={formData.monthlyAmount}
-                      onChange={(e) => setFormData({ ...formData, monthlyAmount: e.target.value })}
-                      className="border-primary/30 font-bold"
-                      placeholder="০"
-                    />
-                  </div>
+                <div className="space-y-2 max-w-xs">
+                  <Label htmlFor="emiMonths" className="text-primary font-semibold">
+                    কত মাসের কিস্তি <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="emiMonths"
+                    type="number"
+                    min="1"
+                    value={formData.emiMonths}
+                    onChange={(e) => setFormData({ ...formData, emiMonths: e.target.value })}
+                    className="border-primary/30"
+                    placeholder="যেমন: 12"
+                  />
                 </div>
 
-                {formData.totalPrice && formData.emiMonths && formData.monthlyAmount && (
-                  <div className="pt-4 border-t border-primary/10 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">মূল কিস্তির পরিমাণ (ডাউন বাদে):</span>
+                {/* Auto-calculated preview */}
+                {formData.totalPrice && formData.emiMonths && (
+                  <div className="pt-4 border-t border-primary/10 space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">EMI মূল পরিমাণ (ডাউন বাদে):</span>
                       <span className="font-semibold">{formatCurrency(principal)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">মোট কিস্তি মূল্য:</span>
-                      <span className="font-bold text-primary">
-                        {formatCurrency(Number(formData.monthlyAmount) * Number(formData.emiMonths))}
+                    <div className="flex items-center justify-between bg-primary/10 rounded-md px-3 py-2">
+                      <span className="font-semibold text-primary">মাসিক কিস্তি (Auto):</span>
+                      <span className="font-bold text-primary text-lg">
+                        {autoMonthlyAmount > 0 ? formatCurrency(autoMonthlyAmount) : "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">মোট EMI মূল্য:</span>
+                      <span className="font-bold">
+                        {autoMonthlyAmount > 0 ? formatCurrency(autoMonthlyAmount * months) : "—"}
                       </span>
                     </div>
                     {previewNextDue() && (
-                      <div className="flex justify-between pt-1 border-t border-primary/10">
+                      <div className="flex items-center justify-between pt-1 border-t border-primary/10">
                         <span className="text-muted-foreground">প্রথম কিস্তির তারিখ:</span>
                         <span className="font-semibold text-orange-600">{previewNextDue()}</span>
                       </div>

@@ -448,6 +448,8 @@ components:
           type: integer
         monthlyAmount:
           type: number
+        nextMonthlyAmount:
+          type: number
         totalPaid:
           type: number
         remainingAmount:
@@ -465,7 +467,7 @@ components:
 
     EmiOrderInput:
       type: object
-      required: [shopId, productName, totalPrice, downPayment, emiMonths, monthlyAmount, purchaseDate]
+      required: [shopId, productName, totalPrice, downPayment, emiMonths, purchaseDate]
       properties:
         shopId:
           type: integer
@@ -480,8 +482,6 @@ components:
           type: number
         emiMonths:
           type: integer
-        monthlyAmount:
-          type: number
         purchaseDate:
           type: string
 
@@ -522,6 +522,8 @@ components:
         emiMonths:
           type: integer
         monthlyAmount:
+          type: number
+        nextMonthlyAmount:
           type: number
         totalPaid:
           type: number

@@ -27,11 +27,18 @@ function calcNextDueDate(purchaseDate: string, emiMonths: number, installmentsPa
 function formatOrder(order: Record<string, unknown>, totalPaid: number, installmentsPaid: number) {
   const totalPrice = Number(order.totalPrice);
   const downPayment = Number(order.downPayment);
+  const emiMonths = Number(order.emiMonths);
   const emiTotal = totalPrice - downPayment;
   const remaining = Math.max(0, emiTotal - totalPaid);
+  const remainingMonths = Math.max(0, emiMonths - installmentsPaid);
+
+  // Dynamic next monthly amount: remaining balance divided by remaining months
+  const nextMonthlyAmount = remainingMonths > 0 ? Math.ceil(remaining / remainingMonths) : 0;
+
   const nextDueDate = order.status === "completed"
     ? null
-    : calcNextDueDate(order.purchaseDate as string, order.emiMonths as number, installmentsPaid);
+    : calcNextDueDate(order.purchaseDate as string, emiMonths, installmentsPaid);
+
   return {
     ...order,
     totalPrice,
@@ -41,6 +48,7 @@ function formatOrder(order: Record<string, unknown>, totalPaid: number, installm
     remainingAmount: remaining,
     installmentsPaid,
     nextDueDate,
+    nextMonthlyAmount,
   };
 }
 
@@ -97,6 +105,11 @@ router.get("/emi-orders", async (req, res) => {
 
 router.post("/emi-orders", async (req, res) => {
   const body = CreateEmiOrderBody.parse(req.body);
+
+  // Auto-calculate monthly amount from total, down payment, and months
+  const emiTotal = body.totalPrice - body.downPayment;
+  const monthlyAmount = body.emiMonths > 0 ? Math.ceil(emiTotal / body.emiMonths) : 0;
+
   const [order] = await db
     .insert(emiOrdersTable)
     .values({
@@ -106,7 +119,7 @@ router.post("/emi-orders", async (req, res) => {
       totalPrice: String(body.totalPrice),
       downPayment: String(body.downPayment),
       emiMonths: body.emiMonths,
-      monthlyAmount: String(body.monthlyAmount),
+      monthlyAmount: String(monthlyAmount),
       purchaseDate: body.purchaseDate,
       status: "active",
     })
@@ -182,6 +195,21 @@ router.put("/emi-orders/:id", async (req, res) => {
   if (body.monthlyAmount !== undefined) updateData.monthlyAmount = String(body.monthlyAmount);
   if (body.status !== undefined) updateData.status = body.status;
   if (body.purchaseDate !== undefined) updateData.purchaseDate = body.purchaseDate;
+
+  // If price/down payment/months changed, recalculate monthlyAmount
+  if (
+    (body.totalPrice !== undefined || body.downPayment !== undefined || body.emiMonths !== undefined) &&
+    body.monthlyAmount === undefined
+  ) {
+    const [existing] = await db.select().from(emiOrdersTable).where(eq(emiOrdersTable.id, id));
+    if (existing) {
+      const totalPrice = body.totalPrice ?? Number(existing.totalPrice);
+      const downPayment = body.downPayment ?? Number(existing.downPayment);
+      const emiMonths = body.emiMonths ?? existing.emiMonths;
+      const emiTotal = totalPrice - downPayment;
+      updateData.monthlyAmount = String(emiMonths > 0 ? Math.ceil(emiTotal / emiMonths) : 0);
+    }
+  }
 
   const [order] = await db
     .update(emiOrdersTable)

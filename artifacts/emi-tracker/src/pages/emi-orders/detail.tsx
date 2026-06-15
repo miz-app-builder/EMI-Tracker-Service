@@ -146,7 +146,7 @@ export default function EmiOrderDetail() {
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <Button
-                    onClick={() => setPaymentData((p) => ({ ...p, amount: order.monthlyAmount.toString() }))}
+                    onClick={() => setPaymentData((p) => ({ ...p, amount: (order.nextMonthlyAmount ?? order.monthlyAmount).toString() }))}
                   >
                     <CreditCard className="mr-2 h-4 w-4" /> কিস্তি দিন
                   </Button>
@@ -167,7 +167,10 @@ export default function EmiOrderDetail() {
                         className="font-bold text-lg"
                       />
                       <p className="text-xs text-muted-foreground">
-                        মাসিক কিস্তি: {formatCurrency(order.monthlyAmount)}
+                        প্রস্তাবিত কিস্তি: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
+                        {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+                          <span className="ml-1 text-muted-foreground">(মূল: {formatCurrency(order.monthlyAmount)})</span>
+                        )}
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -226,7 +229,12 @@ export default function EmiOrderDetail() {
           <Clock className="h-5 w-5 shrink-0" />
           <div>
             <p className="font-semibold">পরবর্তী কিস্তির তারিখ: {formatDate(order.nextDueDate)}</p>
-            <p className="text-sm opacity-80">{nextDueBadge.label} — পরিমাণ: {formatCurrency(order.monthlyAmount)}</p>
+            <p className="text-sm opacity-80">
+          {nextDueBadge.label} — পরবর্তী কিস্তি: <span className="font-bold">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
+          {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+            <span className="ml-1 opacity-70">(মূল: {formatCurrency(order.monthlyAmount)})</span>
+          )}
+        </p>
           </div>
         </div>
       )}
@@ -295,8 +303,11 @@ export default function EmiOrderDetail() {
                   <CreditCard className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">মাসিক কিস্তি</p>
-                  <p className="font-bold text-primary">{formatCurrency(order.monthlyAmount)}</p>
+                  <p className="text-sm text-muted-foreground">পরবর্তী কিস্তি</p>
+                  <p className="font-bold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</p>
+                  {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+                    <p className="text-xs text-muted-foreground">মূল: {formatCurrency(order.monthlyAmount)}</p>
+                  )}
                 </div>
               </div>
             </div>
