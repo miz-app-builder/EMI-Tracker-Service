@@ -259,6 +259,9 @@ export const ListEmiPaymentsResponseItem = zod.object({
   "amount": zod.number(),
   "paymentDate": zod.string(),
   "paymentMethod": zod.string(),
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "transactionId": zod.string().nullish(),
   "notes": zod.string().nullish()
 })
 export const ListEmiPaymentsResponse = zod.array(ListEmiPaymentsResponseItem)
@@ -275,6 +278,9 @@ export const CreateEmiPaymentBody = zod.object({
   "amount": zod.number(),
   "paymentDate": zod.string(),
   "paymentMethod": zod.string(),
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "transactionId": zod.string().nullish(),
   "notes": zod.string().nullish()
 })
 

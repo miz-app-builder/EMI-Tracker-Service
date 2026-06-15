@@ -294,6 +294,9 @@ router.post("/emi-orders/:id/payments", async (req, res) => {
       amount: String(body.amount),
       paymentDate: body.paymentDate,
       paymentMethod: body.paymentMethod,
+      bankName: body.bankName ?? null,
+      accountNumber: body.accountNumber ?? null,
+      transactionId: body.transactionId ?? null,
       notes: body.notes ?? null,
     })
     .returning();

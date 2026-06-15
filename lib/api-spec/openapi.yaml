@@ -570,6 +570,12 @@ components:
           type: string
         paymentMethod:
           type: string
+        bankName:
+          type: ["string", "null"]
+        accountNumber:
+          type: ["string", "null"]
+        transactionId:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
 
@@ -583,6 +589,12 @@ components:
           type: string
         paymentMethod:
           type: string
+        bankName:
+          type: ["string", "null"]
+        accountNumber:
+          type: ["string", "null"]
+        transactionId:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
 

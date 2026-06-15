@@ -11,5 +11,11 @@ export interface EmiPaymentInput {
   paymentDate: string;
   paymentMethod: string;
   /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  accountNumber?: string | null;
+  /** @nullable */
+  transactionId?: string | null;
+  /** @nullable */
   notes?: string | null;
 }

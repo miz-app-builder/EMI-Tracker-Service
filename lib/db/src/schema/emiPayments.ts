@@ -9,6 +9,9 @@ export const emiPaymentsTable = pgTable("emi_payments", {
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   paymentDate: date("payment_date", { mode: "string" }).notNull(),
   paymentMethod: text("payment_method").notNull(),
+  bankName: text("bank_name"),
+  accountNumber: text("account_number"),
+  transactionId: text("transaction_id"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

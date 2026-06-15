@@ -103,6 +103,12 @@ export interface EmiPayment {
   paymentDate: string;
   paymentMethod: string;
   /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  accountNumber?: string | null;
+  /** @nullable */
+  transactionId?: string | null;
+  /** @nullable */
   notes?: string | null;
 }
 
@@ -136,6 +142,12 @@ export interface EmiPaymentInput {
   amount: number;
   paymentDate: string;
   paymentMethod: string;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  accountNumber?: string | null;
+  /** @nullable */
+  transactionId?: string | null;
   /** @nullable */
   notes?: string | null;
 }

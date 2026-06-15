@@ -50,6 +50,9 @@ export default function EmiOrderDetail() {
     amount: "",
     paymentDate: new Date().toISOString().split("T")[0],
     paymentMethod: "Cash",
+    bankName: "",
+    accountNumber: "",
+    transactionId: "",
     notes: "",
   });
 
@@ -64,7 +67,10 @@ export default function EmiOrderDetail() {
           amount: Number(paymentData.amount),
           paymentDate: paymentData.paymentDate,
           paymentMethod: paymentData.paymentMethod,
-          notes: paymentData.notes,
+          bankName: paymentData.bankName || null,
+          accountNumber: paymentData.accountNumber || null,
+          transactionId: paymentData.transactionId || null,
+          notes: paymentData.notes || null,
         },
       },
       {
@@ -72,7 +78,7 @@ export default function EmiOrderDetail() {
           queryClient.invalidateQueries({ queryKey: getGetEmiOrderQueryKey(orderId) });
           queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
           setOpen(false);
-          setPaymentData({ amount: "", paymentDate: new Date().toISOString().split("T")[0], paymentMethod: "Cash", notes: "" });
+          setPaymentData({ amount: "", paymentDate: new Date().toISOString().split("T")[0], paymentMethod: "Cash", bankName: "", accountNumber: "", transactionId: "", notes: "" });
           toast({ title: "কিস্তি যোগ হয়েছে!" });
         },
         onError: () => {
@@ -188,7 +194,7 @@ export default function EmiOrderDetail() {
                         <Label htmlFor="paymentMethod">পদ্ধতি</Label>
                         <Select
                           value={paymentData.paymentMethod}
-                          onValueChange={(val) => setPaymentData({ ...paymentData, paymentMethod: val })}
+                          onValueChange={(val) => setPaymentData({ ...paymentData, paymentMethod: val, bankName: "", accountNumber: "", transactionId: "" })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -196,18 +202,83 @@ export default function EmiOrderDetail() {
                           <SelectContent>
                             <SelectItem value="Cash">নগদ (Cash)</SelectItem>
                             <SelectItem value="Bank Transfer">ব্যাংক ট্রান্সফার</SelectItem>
-                            <SelectItem value="Mobile Banking">মোবাইল ব্যাংকিং (bKash/Nagad)</SelectItem>
+                            <SelectItem value="bKash">bKash</SelectItem>
+                            <SelectItem value="Nagad">Nagad</SelectItem>
+                            <SelectItem value="Rocket">Rocket</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
+
+                    {paymentData.paymentMethod === "Bank Transfer" && (
+                      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">ব্যাংক ট্রান্সফার বিবরণ</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="bankName">ব্যাংকের নাম</Label>
+                            <Input
+                              id="bankName"
+                              value={paymentData.bankName}
+                              onChange={(e) => setPaymentData({ ...paymentData, bankName: e.target.value })}
+                              placeholder="যেমন: Dutch-Bangla Bank"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="accountNumber">অ্যাকাউন্ট নম্বর</Label>
+                            <Input
+                              id="accountNumber"
+                              value={paymentData.accountNumber}
+                              onChange={(e) => setPaymentData({ ...paymentData, accountNumber: e.target.value })}
+                              placeholder="যেমন: 1234567890"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="transactionId">Transaction ID / Reference</Label>
+                          <Input
+                            id="transactionId"
+                            value={paymentData.transactionId}
+                            onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
+                            placeholder="যেমন: TXN123456789"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {(paymentData.paymentMethod === "bKash" || paymentData.paymentMethod === "Nagad" || paymentData.paymentMethod === "Rocket") && (
+                      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{paymentData.paymentMethod} বিবরণ</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="accountNumber">{paymentData.paymentMethod} নম্বর</Label>
+                            <Input
+                              id="accountNumber"
+                              type="tel"
+                              value={paymentData.accountNumber}
+                              onChange={(e) => setPaymentData({ ...paymentData, accountNumber: e.target.value })}
+                              placeholder="যেমন: 01XXXXXXXXX"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="transactionId">Transaction ID</Label>
+                            <Input
+                              id="transactionId"
+                              value={paymentData.transactionId}
+                              onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
+                              placeholder="যেমন: ABC1234567890"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="notes">নোট (ঐচ্ছিক)</Label>
                       <Textarea
                         id="notes"
                         value={paymentData.notes}
                         onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
-                        placeholder="Transaction ID, মন্তব্য ইত্যাদি..."
+                        placeholder="যেকোনো মন্তব্য..."
                       />
                     </div>
                     <div className="flex justify-end pt-4">
@@ -401,9 +472,23 @@ export default function EmiOrderDetail() {
                         <div>{formatDate(payment.paymentDate)}</div>
                         <div className="text-xs text-muted-foreground">{idx + 1}নং কিস্তি</div>
                       </TableCell>
-                      <TableCell>{payment.paymentMethod}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
-                        {payment.notes || "-"}
+                      <TableCell>
+                        <div>{payment.paymentMethod}</div>
+                        {payment.accountNumber && (
+                          <div className="text-xs text-muted-foreground">{payment.accountNumber}</div>
+                        )}
+                        {payment.bankName && (
+                          <div className="text-xs text-muted-foreground">{payment.bankName}</div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm max-w-[200px]">
+                        {payment.transactionId && (
+                          <div className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded inline-block mb-1">
+                            {payment.transactionId}
+                          </div>
+                        )}
+                        {payment.notes && <div className="truncate">{payment.notes}</div>}
+                        {!payment.transactionId && !payment.notes && "-"}
                       </TableCell>
                       <TableCell className="text-right font-bold text-primary">{formatCurrency(payment.amount)}</TableCell>
                     </TableRow>
