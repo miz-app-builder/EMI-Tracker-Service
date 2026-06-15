@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { db, emiOrdersTable, emiPaymentsTable, shopsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
+import { resolveUserId } from "../lib/resolveUserId";
 
 const router = Router();
 
 router.get("/dashboard/summary", async (req, res) => {
-  const userId = (req as any).userId;
+  const userId = await resolveUserId((req as any).userId);
+  if (!userId) { res.status(401).json({ error: "User not found" }); return; }
 
   const orders = await db
     .select({
@@ -48,7 +50,7 @@ router.get("/dashboard/summary", async (req, res) => {
     const thisMonthPayments = await db
       .select({ total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)` })
       .from(emiPaymentsTable)
-      .where(sql`${emiPaymentsTable.emiOrderId} = ANY(${sql.raw(`ARRAY[${orderIds.join(",")}]::int[]`)}) AND ${emiPaymentsTable.paymentDate} >= ${monthStart} AND ${emiPaymentsTable.paymentDate} <= ${monthEndStr}`);
+      .where(sql`${emiPaymentsTable.emiOrderId} = ANY(ARRAY[${sql.raw(orderIds.join(","))}]::int[]) AND ${emiPaymentsTable.paymentDate} >= ${monthStart} AND ${emiPaymentsTable.paymentDate} <= ${monthEndStr}`);
     thisMonthCollected = Number(thisMonthPayments[0]?.total ?? 0);
   }
 
@@ -70,20 +72,15 @@ router.get("/dashboard/summary", async (req, res) => {
     if (order.status === "active") {
       totalActiveOrders++;
       totalDueAmount += remaining;
-
       const purchaseDate = new Date(order.purchaseDate);
       const planEndDate = new Date(purchaseDate);
       planEndDate.setMonth(planEndDate.getMonth() + order.emiMonths);
       if (planEndDate < now && remaining > 0) overdueOrders++;
-
       if (installmentsPaid < order.emiMonths) {
-        const nextInstallment = installmentsPaid + 1;
         const nd = new Date(order.purchaseDate);
-        nd.setMonth(nd.getMonth() + nextInstallment);
+        nd.setMonth(nd.getMonth() + installmentsPaid + 1);
         const ndStr = nd.toISOString().split("T")[0];
-        if (!nextPaymentDate || ndStr < nextPaymentDate) {
-          nextPaymentDate = ndStr;
-        }
+        if (!nextPaymentDate || ndStr < nextPaymentDate) nextPaymentDate = ndStr;
       }
     } else {
       totalCompletedOrders++;
@@ -103,7 +100,8 @@ router.get("/dashboard/summary", async (req, res) => {
 });
 
 router.get("/dashboard/due-this-month", async (req, res) => {
-  const userId = (req as any).userId;
+  const userId = await resolveUserId((req as any).userId);
+  if (!userId) { res.status(401).json({ error: "User not found" }); return; }
   const now = new Date();
 
   const rows = await db
@@ -156,12 +154,9 @@ router.get("/dashboard/due-this-month", async (req, res) => {
       const discount = Number(order.discount ?? 0);
       const emiTotal = Number(order.totalPrice) - discount - Number(order.downPayment);
       const remaining = Math.max(0, emiTotal - totalPaid);
-
-      const nextInstallment = installmentsPaid + 1;
       const nd = new Date(order.purchaseDate);
-      nd.setMonth(nd.getMonth() + nextInstallment);
+      nd.setMonth(nd.getMonth() + installmentsPaid + 1);
       const nextDueDate = installmentsPaid >= order.emiMonths ? null : nd.toISOString().split("T")[0];
-
       return {
         ...order,
         totalPrice: Number(order.totalPrice),
@@ -178,34 +173,24 @@ router.get("/dashboard/due-this-month", async (req, res) => {
 });
 
 router.get("/dashboard/shop-stats", async (req, res) => {
-  const userId = (req as any).userId;
+  const userId = await resolveUserId((req as any).userId);
+  if (!userId) { res.status(401).json({ error: "User not found" }); return; }
 
   const shops = await db.select().from(shopsTable).where(eq(shopsTable.userId, userId));
-
   const orders = await db
-    .select({
-      id: emiOrdersTable.id,
-      shopId: emiOrdersTable.shopId,
-      totalPrice: emiOrdersTable.totalPrice,
-      downPayment: emiOrdersTable.downPayment,
-    })
+    .select({ id: emiOrdersTable.id, shopId: emiOrdersTable.shopId, totalPrice: emiOrdersTable.totalPrice, downPayment: emiOrdersTable.downPayment })
     .from(emiOrdersTable)
     .where(eq(emiOrdersTable.userId, userId));
 
   const paymentTotals = await db
-    .select({
-      emiOrderId: emiPaymentsTable.emiOrderId,
-      total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)`,
-    })
+    .select({ emiOrderId: emiPaymentsTable.emiOrderId, total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)` })
     .from(emiPaymentsTable)
     .groupBy(emiPaymentsTable.emiOrderId);
 
   const paidMap: Record<number, number> = {};
-  paymentTotals.forEach((p) => {
-    paidMap[p.emiOrderId] = Number(p.total);
-  });
+  paymentTotals.forEach((p) => { paidMap[p.emiOrderId] = Number(p.total); });
 
-  const stats = shops.map((shop) => {
+  res.json(shops.map((shop) => {
     const shopOrders = orders.filter((o) => o.shopId === shop.id);
     let totalDue = 0;
     let totalPaid = 0;
@@ -215,16 +200,8 @@ router.get("/dashboard/shop-stats", async (req, res) => {
       totalDue += Math.max(0, emiTotal - paid);
       totalPaid += paid;
     }
-    return {
-      shopId: shop.id,
-      shopName: shop.name,
-      totalOrders: shopOrders.length,
-      totalDue,
-      totalPaid,
-    };
-  });
-
-  res.json(stats);
+    return { shopId: shop.id, shopName: shop.name, totalOrders: shopOrders.length, totalDue, totalPaid };
+  }));
 });
 
 export default router;

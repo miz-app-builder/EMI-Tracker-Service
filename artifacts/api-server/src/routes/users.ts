@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 const router = Router();
 
 router.post("/users/me", async (req, res) => {
-  const userId = (req as any).userId;
+  const clerkId = (req as any).userId;
   const { email, name } = req.body;
 
   if (!email) {
@@ -15,9 +15,9 @@ router.post("/users/me", async (req, res) => {
 
   const [user] = await db
     .insert(usersTable)
-    .values({ id: userId, email, name: name ?? null })
+    .values({ clerkId, email, name: name ?? null })
     .onConflictDoUpdate({
-      target: usersTable.id,
+      target: usersTable.clerkId,
       set: { email, name: name ?? null },
     })
     .returning();
@@ -26,8 +26,8 @@ router.post("/users/me", async (req, res) => {
 });
 
 router.get("/users/me", async (req, res) => {
-  const userId = (req as any).userId;
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  const clerkId = (req as any).userId;
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkId));
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
