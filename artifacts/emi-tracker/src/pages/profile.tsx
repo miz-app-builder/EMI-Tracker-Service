@@ -128,12 +128,24 @@ export default function ProfilePage() {
   const [exportLoading, setExportLoading] = useState(false);
 
   // ── Import ──
+  type ImportMode = "all" | "shops" | "emiOrders" | "payments";
   const importFileRef = useRef<HTMLInputElement>(null);
+  const [importMode, setImportMode] = useState<ImportMode>("all");
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importPreview, setImportPreview] = useState<{ shops: number; emiOrders: number; payments: number } | null>(null);
   const [importError, setImportError] = useState("");
   const [importLoading, setImportLoading] = useState(false);
   const [importResult, setImportResult] = useState<{ shops: number; emiOrders: number; payments: number } | null>(null);
+
+  function openImportPicker(mode: ImportMode) {
+    setImportMode(mode);
+    setImportError("");
+    setImportResult(null);
+    setImportFile(null);
+    setImportPreview(null);
+    if (importFileRef.current) importFileRef.current.value = "";
+    importFileRef.current?.click();
+  }
 
   function handleImportFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -168,7 +180,7 @@ export default function ProfilePage() {
     try {
       const text = await importFile.text();
       const json = JSON.parse(text);
-      const res = await fetch(`${basePath}/api/import`, {
+      const res = await fetch(`${basePath}/api/import?mode=${importMode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -460,9 +472,7 @@ export default function ProfilePage() {
           )}
 
           {dataTab === "import" && (
-            <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">Restore from a previously exported EMI Tracker JSON file. Existing data will not be overwritten.</p>
-
+            <div className="space-y-3">
               <input
                 ref={importFileRef}
                 type="file"
@@ -471,50 +481,75 @@ export default function ProfilePage() {
                 onChange={handleImportFileChange}
               />
 
-              {!importFile && !importResult && (
-                <button
-                  type="button"
-                  onClick={() => importFileRef.current?.click()}
-                  className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-colors py-10 cursor-pointer"
-                >
-                  <div className="p-3 rounded-full bg-primary/10">
-                    <Upload className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-foreground">Click to select a file</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">JSON file exported from EMI Tracker</p>
-                  </div>
-                </button>
-              )}
+              {/* Top row: description + Import All */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Select what to import from a previously exported JSON file</p>
+                <Button size="sm" onClick={() => openImportPicker("all")} disabled={importLoading} className="gap-2 shrink-0">
+                  {importLoading && importMode === "all" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  Import All
+                </Button>
+              </div>
 
+              {/* 3 cards — mirrors Export layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { key: "shops"     as const, label: "Shops",      icon: Store,      color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/30",   desc: "Restore all shops" },
+                  { key: "emiOrders" as const, label: "EMI Orders", icon: FileText,   color: "text-teal-600",   bg: "bg-teal-50 dark:bg-teal-950/30",   desc: "Restore orders only" },
+                  { key: "payments"  as const, label: "Payments",   icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30", desc: "Restore payments only" },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => openImportPicker(item.key)}
+                    disabled={importLoading}
+                    className={`flex items-center gap-3 p-3 rounded-lg border ${item.bg} hover:opacity-80 transition-opacity text-left disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.desc}</p>
+                    </div>
+                    <Upload className="h-3.5 w-3.5 ml-auto shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+
+              {/* File selected — inline preview */}
               {importFile && importPreview && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3 mt-1">
+                  <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{importFile.name}</p>
-                      <p className="text-xs text-muted-foreground">{(importFile.size / 1024).toFixed(1)} KB</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(importFile.size / 1024).toFixed(1)} KB · importing{" "}
+                        <span className="font-medium text-foreground">
+                          {importMode === "all" ? "everything" : importMode === "shops" ? "Shops" : importMode === "emiOrders" ? "EMI Orders" : "Payments"}
+                        </span>
+                      </p>
                     </div>
                     <button onClick={clearImport} className="text-muted-foreground hover:text-destructive transition-colors text-xs shrink-0">Remove</button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+
+                  <div className="grid grid-cols-3 gap-2">
                     {[
-                      { label: "Shops", count: importPreview.shops, icon: Store, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" },
-                      { label: "EMI Orders", count: importPreview.emiOrders, icon: Package, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800" },
-                      { label: "Payments", count: importPreview.payments, icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" },
+                      { label: "Shops",      count: importPreview.shops,     icon: Store,      color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" },
+                      { label: "EMI Orders", count: importPreview.emiOrders, icon: Package,    color: "text-teal-600",   bg: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800" },
+                      { label: "Payments",   count: importPreview.payments,  icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" },
                     ].map((item) => (
-                      <div key={item.label} className={`rounded-lg border p-3 text-center ${item.bg}`}>
-                        <item.icon className={`h-5 w-5 mx-auto mb-1 ${item.color}`} />
-                        <p className={`text-xl font-bold ${item.color}`}>{item.count}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                      <div key={item.label} className={`rounded-lg border p-2 text-center ${item.bg}`}>
+                        <item.icon className={`h-4 w-4 mx-auto mb-1 ${item.color}`} />
+                        <p className={`text-lg font-bold ${item.color}`}>{item.count}</p>
+                        <p className="text-xs text-muted-foreground">{item.label}</p>
                       </div>
                     ))}
                   </div>
+
                   {importError && (
                     <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
                       <AlertCircle className="h-4 w-4 shrink-0" />{importError}
                     </div>
                   )}
+
                   <div className="flex gap-2">
                     <Button onClick={handleImport} disabled={importLoading} className="gap-2">
                       {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -525,28 +560,30 @@ export default function ProfilePage() {
                 </div>
               )}
 
+              {/* Error with no file */}
               {importError && !importFile && (
                 <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
                   <AlertCircle className="h-4 w-4 shrink-0" />{importError}
                 </div>
               )}
 
+              {/* Success */}
               {importResult && (
-                <div className="space-y-3">
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3 mt-1">
                   <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
                     <span className="font-medium">Import complete!</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     {[
-                      { label: "Shops", count: importResult.shops, icon: Store, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" },
-                      { label: "EMI Orders", count: importResult.emiOrders, icon: Package, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800" },
-                      { label: "Payments", count: importResult.payments, icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" },
+                      { label: "Shops",      count: importResult.shops,     icon: Store,      color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" },
+                      { label: "EMI Orders", count: importResult.emiOrders, icon: Package,    color: "text-teal-600",   bg: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800" },
+                      { label: "Payments",   count: importResult.payments,  icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" },
                     ].map((item) => (
-                      <div key={item.label} className={`rounded-lg border p-3 text-center ${item.bg}`}>
-                        <item.icon className={`h-5 w-5 mx-auto mb-1 ${item.color}`} />
-                        <p className={`text-xl font-bold ${item.color}`}>{item.count}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                      <div key={item.label} className={`rounded-lg border p-2 text-center ${item.bg}`}>
+                        <item.icon className={`h-4 w-4 mx-auto mb-1 ${item.color}`} />
+                        <p className={`text-lg font-bold ${item.color}`}>{item.count}</p>
+                        <p className="text-xs text-muted-foreground">{item.label}</p>
                       </div>
                     ))}
                   </div>
