@@ -66,7 +66,7 @@ export default function ActivityLogPage() {
             <Activity className="h-8 w-8 text-primary" />
             Activity Log
           </h2>
-          <p className="text-muted-foreground mt-1">আপনার account-এ সব গুরুত্বপূর্ণ কার্যক্রমের ইতিহাস।</p>
+          <p className="text-muted-foreground mt-1">A history of all important activity on your account.</p>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ export default function ActivityLogPage() {
           ) : filtered.length === 0 ? (
             <div className="py-14 text-center text-muted-foreground">
               <Activity className="mx-auto h-8 w-8 opacity-30 mb-2" />
-              <p className="text-sm">{query ? "কোনো ফলাফল নেই" : "এখনো কোনো activity নেই"}</p>
+              <p className="text-sm">{query ? "No results found" : "No activity yet"}</p>
             </div>
           ) : (
             <div className="divide-y">

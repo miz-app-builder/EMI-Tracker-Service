@@ -38,7 +38,7 @@ export function SmsPastePanel({ onApply }: SmsPastePanelProps) {
       >
         <span className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4" />
-          SMS থেকে auto-fill করুন
+          Auto-fill from SMS
         </span>
         {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
@@ -46,14 +46,14 @@ export function SmsPastePanel({ onApply }: SmsPastePanelProps) {
       {open && (
         <div className="px-4 pb-4 space-y-3 border-t border-primary/20 pt-3">
           <p className="text-xs text-muted-foreground">
-            bKash / Nagad / Rocket-এর confirmation SMS এখানে paste করুন।
+            Paste your bKash / Nagad / Rocket confirmation SMS here.
           </p>
 
           <div className="relative">
             <Textarea
               value={smsText}
               onChange={(e) => { setSmsText(e.target.value); setApplied(false); }}
-              placeholder="উদাহরণ: You have sent Tk 1500.00 to 01711XXXXXX from your bKash account. TrxID A2B3C4D5E6."
+              placeholder="Example: You have sent Tk 1500.00 to 01711XXXXXX from your bKash account. TrxID A2B3C4D5E6."
               rows={3}
               className="text-xs resize-none pr-8"
             />
@@ -73,7 +73,7 @@ export function SmsPastePanel({ onApply }: SmsPastePanelProps) {
               {hasResult ? (
                 <>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-primary" /> পাওয়া গেছে
+                    <Sparkles className="h-3 w-3 text-primary" /> Detected
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {parsed.paymentMethod && (
@@ -107,13 +107,13 @@ export function SmsPastePanel({ onApply }: SmsPastePanelProps) {
                     {applied ? (
                       <><CheckCircle2 className="h-4 w-4 text-green-500" /> Applied!</>
                     ) : (
-                      <><Sparkles className="h-4 w-4" /> Form-এ apply করুন</>
+                      <><Sparkles className="h-4 w-4" /> Apply to form</>
                     )}
                   </Button>
                 </>
               ) : (
                 <p className="text-xs text-muted-foreground italic">
-                  SMS recognize করা যাচ্ছে না। bKash / Nagad / Rocket-এর SMS try করুন।
+                  Could not parse SMS. Try a bKash / Nagad / Rocket message.
                 </p>
               )}
             </div>

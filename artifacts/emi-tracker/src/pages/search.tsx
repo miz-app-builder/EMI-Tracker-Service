@@ -113,12 +113,12 @@ export default function SearchPage() {
       {!query && (
         <div className="flex flex-col items-center py-16 text-muted-foreground gap-3">
           <Search className="h-12 w-12 text-muted-foreground/30" />
-          <p className="text-base font-medium">কিছু খুঁজুন</p>
+          <p className="text-base font-medium">Search anything</p>
           <p className="text-sm text-center max-w-xs">
-            Product name, shop name, বা model number লিখুন
+            Type a product name, shop name, or model number
           </p>
           <p className="text-xs text-muted-foreground/60 mt-1">
-            Esc চাপলে ফিরে যাবে
+            Press Esc to go back
           </p>
         </div>
       )}
@@ -134,9 +134,9 @@ export default function SearchPage() {
       {query && !isLoading && totalResults === 0 && (
         <div className="flex flex-col items-center py-14 text-muted-foreground gap-3">
           <Search className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-base font-medium">কোনো ফলাফল নেই</p>
+          <p className="text-base font-medium">No results found</p>
           <p className="text-sm">
-            "<span className="font-medium text-foreground">{query}</span>" এর জন্য কিছু পাওয়া যায়নি
+            Nothing matched "<span className="font-medium text-foreground">{query}</span>"
           </p>
         </div>
       )}
@@ -147,7 +147,7 @@ export default function SearchPage() {
             <FileText className="h-4 w-4" />
             EMI Orders
             <span className="ml-auto font-normal normal-case tracking-normal text-muted-foreground/70">
-              {matchedOrders.length} টি
+              {matchedOrders.length}
             </span>
           </div>
           <div className="space-y-1.5">
@@ -176,7 +176,7 @@ export default function SearchPage() {
                         <p className="text-sm font-semibold text-primary">
                           {formatCurrency(order.remainingAmount ?? 0)}
                         </p>
-                        <p className="text-xs text-muted-foreground">বাকি</p>
+                        <p className="text-xs text-muted-foreground">Remaining</p>
                       </div>
                       <StatusBadge status={status} />
                       <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -195,7 +195,7 @@ export default function SearchPage() {
             <Store className="h-4 w-4" />
             Shops
             <span className="ml-auto font-normal normal-case tracking-normal text-muted-foreground/70">
-              {matchedShops.length} টি
+              {matchedShops.length}
             </span>
           </div>
           <div className="space-y-1.5">

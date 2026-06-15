@@ -443,16 +443,16 @@ function PinSettingsCard() {
   function handleSubmit() {
     if (mode === "remove") {
       const ok = removePin(pin1);
-      if (!ok) { setError("ভুল PIN"); return; }
-      setSuccess("PIN সরিয়ে দেওয়া হয়েছে।"); reset(); return;
+      if (!ok) { setError("Incorrect PIN"); return; }
+      setSuccess("PIN removed successfully."); reset(); return;
     }
     if (step === "enter") {
-      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("৪-ডিজিটের সংখ্যা দিন"); return; }
+      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("Please enter a 4-digit number"); return; }
       setStep("confirm"); setPin2(""); setError(""); return;
     }
-    if (pin1 !== pin2) { setError("PIN দুটো মিলছে না"); setPin2(""); return; }
+    if (pin1 !== pin2) { setError("PINs do not match"); setPin2(""); return; }
     setPin(pin1);
-    setSuccess("PIN সফলভাবে সেট হয়েছে!");
+    setSuccess("PIN set successfully!");
     reset();
   }
 
@@ -464,8 +464,8 @@ function PinSettingsCard() {
           PIN Lock
         </CardTitle>
         <CardDescription>
-          অ্যাপ খোলার সময় ৪-ডিজিটের PIN দিয়ে সুরক্ষিত রাখুন।{" "}
-          {hasPin ? <span className="text-green-600 font-medium">PIN সক্রিয় আছে ✓</span> : <span className="text-muted-foreground">PIN সেট নেই</span>}
+          Protect the app with a 4-digit PIN when opening.{" "}
+          {hasPin ? <span className="text-green-600 font-medium">PIN is active ✓</span> : <span className="text-muted-foreground">No PIN set</span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -475,16 +475,16 @@ function PinSettingsCard() {
           <div className="flex flex-wrap gap-2">
             {!hasPin && (
               <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("set"); setSuccess(""); }}>
-                <Shield className="h-4 w-4" /> PIN সেট করুন
+                <Shield className="h-4 w-4" /> Set PIN
               </Button>
             )}
             {hasPin && (
               <>
                 <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("change"); setSuccess(""); }}>
-                  <KeyRound className="h-4 w-4" /> PIN পরিবর্তন
+                  <KeyRound className="h-4 w-4" /> Change PIN
                 </Button>
                 <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("remove"); setSuccess(""); }}>
-                  <Trash2 className="h-4 w-4" /> PIN সরিয়ে দিন
+                  <Trash2 className="h-4 w-4" /> Remove PIN
                 </Button>
               </>
             )}
@@ -493,10 +493,10 @@ function PinSettingsCard() {
           <div className="space-y-3 max-w-xs">
             <Label>
               {mode === "remove"
-                ? "বর্তমান PIN দিন"
+                ? "Enter current PIN"
                 : step === "enter"
-                ? mode === "change" ? "নতুন PIN দিন" : "PIN দিন (৪ সংখ্যা)"
-                : "PIN নিশ্চিত করুন"}
+                ? mode === "change" ? "Enter new PIN" : "Enter PIN (4 digits)"
+                : "Confirm PIN"}
             </Label>
             <Input
               type="password"
@@ -513,9 +513,9 @@ function PinSettingsCard() {
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSubmit}>
-                {mode === "remove" ? "সরিয়ে দিন" : step === "enter" ? "পরবর্তী" : "সংরক্ষণ"}
+                {mode === "remove" ? "Remove" : step === "enter" ? "Next" : "Save"}
               </Button>
-              <Button size="sm" variant="ghost" onClick={reset}>বাতিল</Button>
+              <Button size="sm" variant="ghost" onClick={reset}>Cancel</Button>
             </div>
           </div>
         )}
@@ -525,12 +525,12 @@ function PinSettingsCard() {
 }
 
 const AUTO_LOGOUT_OPTIONS = [
-  { label: "বন্ধ (Auto logout নেই)", value: "0" },
-  { label: "৫ মিনিট", value: "5" },
-  { label: "১০ মিনিট", value: "10" },
-  { label: "১৫ মিনিট", value: "15" },
-  { label: "৩০ মিনিট", value: "30" },
-  { label: "১ ঘণ্টা", value: "60" },
+  { label: "Off (no auto logout)", value: "0" },
+  { label: "5 minutes", value: "5" },
+  { label: "10 minutes", value: "10" },
+  { label: "15 minutes", value: "15" },
+  { label: "30 minutes", value: "30" },
+  { label: "1 hour", value: "60" },
 ];
 
 function AutoLogoutCard() {
@@ -552,14 +552,14 @@ function AutoLogoutCard() {
           Auto Logout
         </CardTitle>
         <CardDescription>
-          নির্দিষ্ট সময় নিষ্ক্রিয় থাকলে স্বয়ংক্রিয়ভাবে logout হবে।
+          Automatically log out after a period of inactivity.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3 flex-wrap">
           <Select value={minutes} onValueChange={setMinutes}>
             <SelectTrigger className="w-52">
-              <SelectValue placeholder="সময় বেছে নিন" />
+              <SelectValue placeholder="Select a duration" />
             </SelectTrigger>
             <SelectContent>
               {AUTO_LOGOUT_OPTIONS.map((o) => (
@@ -569,12 +569,12 @@ function AutoLogoutCard() {
           </Select>
           <Button size="sm" variant="outline" onClick={save} className="gap-2">
             {saved ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <Save className="h-4 w-4" />}
-            {saved ? "সংরক্ষিত!" : "সংরক্ষণ"}
+            {saved ? "Saved!" : "Save"}
           </Button>
         </div>
         {minutes !== "0" && (
           <p className="text-xs text-muted-foreground">
-            {minutes} মিনিট নিষ্ক্রিয় থাকলে স্বয়ংক্রিয়ভাবে logout হবে এবং ৩০ সেকেন্ড আগে সতর্কতা দেখাবে।
+            You will be automatically logged out after {minutes} minute{minutes !== "1" ? "s" : ""} of inactivity, with a 30-second warning beforehand.
           </p>
         )}
       </CardContent>
@@ -656,7 +656,7 @@ function SessionsCard() {
               Active Sessions
             </CardTitle>
             <CardDescription className="mt-1">
-              সব device-এ আপনার account-এ active login session। যেকোনো session বন্ধ করতে Revoke করুন।
+              All active login sessions on your account across devices. Revoke any session to sign it out.
             </CardDescription>
           </div>
           <div className="flex gap-2 flex-shrink-0">
@@ -667,7 +667,7 @@ function SessionsCard() {
             {others.length > 0 && (
               <Button size="sm" variant="destructive" className="gap-1.5 h-8" onClick={revokeOthers} disabled={revokingAll}>
                 {revokingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
-                অন্য সব বন্ধ করুন
+                Sign out all others
               </Button>
             )}
           </div>
@@ -681,7 +681,7 @@ function SessionsCard() {
             ))}
           </div>
         ) : sessions.length === 0 ? (
-          <p className="px-6 pb-6 text-sm text-muted-foreground">কোনো active session নেই।</p>
+          <p className="px-6 pb-6 text-sm text-muted-foreground">No active sessions found.</p>
         ) : (
           <div className="divide-y">
             {[...sessions].reverse().map((s) => {

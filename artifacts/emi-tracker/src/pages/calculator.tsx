@@ -295,13 +295,13 @@ function EarlyPayoffTab() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base"><Zap className="h-4 w-4 text-primary" />Early Payoff Details</CardTitle>
-            <CardDescription>আগে EMI শেষ করতে চাইলে প্রতি মাসে কত দিতে হবে calculate করুন।</CardDescription>
+            <CardDescription>Calculate how much to pay per month to pay off your EMI early.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
 
             {/* Auto-fill from order */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Active EMI থেকে auto-fill (optional)</Label>
+              <Label className="text-sm font-medium">Auto-fill from active EMI (optional)</Label>
               <Select value={selectedOrderId} onValueChange={handleOrderSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an order…" />
@@ -315,7 +315,7 @@ function EarlyPayoffTab() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Select করলে remaining balance ও months auto-fill হবে।</p>
+              <p className="text-xs text-muted-foreground">Selecting an order will auto-fill the remaining balance and months.</p>
             </div>
 
             <Separator />
@@ -324,7 +324,7 @@ function EarlyPayoffTab() {
               label="Remaining Balance"
               value={remainingBalance}
               onChange={setRemainingBalance}
-              hint="এখনো কত টাকা বাকি আছে"
+              hint="How much is still remaining"
             />
 
             <div className="space-y-1.5">
@@ -341,7 +341,7 @@ function EarlyPayoffTab() {
                 }}
                 placeholder="12"
               />
-              <p className="text-xs text-muted-foreground">আসল plan অনুযায়ী আর কত মাস ছিল</p>
+              <p className="text-xs text-muted-foreground">How many months were left in the original plan</p>
             </div>
 
             <div className="space-y-3">
@@ -426,7 +426,7 @@ function EarlyPayoffTab() {
             <Card>
               <CardContent className="py-16 text-center text-muted-foreground">
                 <Zap className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                <p>Remaining balance ও months দিলে result দেখাবে।</p>
+                <p>Enter remaining balance and months to see results.</p>
               </CardContent>
             </Card>
           )}
@@ -441,7 +441,7 @@ function EarlyPayoffTab() {
               <CheckCircle2 className="h-4 w-4 text-primary" />
               Month-by-Month Schedule
             </CardTitle>
-            <CardDescription>প্রতি মাসে কত দিতে হবে এবং কত বাকি থাকবে।</CardDescription>
+            <CardDescription>Payment amount and remaining balance per month.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -484,7 +484,7 @@ export default function CalculatorPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-foreground">EMI Calculator</h2>
-        <p className="text-muted-foreground mt-1">EMI plan করুন বা আগে শেষ করার option দেখুন।</p>
+        <p className="text-muted-foreground mt-1">Plan your EMI or explore early payoff options.</p>
       </div>
 
       {/* Tab switcher */}

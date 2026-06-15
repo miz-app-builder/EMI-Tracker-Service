@@ -55,14 +55,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navGroups = [
     {
-      label: "মূল",
+      label: "Main",
       items: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
       ],
     },
     {
-      label: "EMI ব্যবস্থাপনা",
+      label: "EMI Management",
       items: [
         { href: "/emi-orders", label: "My EMIs", icon: FileText },
         { href: "/shops", label: "Shops", icon: Store },
@@ -70,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       ],
     },
     {
-      label: "বিশ্লেষণ",
+      label: "Analytics",
       items: [
         { href: "/reports", label: "Reports", icon: BarChart2 },
         { href: "/debt-overview", label: "Debt Overview", icon: Layers },
@@ -78,7 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       ],
     },
     {
-      label: "টুলস",
+      label: "Tools",
       items: [
         { href: "/activity-log", label: "Activity Log", icon: Activity },
       ],
@@ -113,19 +113,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-amber-600">
             <ShieldAlert className="h-5 w-5" />
-            Auto Logout সতর্কতা
+            Auto Logout Warning
           </DialogTitle>
           <DialogDescription>
-            দীর্ঘ সময় নিষ্ক্রিয় থাকার কারণে{" "}
-            <span className="font-bold text-foreground">{secondsLeft}</span> সেকেন্ডের মধ্যে আপনাকে logout করা হবে।
+            Due to inactivity, you will be logged out in{" "}
+            <span className="font-bold text-foreground">{secondsLeft}</span> seconds.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={dismiss}>
-            সক্রিয় আছি — থাকুন
+            I'm still here
           </Button>
           <Button variant="destructive" onClick={logout}>
-            এখনই Logout
+            Logout Now
           </Button>
         </DialogFooter>
       </DialogContent>
