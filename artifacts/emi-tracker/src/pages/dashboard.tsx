@@ -30,7 +30,7 @@ export default function Dashboard() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground mt-1">আমার সকল EMI কিস্তির সারসংক্ষেপ।</p>
+        <p className="text-muted-foreground mt-1">Summary of all your EMI installments.</p>
       </div>
 
       {/* Next payment alert */}
@@ -46,18 +46,18 @@ export default function Dashboard() {
           <div>
             <p className="font-bold">
               {nextPayDays !== null && nextPayDays < 0
-                ? "কিস্তির তারিখ পার হয়ে গেছে!"
+                ? "Installment is overdue!"
                 : nextPayDays === 0
-                ? "আজকে কিস্তির শেষ তারিখ!"
-                : `পরবর্তী কিস্তি: ${formatDate(summary.nextPaymentDate)}`}
+                ? "Payment due today!"
+                : `Next payment: ${formatDate(summary.nextPaymentDate)}`}
             </p>
             <p className="text-sm opacity-80">
               {nextPayDays !== null && nextPayDays < 0
-                ? `${Math.abs(nextPayDays)} দিন আগে শেষ তারিখ ছিল`
+                ? `Due date was ${Math.abs(nextPayDays)} day(s) ago`
                 : nextPayDays !== null && nextPayDays <= 7
-                ? `মাত্র ${nextPayDays} দিন বাকি — এখনই দিন`
+                ? `Only ${nextPayDays} day(s) left — pay now`
                 : nextPayDays !== null
-                ? `${nextPayDays} দিন বাকি`
+                ? `${nextPayDays} day(s) remaining`
                 : ""}
             </p>
           </div>
@@ -67,46 +67,46 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-primary/5 border-primary/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">চলমান EMI</CardTitle>
+            <CardTitle className="text-sm font-medium">Active EMIs</CardTitle>
             <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             {loadingSummary ? <Skeleton className="h-8 w-20" /> : (
               <div className="text-2xl font-bold text-primary">{summary?.totalActiveOrders || 0}</div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">মোট {summary?.totalOrders || 0}টি EMI-এর মধ্যে</p>
+            <p className="text-xs text-muted-foreground mt-1">out of {summary?.totalOrders || 0} total EMIs</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">মোট বাকি আছে</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {loadingSummary ? <Skeleton className="h-8 w-32" /> : (
               <div className="text-2xl font-bold">{formatCurrency(summary?.totalDueAmount || 0)}</div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">মোট পরিশোধ: {formatCurrency(summary?.totalPaidAmount || 0)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Total paid: {formatCurrency(summary?.totalPaidAmount || 0)}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">এই মাসে দিয়েছি</CardTitle>
+            <CardTitle className="text-sm font-medium">Paid This Month</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {loadingSummary ? <Skeleton className="h-8 w-32" /> : (
               <div className="text-2xl font-bold">{formatCurrency(summary?.thisMonthCollected || 0)}</div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">এই মাসের পেমেন্ট</p>
+            <p className="text-xs text-muted-foreground mt-1">This month's payments</p>
           </CardContent>
         </Card>
 
         <Card className={summary?.overdueOrders ? "border-destructive/30 bg-destructive/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">মেয়াদ পেরিয়ে গেছে</CardTitle>
+            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
             <AlertCircle className={`h-4 w-4 ${summary?.overdueOrders ? "text-destructive" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
@@ -116,7 +116,7 @@ export default function Dashboard() {
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-1">
-              {summary?.overdueOrders ? "মনোযোগ দরকার!" : "সব ঠিকঠাক"}
+              {summary?.overdueOrders ? "Needs attention!" : "All up to date"}
             </p>
           </CardContent>
         </Card>
@@ -125,8 +125,8 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>এই মাসে যে কিস্তিগুলো দিতে হবে</CardTitle>
-            <CardDescription>চলতি মাসে যে EMI পেমেন্ট pending আছে।</CardDescription>
+            <CardTitle>Due This Month</CardTitle>
+            <CardDescription>EMI payments pending in the current month.</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingDue ? (
@@ -145,10 +145,10 @@ export default function Dashboard() {
                           <p className="text-sm text-muted-foreground">{order.shopName}</p>
                           {order.nextDueDate && (
                             <p className={`text-xs mt-1 ${days !== null && days < 0 ? "text-destructive" : days !== null && days <= 7 ? "text-orange-600" : "text-muted-foreground"}`}>
-                              তারিখ: {formatDate(order.nextDueDate)}
-                              {days !== null && days < 0 && ` (${Math.abs(days)} দিন আগে)`}
-                              {days !== null && days === 0 && " (আজকে!)"}
-                              {days !== null && days > 0 && days <= 7 && ` (${days} দিন বাকি)`}
+                              Due: {formatDate(order.nextDueDate)}
+                              {days !== null && days < 0 && ` (${Math.abs(days)} day(s) ago)`}
+                              {days !== null && days === 0 && " (Today!)"}
+                              {days !== null && days > 0 && days <= 7 && ` (${days} day(s) left)`}
                             </p>
                           )}
                         </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <p>এই মাসে কোনো কিস্তি নেই।</p>
+                <p>No installments due this month.</p>
               </div>
             )}
           </CardContent>
@@ -176,8 +176,8 @@ export default function Dashboard() {
 
         <Card className="col-span-3">
           <CardHeader>
-            <CardTitle>দোকান অনুযায়ী</CardTitle>
-            <CardDescription>প্রতি দোকানে কত বাকি ও কত দেওয়া হয়েছে।</CardDescription>
+            <CardTitle>By Shop</CardTitle>
+            <CardDescription>Outstanding and paid amounts per shop.</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingStats ? (
@@ -190,7 +190,7 @@ export default function Dashboard() {
                   <div key={stat.shopId} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{stat.shopName}</span>
-                      <span className="text-muted-foreground">{stat.totalOrders}টি EMI</span>
+                      <span className="text-muted-foreground">{stat.totalOrders} EMI(s)</span>
                     </div>
                     <div className="flex h-4 overflow-hidden rounded-full bg-secondary">
                       {stat.totalPaid > 0 && stat.totalDue + stat.totalPaid > 0 && (
@@ -201,15 +201,15 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>দেওয়া: {formatCurrency(stat.totalPaid)}</span>
-                      <span>বাকি: {formatCurrency(stat.totalDue)}</span>
+                      <span>Paid: {formatCurrency(stat.totalPaid)}</span>
+                      <span>Remaining: {formatCurrency(stat.totalDue)}</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <p>কোনো দোকানের তথ্য নেই।</p>
+                <p>No shop data available.</p>
               </div>
             )}
           </CardContent>

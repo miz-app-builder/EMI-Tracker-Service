@@ -70,7 +70,7 @@ export default function NewEmiOrder() {
     if (!formData.purchaseDate) return null;
     const d = new Date(formData.purchaseDate);
     d.setMonth(d.getMonth() + 1);
-    return d.toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" });
+    return d.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
   };
 
   const discountAmt = Number(formData.discount) || 0;
@@ -82,7 +82,7 @@ export default function NewEmiOrder() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.shopId || !formData.productName || !formData.totalPrice || !formData.emiMonths || !formData.purchaseDate) {
-      toast({ title: "সব required field পূরণ করুন", variant: "destructive" });
+      toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
 
@@ -106,11 +106,11 @@ export default function NewEmiOrder() {
       {
         onSuccess: (data) => {
           queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
-          toast({ title: "EMI Order তৈরি হয়েছে!" });
+          toast({ title: "EMI order created!" });
           setLocation(`/emi-orders/${data.id}`);
         },
         onError: () => {
-          toast({ title: "Order তৈরি ব্যর্থ হয়েছে", variant: "destructive" });
+          toast({ title: "Failed to create order", variant: "destructive" });
         },
       }
     );
@@ -123,8 +123,8 @@ export default function NewEmiOrder() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">নতুন EMI যোগ করুন</h2>
-          <p className="text-muted-foreground mt-1">কোথা থেকে কী কিনেছেন এবং কত মাসের কিস্তি।</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Add New EMI</h2>
+          <p className="text-muted-foreground mt-1">Where did you buy it, what did you buy, and how many months.</p>
         </div>
       </div>
 
@@ -150,8 +150,8 @@ export default function NewEmiOrder() {
 
       <Card>
         <CardHeader className="bg-muted/20 border-b">
-          <CardTitle>EMI বিবরণ</CardTitle>
-          <CardDescription>দোকান, পণ্য এবং কিস্তির তথ্য দিন।</CardDescription>
+          <CardTitle>EMI Details</CardTitle>
+          <CardDescription>Enter shop, product, and installment information.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -159,13 +159,13 @@ export default function NewEmiOrder() {
             {/* Shop selector */}
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="shopId">দোকান / শোরুম <span className="text-destructive">*</span></Label>
+                <Label htmlFor="shopId">Shop / Showroom <span className="text-destructive">*</span></Label>
                 <Select
                   value={formData.shopId}
                   onValueChange={(val) => setFormData({ ...formData, shopId: val, productId: "", productName: "", customerId: "" })}
                 >
                   <SelectTrigger className="max-w-sm">
-                    <SelectValue placeholder="দোকান বেছে নিন" />
+                    <SelectValue placeholder="Select a shop" />
                   </SelectTrigger>
                   <SelectContent>
                     {shops?.map((s) => (
@@ -175,7 +175,7 @@ export default function NewEmiOrder() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">দোকান না থাকলে প্রথমে Shops পেজ থেকে যোগ করুন।</p>
+                <p className="text-xs text-muted-foreground">If the shop is not listed, add it from the Shops page first.</p>
               </div>
 
               {/* Shop preview */}
@@ -250,16 +250,16 @@ export default function NewEmiOrder() {
                 <div className="space-y-2">
                   <Label htmlFor="customerId" className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-primary/70" />
-                    Customer ID (দোকান প্রদত্ত, ঐচ্ছিক)
+                    Customer ID (assigned by shop, optional)
                   </Label>
                   <Input
                     id="customerId"
                     value={formData.customerId}
                     onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-                    placeholder="যেমন: CUST-00123"
+                    placeholder="e.g. CUST-00123"
                     className="max-w-sm"
                   />
-                  <p className="text-xs text-muted-foreground">দোকান আপনাকে যে Customer ID দিয়েছে সেটি লিখুন।</p>
+                  <p className="text-xs text-muted-foreground">Enter the Customer ID the shop assigned to you.</p>
                 </div>
               )}
             </div>
@@ -269,22 +269,22 @@ export default function NewEmiOrder() {
             {/* Product */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-primary" /> পণ্য ও মূল্য
+                <Calculator className="h-5 w-5 text-primary" /> Product & Price
               </h3>
 
               <div className="grid gap-6 md:grid-cols-2">
                 {formData.shopId && products && products.length > 0 && (
                   <div className="space-y-2">
-                    <Label>পুরনো পণ্য বেছে নিন (ঐচ্ছিক)</Label>
+                    <Label>Select existing product (optional)</Label>
                     <Select
                       value={formData.productId || (formData.productName ? "custom" : "")}
                       onValueChange={handleProductSelect}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="পণ্য বেছে নিন বা নিচে লিখুন" />
+                        <SelectValue placeholder="Choose a product or enter below" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="custom">-- নতুন পণ্য --</SelectItem>
+                        <SelectItem value="custom">-- New Product --</SelectItem>
                         {products.map((p) => (
                           <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                         ))}
@@ -294,55 +294,55 @@ export default function NewEmiOrder() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="productName">পণ্যের নাম <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="productName">Product Name <span className="text-destructive">*</span></Label>
                   <Input
                     id="productName"
                     value={formData.productName}
                     onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                    placeholder="যেমন: LG AC 1.5 Ton"
+                    placeholder="e.g. LG AC 1.5 Ton"
                   />
                 </div>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="modelNumber">মডেল নম্বর (ঐচ্ছিক)</Label>
+                  <Label htmlFor="modelNumber">Model Number (optional)</Label>
                   <Input
                     id="modelNumber"
                     value={formData.modelNumber}
                     onChange={(e) => setFormData({ ...formData, modelNumber: e.target.value })}
-                    placeholder="যেমন: LG-A18LFNZAA"
+                    placeholder="e.g. LG-A18LFNZAA"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="warrantyInfo">গ্যারান্টি / ওয়ারেন্টি (ঐচ্ছিক)</Label>
+                  <Label htmlFor="warrantyInfo">Guarantee / Warranty (optional)</Label>
                   <Input
                     id="warrantyInfo"
                     value={formData.warrantyInfo}
                     onChange={(e) => setFormData({ ...formData, warrantyInfo: e.target.value })}
-                    placeholder="যেমন: ২ বছর কম্প্রেসার ওয়ারেন্টি"
+                    placeholder="e.g. 2 year compressor warranty"
                   />
                 </div>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
-                  <Label htmlFor="totalPrice">মোট দাম (টাকা) <span className="text-destructive">*</span></Label>
-                  <Input id="totalPrice" type="number" value={formData.totalPrice} onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value })} placeholder="০" />
+                  <Label htmlFor="totalPrice">Total Price (BDT) <span className="text-destructive">*</span></Label>
+                  <Input id="totalPrice" type="number" value={formData.totalPrice} onChange={(e) => setFormData({ ...formData, totalPrice: e.target.value })} placeholder="0" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="discount">ছাড় / Discount (টাকা)</Label>
-                  <Input id="discount" type="number" value={formData.discount} onChange={(e) => setFormData({ ...formData, discount: e.target.value })} placeholder="০" />
+                  <Label htmlFor="discount">Discount (BDT)</Label>
+                  <Input id="discount" type="number" value={formData.discount} onChange={(e) => setFormData({ ...formData, discount: e.target.value })} placeholder="0" />
                   {discountAmt > 0 && Number(formData.totalPrice) > 0 && (
-                    <p className="text-xs text-green-600 font-medium">কার্যকর দাম: {formatCurrency(effectivePrice)}</p>
+                    <p className="text-xs text-green-600 font-medium">Effective price: {formatCurrency(effectivePrice)}</p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="downPayment">ডাউন পেমেন্ট (টাকা)</Label>
-                  <Input id="downPayment" type="number" value={formData.downPayment} onChange={(e) => setFormData({ ...formData, downPayment: e.target.value })} placeholder="০" />
+                  <Label htmlFor="downPayment">Down Payment (BDT)</Label>
+                  <Input id="downPayment" type="number" value={formData.downPayment} onChange={(e) => setFormData({ ...formData, downPayment: e.target.value })} placeholder="0" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="purchaseDate">কেনার তারিখ <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="purchaseDate">Purchase Date <span className="text-destructive">*</span></Label>
                   <Input id="purchaseDate" type="date" value={formData.purchaseDate} onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })} />
                 </div>
               </div>
@@ -353,14 +353,14 @@ export default function NewEmiOrder() {
             {/* EMI Terms */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-primary" /> কিস্তির শর্ত
+                <CalendarDays className="h-5 w-5 text-primary" /> Installment Terms
               </h3>
 
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="emiMonths" className="text-primary font-semibold">
-                      কত মাসের কিস্তি <span className="text-destructive">*</span>
+                      Number of Months <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="emiMonths"
@@ -369,12 +369,12 @@ export default function NewEmiOrder() {
                       value={formData.emiMonths}
                       onChange={(e) => setFormData({ ...formData, emiMonths: e.target.value })}
                       className="border-primary/30"
-                      placeholder="যেমন: 12"
+                      placeholder="e.g. 12"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dueDayOfMonth" className="font-semibold">
-                      প্রতি মাসের কত তারিখে? (ঐচ্ছিক)
+                      Due Day of Month (optional)
                     </Label>
                     <Input
                       id="dueDayOfMonth"
@@ -383,10 +383,10 @@ export default function NewEmiOrder() {
                       max="31"
                       value={formData.dueDayOfMonth}
                       onChange={(e) => setFormData({ ...formData, dueDayOfMonth: e.target.value })}
-                      placeholder="যেমন: 10 (না দিলে কেনার তারিখ)"
+                      placeholder="e.g. 10 (defaults to purchase day)"
                     />
                     <p className="text-xs text-muted-foreground">
-                      না দিলে কেনার তারিখ ({formData.purchaseDate ? new Date(formData.purchaseDate).getDate() : "—"}) অনুযায়ী due date হবে।
+                      If left blank, due date follows purchase day ({formData.purchaseDate ? new Date(formData.purchaseDate).getDate() : "—"}).
                     </p>
                   </div>
                 </div>
@@ -394,22 +394,22 @@ export default function NewEmiOrder() {
                 {formData.totalPrice && formData.emiMonths && (
                   <div className="pt-4 border-t border-primary/10 space-y-3 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">EMI মূল পরিমাণ (ডাউন বাদে):</span>
+                      <span className="text-muted-foreground">EMI Principal (after down payment):</span>
                       <span className="font-semibold">{formatCurrency(principal)}</span>
                     </div>
                     <div className="flex items-center justify-between bg-primary/10 rounded-md px-3 py-2">
-                      <span className="font-semibold text-primary">মাসিক কিস্তি (Auto):</span>
+                      <span className="font-semibold text-primary">Monthly Installment (Auto):</span>
                       <span className="font-bold text-primary text-lg">
                         {autoMonthlyAmount > 0 ? formatCurrency(autoMonthlyAmount) : "—"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">মোট EMI মূল্য:</span>
+                      <span className="text-muted-foreground">Total EMI Amount:</span>
                       <span className="font-bold">{autoMonthlyAmount > 0 ? formatCurrency(autoMonthlyAmount * months) : "—"}</span>
                     </div>
                     {previewNextDue() && (
                       <div className="flex items-center justify-between pt-1 border-t border-primary/10">
-                        <span className="text-muted-foreground">প্রথম কিস্তির তারিখ:</span>
+                        <span className="text-muted-foreground">First Installment Date:</span>
                         <span className="font-semibold text-orange-600">{previewNextDue()}</span>
                       </div>
                     )}
@@ -420,10 +420,10 @@ export default function NewEmiOrder() {
 
             <div className="flex justify-end gap-4 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => setLocation("/emi-orders")}>
-                বাতিল
+                Cancel
               </Button>
               <Button type="submit" size="lg" disabled={createOrder.isPending}>
-                {createOrder.isPending ? "তৈরি হচ্ছে..." : "EMI যোগ করুন"}
+                {createOrder.isPending ? "Creating..." : "Add EMI"}
               </Button>
             </div>
           </form>

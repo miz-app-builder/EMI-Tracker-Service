@@ -22,12 +22,12 @@ function getNextDueBadge(nextDueDate: string | null | undefined, status: string)
   const due = new Date(nextDueDate);
   const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays < 0)
-    return { label: `${Math.abs(diffDays)} দিন বাকি শেষ হয়ে গেছে`, color: "bg-destructive/10 text-destructive border-destructive/30" };
+    return { label: `${Math.abs(diffDays)} day(s) overdue`, color: "bg-destructive/10 text-destructive border-destructive/30" };
   if (diffDays === 0)
-    return { label: "আজকেই শেষ তারিখ!", color: "bg-orange-500/10 text-orange-700 border-orange-400/30" };
+    return { label: "Due today!", color: "bg-orange-500/10 text-orange-700 border-orange-400/30" };
   if (diffDays <= 7)
-    return { label: `মাত্র ${diffDays} দিন বাকি`, color: "bg-orange-500/10 text-orange-700 border-orange-400/30" };
-  return { label: `${diffDays} দিন বাকি`, color: "bg-primary/5 text-primary border-primary/20" };
+    return { label: `Only ${diffDays} day(s) left`, color: "bg-orange-500/10 text-orange-700 border-orange-400/30" };
+  return { label: `${diffDays} day(s) remaining`, color: "bg-primary/5 text-primary border-primary/20" };
 }
 
 export default function EmiOrderDetail() {
@@ -79,24 +79,24 @@ export default function EmiOrderDetail() {
           queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
           setOpen(false);
           setPaymentData({ amount: "", paymentDate: new Date().toISOString().split("T")[0], paymentMethod: "Cash", bankName: "", accountNumber: "", transactionId: "", notes: "" });
-          toast({ title: "কিস্তি যোগ হয়েছে!" });
+          toast({ title: "Payment recorded!" });
         },
         onError: () => {
-          toast({ title: "কিস্তি যোগ ব্যর্থ হয়েছে", variant: "destructive" });
+          toast({ title: "Failed to record payment", variant: "destructive" });
         },
       }
     );
   };
 
   const handleStatusComplete = () => {
-    if (!confirm("এই EMI সম্পন্ন হিসেবে চিহ্নিত করবেন?")) return;
+    if (!confirm("Mark this EMI as completed?")) return;
     updateOrder.mutate(
       { id: orderId, data: { status: "completed" } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetEmiOrderQueryKey(orderId) });
           queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
-          toast({ title: "EMI সম্পন্ন হিসেবে চিহ্নিত হয়েছে" });
+          toast({ title: "EMI marked as completed" });
         },
       }
     );
@@ -134,11 +134,11 @@ export default function EmiOrderDetail() {
                 variant={order.status === "completed" ? "outline" : "default"}
                 className={order.status === "completed" ? "bg-green-500/10 text-green-700 border-green-500/20" : ""}
               >
-                {order.status === "completed" ? "সম্পন্ন" : "চলমান"}
+                {order.status === "completed" ? "Completed" : "Active"}
               </Badge>
             </div>
             <p className="text-muted-foreground mt-1">
-              Order #{order.id} • কেনা: {formatDate(order.purchaseDate)}
+              Order #{order.id} • Purchased: {formatDate(order.purchaseDate)}
             </p>
           </div>
         </div>
@@ -147,23 +147,23 @@ export default function EmiOrderDetail() {
           {order.status === "active" && (
             <>
               <Button variant="outline" onClick={handleStatusComplete} className="text-green-600 border-green-200 hover:bg-green-50">
-                <CheckCircle2 className="mr-2 h-4 w-4" /> সম্পন্ন করুন
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Complete
               </Button>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <Button
                     onClick={() => setPaymentData((p) => ({ ...p, amount: (order.nextMonthlyAmount ?? order.monthlyAmount).toString() }))}
                   >
-                    <CreditCard className="mr-2 h-4 w-4" /> কিস্তি দিন
+                    <CreditCard className="mr-2 h-4 w-4" /> Pay Installment
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>কিস্তি রেকর্ড করুন</DialogTitle>
+                    <DialogTitle>Record Payment</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handlePaymentSubmit} className="space-y-4 pt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="amount">পরিমাণ (টাকা) <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="amount">Amount (BDT) <span className="text-destructive">*</span></Label>
                       <Input
                         id="amount"
                         type="number"
@@ -173,15 +173,15 @@ export default function EmiOrderDetail() {
                         className="font-bold text-lg"
                       />
                       <p className="text-xs text-muted-foreground">
-                        প্রস্তাবিত কিস্তি: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
+                        Suggested: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
                         {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
-                          <span className="ml-1 text-muted-foreground">(মূল: {formatCurrency(order.monthlyAmount)})</span>
+                          <span className="ml-1 text-muted-foreground">(original: {formatCurrency(order.monthlyAmount)})</span>
                         )}
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="paymentDate">তারিখ</Label>
+                        <Label htmlFor="paymentDate">Date</Label>
                         <Input
                           id="paymentDate"
                           type="date"
@@ -191,7 +191,7 @@ export default function EmiOrderDetail() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="paymentMethod">পদ্ধতি</Label>
+                        <Label htmlFor="paymentMethod">Method</Label>
                         <Select
                           value={paymentData.paymentMethod}
                           onValueChange={(val) => setPaymentData({ ...paymentData, paymentMethod: val, bankName: "", accountNumber: "", transactionId: "" })}
@@ -200,8 +200,8 @@ export default function EmiOrderDetail() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Cash">নগদ (Cash)</SelectItem>
-                            <SelectItem value="Bank Transfer">ব্যাংক ট্রান্সফার</SelectItem>
+                            <SelectItem value="Cash">Cash</SelectItem>
+                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
                             <SelectItem value="bKash">bKash</SelectItem>
                             <SelectItem value="Nagad">Nagad</SelectItem>
                             <SelectItem value="Rocket">Rocket</SelectItem>
@@ -212,24 +212,24 @@ export default function EmiOrderDetail() {
 
                     {paymentData.paymentMethod === "Bank Transfer" && (
                       <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">ব্যাংক ট্রান্সফার বিবরণ</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bank Transfer Details</p>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-2">
-                            <Label htmlFor="bankName">ব্যাংকের নাম</Label>
+                            <Label htmlFor="bankName">Bank Name</Label>
                             <Input
                               id="bankName"
                               value={paymentData.bankName}
                               onChange={(e) => setPaymentData({ ...paymentData, bankName: e.target.value })}
-                              placeholder="যেমন: Dutch-Bangla Bank"
+                              placeholder="e.g. Dutch-Bangla Bank"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="accountNumber">অ্যাকাউন্ট নম্বর</Label>
+                            <Label htmlFor="accountNumber">Account Number</Label>
                             <Input
                               id="accountNumber"
                               value={paymentData.accountNumber}
                               onChange={(e) => setPaymentData({ ...paymentData, accountNumber: e.target.value })}
-                              placeholder="যেমন: 1234567890"
+                              placeholder="e.g. 1234567890"
                             />
                           </div>
                         </div>
@@ -239,7 +239,7 @@ export default function EmiOrderDetail() {
                             id="transactionId"
                             value={paymentData.transactionId}
                             onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
-                            placeholder="যেমন: TXN123456789"
+                            placeholder="e.g. TXN123456789"
                           />
                         </div>
                       </div>
@@ -247,16 +247,16 @@ export default function EmiOrderDetail() {
 
                     {(paymentData.paymentMethod === "bKash" || paymentData.paymentMethod === "Nagad" || paymentData.paymentMethod === "Rocket") && (
                       <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{paymentData.paymentMethod} বিবরণ</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{paymentData.paymentMethod} Details</p>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-2">
-                            <Label htmlFor="accountNumber">{paymentData.paymentMethod} নম্বর</Label>
+                            <Label htmlFor="accountNumber">{paymentData.paymentMethod} Number</Label>
                             <Input
                               id="accountNumber"
                               type="tel"
                               value={paymentData.accountNumber}
                               onChange={(e) => setPaymentData({ ...paymentData, accountNumber: e.target.value })}
-                              placeholder="যেমন: 01XXXXXXXXX"
+                              placeholder="e.g. 01XXXXXXXXX"
                             />
                           </div>
                           <div className="space-y-2">
@@ -265,7 +265,7 @@ export default function EmiOrderDetail() {
                               id="transactionId"
                               value={paymentData.transactionId}
                               onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
-                              placeholder="যেমন: ABC1234567890"
+                              placeholder="e.g. ABC1234567890"
                             />
                           </div>
                         </div>
@@ -273,17 +273,17 @@ export default function EmiOrderDetail() {
                     )}
 
                     <div className="space-y-2">
-                      <Label htmlFor="notes">নোট (ঐচ্ছিক)</Label>
+                      <Label htmlFor="notes">Note (optional)</Label>
                       <Textarea
                         id="notes"
                         value={paymentData.notes}
                         onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
-                        placeholder="যেকোনো মন্তব্য..."
+                        placeholder="Any comments..."
                       />
                     </div>
                     <div className="flex justify-end pt-4">
                       <Button type="submit" disabled={createPayment.isPending}>
-                        {createPayment.isPending ? "সেভ হচ্ছে..." : "কিস্তি সেভ করুন"}
+                        {createPayment.isPending ? "Saving..." : "Save Payment"}
                       </Button>
                     </div>
                   </form>
@@ -299,47 +299,47 @@ export default function EmiOrderDetail() {
         <div className={`flex items-center gap-3 p-4 rounded-lg border ${nextDueBadge.color}`}>
           <Clock className="h-5 w-5 shrink-0" />
           <div>
-            <p className="font-semibold">পরবর্তী কিস্তির তারিখ: {formatDate(order.nextDueDate)}</p>
+            <p className="font-semibold">Next installment due: {formatDate(order.nextDueDate)}</p>
             <p className="text-sm opacity-80">
-          {nextDueBadge.label} — পরবর্তী কিস্তি: <span className="font-bold">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
-          {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
-            <span className="ml-1 opacity-70">(মূল: {formatCurrency(order.monthlyAmount)})</span>
-          )}
-        </p>
+              {nextDueBadge.label} — Next payment: <span className="font-bold">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
+              {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+                <span className="ml-1 opacity-70">(original: {formatCurrency(order.monthlyAmount)})</span>
+              )}
+            </p>
           </div>
         </div>
       )}
       {order.status === "completed" && (
         <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-500/10 text-green-700 border-green-500/30">
           <CheckCircle2 className="h-5 w-5 shrink-0" />
-          <p className="font-semibold">এই EMI সম্পূর্ণ পরিশোধ হয়ে গেছে।</p>
+          <p className="font-semibold">This EMI has been fully paid off.</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardHeader className="pb-3 border-b">
-            <CardTitle>আর্থিক সারসংক্ষেপ</CardTitle>
+            <CardTitle>Financial Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">মোট দাম</p>
+                <p className="text-sm text-muted-foreground">Total Price</p>
                 <p className="font-bold text-xl">{formatCurrency(order.totalPrice)}</p>
                 {(order.discount ?? 0) > 0 && (
-                  <p className="text-xs text-green-600 font-medium">ছাড়: -{formatCurrency(order.discount ?? 0)}</p>
+                  <p className="text-xs text-green-600 font-medium">Discount: -{formatCurrency(order.discount ?? 0)}</p>
                 )}
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">ডাউন পেমেন্ট</p>
+                <p className="text-sm text-muted-foreground">Down Payment</p>
                 <p className="font-semibold text-lg">{formatCurrency(order.downPayment)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">মোট দেওয়া হয়েছে</p>
+                <p className="text-sm text-muted-foreground">Total Paid</p>
                 <p className="font-semibold text-lg text-primary">{formatCurrency(order.totalPaid ?? 0)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">এখনো বাকি</p>
+                <p className="text-sm text-muted-foreground">Still Owed</p>
                 <p className={`font-bold text-xl ${(order.remainingAmount ?? 0) > 0 ? "text-destructive" : "text-green-600"}`}>
                   {formatCurrency(order.remainingAmount ?? 0)}
                 </p>
@@ -348,7 +348,7 @@ export default function EmiOrderDetail() {
 
             <div className="mt-8 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-primary">পরিশোধের অগ্রগতি</span>
+                <span className="font-medium text-primary">Payment Progress</span>
                 <span>{progress}%</span>
               </div>
               <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
@@ -358,7 +358,7 @@ export default function EmiOrderDetail() {
                 />
               </div>
               <p className="text-xs text-muted-foreground text-right">
-                {order.installmentsPaid ?? 0} / {order.emiMonths} টি কিস্তি দেওয়া হয়েছে
+                {order.installmentsPaid ?? 0} / {order.emiMonths} installments paid
               </p>
             </div>
 
@@ -368,8 +368,8 @@ export default function EmiOrderDetail() {
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">EMI মেয়াদ</p>
-                  <p className="font-medium">{order.emiMonths} মাস</p>
+                  <p className="text-sm text-muted-foreground">EMI Duration</p>
+                  <p className="font-medium">{order.emiMonths} months</p>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -377,10 +377,10 @@ export default function EmiOrderDetail() {
                   <CreditCard className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">পরবর্তী কিস্তি</p>
+                  <p className="text-sm text-muted-foreground">Next Installment</p>
                   <p className="font-bold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</p>
                   {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
-                    <p className="text-xs text-muted-foreground">মূল: {formatCurrency(order.monthlyAmount)}</p>
+                    <p className="text-xs text-muted-foreground">Original: {formatCurrency(order.monthlyAmount)}</p>
                   )}
                 </div>
               </div>
@@ -390,21 +390,21 @@ export default function EmiOrderDetail() {
 
         <Card>
           <CardHeader className="pb-3 border-b">
-            <CardTitle>বিস্তারিত</CardTitle>
+            <CardTitle>Details</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               <div className="p-4 flex gap-3 items-start">
                 <Store className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">শোরুম / দোকান</p>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Shop / Showroom</p>
                   <p className="font-medium">{order.shopName}</p>
                 </div>
               </div>
               <div className="p-4 flex gap-3 items-start">
                 <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">পণ্য</p>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Product</p>
                   <p className="font-medium">{order.productName}</p>
                 </div>
               </div>
@@ -412,7 +412,7 @@ export default function EmiOrderDetail() {
                 <div className="p-4 flex gap-3 items-start">
                   <Hash className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">মডেল নম্বর</p>
+                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Model Number</p>
                     <p className="font-medium font-mono">{order.modelNumber}</p>
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export default function EmiOrderDetail() {
                 <div className="p-4 flex gap-3 items-start">
                   <ShieldCheck className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">গ্যারান্টি / ওয়ারেন্টি</p>
+                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Guarantee / Warranty</p>
                     <p className="font-medium">{order.warrantyInfo}</p>
                   </div>
                 </div>
@@ -438,7 +438,7 @@ export default function EmiOrderDetail() {
               <div className="p-4 flex gap-3 items-start">
                 <Calendar className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">কেনার তারিখ</p>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Purchase Date</p>
                   <p className="font-medium">{formatDate(order.purchaseDate)}</p>
                 </div>
               </div>
@@ -446,8 +446,8 @@ export default function EmiOrderDetail() {
                 <div className="p-4 flex gap-3 items-start">
                   <CalendarDays className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">মাসিক due তারিখ</p>
-                    <p className="font-medium">প্রতি মাসের <span className="font-bold text-primary">{order.dueDayOfMonth}</span> তারিখ</p>
+                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Monthly Due Day</p>
+                    <p className="font-medium">Day <span className="font-bold text-primary">{order.dueDayOfMonth}</span> of each month</p>
                   </div>
                 </div>
               )}
@@ -455,7 +455,7 @@ export default function EmiOrderDetail() {
                 <div className="p-4 flex gap-3 items-start bg-orange-50 dark:bg-orange-950/20">
                   <AlertCircle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs text-orange-600 uppercase font-medium tracking-wider mb-1">পরের কিস্তি</p>
+                    <p className="text-xs text-orange-600 uppercase font-medium tracking-wider mb-1">Next Installment</p>
                     <p className="font-bold text-orange-700">{formatDate(order.nextDueDate)}</p>
                   </div>
                 </div>
@@ -467,8 +467,8 @@ export default function EmiOrderDetail() {
 
       <Card>
         <CardHeader>
-          <CardTitle>পেমেন্ট ইতিহাস</CardTitle>
-          <CardDescription>এ পর্যন্ত দেওয়া সকল কিস্তির রেকর্ড।</CardDescription>
+          <CardTitle>Payment History</CardTitle>
+          <CardDescription>All installments recorded so far.</CardDescription>
         </CardHeader>
         <CardContent>
           {order.payments && order.payments.length > 0 ? (
@@ -476,10 +476,10 @@ export default function EmiOrderDetail() {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead>তারিখ</TableHead>
-                    <TableHead>পদ্ধতি</TableHead>
-                    <TableHead>নোট</TableHead>
-                    <TableHead className="text-right">পরিমাণ</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Note</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -489,7 +489,7 @@ export default function EmiOrderDetail() {
                       <TableCell>
                         <Badge variant="outline">Initial</Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground italic">ডাউন পেমেন্ট</TableCell>
+                      <TableCell className="text-muted-foreground italic">Down Payment</TableCell>
                       <TableCell className="text-right font-medium">{formatCurrency(order.downPayment)}</TableCell>
                     </TableRow>
                   )}
@@ -497,7 +497,7 @@ export default function EmiOrderDetail() {
                     <TableRow key={payment.id}>
                       <TableCell className="font-medium">
                         <div>{formatDate(payment.paymentDate)}</div>
-                        <div className="text-xs text-muted-foreground">{idx + 1}নং কিস্তি</div>
+                        <div className="text-xs text-muted-foreground">Installment #{idx + 1}</div>
                       </TableCell>
                       <TableCell>
                         <div>{payment.paymentMethod}</div>
@@ -526,10 +526,10 @@ export default function EmiOrderDetail() {
           ) : (
             <div className="py-8 text-center border rounded-lg border-dashed">
               <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
-              <p className="font-medium text-muted-foreground">এখনো কোনো কিস্তি দেওয়া হয়নি</p>
+              <p className="font-medium text-muted-foreground">No installments recorded yet</p>
               {order.downPayment > 0 && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  ডাউন পেমেন্ট {formatCurrency(order.downPayment)} কেনার সময় দেওয়া হয়েছে।
+                  Down payment of {formatCurrency(order.downPayment)} was made at time of purchase.
                 </p>
               )}
             </div>

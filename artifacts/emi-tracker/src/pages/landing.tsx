@@ -11,28 +11,28 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const features = [
   {
     icon: CreditCard,
-    title: "কিস্তি ট্র্যাক করুন",
-    desc: "প্রতিটি EMI-এর payment history ও বাকি পরিমাণ এক নজরে দেখুন।",
+    title: "Track Installments",
+    desc: "View payment history and remaining balance for every EMI at a glance.",
   },
   {
     icon: Calendar,
-    title: "Due Date মনে রাখুন",
-    desc: "পরবর্তী কিস্তির তারিখ সবসময় সামনে থাকবে, কোনো ভুলের সুযোগ নেই।",
+    title: "Never Miss a Due Date",
+    desc: "Your next installment date is always front and center — no more forgetting.",
   },
   {
     icon: TrendingDown,
     title: "Auto Calculation",
-    desc: "Overpayment হলে automatically পরবর্তী কিস্তি adjust হয়।",
+    desc: "Overpayments automatically adjust the next installment amount.",
   },
   {
     icon: ShoppingBag,
-    title: "দোকান ভিত্তিক হিসাব",
-    desc: "প্রতিটি দোকানের আলাদা হিসাব রাখুন, সব এক জায়গায়।",
+    title: "Per-Shop Tracking",
+    desc: "Keep separate records for each shop — all in one place.",
   },
   {
     icon: BarChart3,
     title: "Dashboard Summary",
-    desc: "মোট বাকি, এই মাসের কিস্তি, overdue — সব এক দৃষ্টিতে।",
+    desc: "Total outstanding, this month's installments, overdue — all at a glance.",
   },
 ];
 
@@ -56,8 +56,8 @@ export default function LandingPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoginError("");
-    if (!loginForm.email.trim()) { setLoginError("ইমেইল লিখুন"); return; }
-    if (!loginForm.password) { setLoginError("পাসওয়ার্ড লিখুন"); return; }
+    if (!loginForm.email.trim()) { setLoginError("Please enter your email"); return; }
+    if (!loginForm.password) { setLoginError("Please enter your password"); return; }
     setLoginLoading(true);
     try {
       const res = await fetch(`${basePath}/api/auth/login`, {
@@ -68,13 +68,13 @@ export default function LandingPage() {
       });
       if (!res.ok) {
         const d = await res.json();
-        setLoginError(d.error === "Invalid credentials" ? "ইমেইল বা পাসওয়ার্ড ভুল" : "সমস্যা হয়েছে");
+        setLoginError(d.error === "Invalid credentials" ? "Incorrect email or password" : "Something went wrong");
         return;
       }
       await refetch();
       setLocation("/dashboard");
     } catch {
-      setLoginError("সমস্যা হয়েছে, আবার চেষ্টা করুন");
+      setLoginError("Something went wrong, please try again");
     } finally {
       setLoginLoading(false);
     }
@@ -83,10 +83,10 @@ export default function LandingPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setSignupError("");
-    if (!signupForm.name.trim()) { setSignupError("পূর্ণ নাম লিখুন"); return; }
-    if (!signupForm.email.trim()) { setSignupError("ইমেইল লিখুন"); return; }
-    if (signupForm.password.length < 8) { setSignupError("পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে"); return; }
-    if (signupForm.password !== signupForm.confirmPassword) { setSignupError("পাসওয়ার্ড দুটি মিলছে না"); return; }
+    if (!signupForm.name.trim()) { setSignupError("Please enter your full name"); return; }
+    if (!signupForm.email.trim()) { setSignupError("Please enter your email"); return; }
+    if (signupForm.password.length < 8) { setSignupError("Password must be at least 8 characters"); return; }
+    if (signupForm.password !== signupForm.confirmPassword) { setSignupError("Passwords do not match"); return; }
     setSignupLoading(true);
     try {
       const res = await fetch(`${basePath}/api/auth/signup`, {
@@ -100,13 +100,13 @@ export default function LandingPage() {
       });
       if (!res.ok) {
         const d = await res.json();
-        setSignupError(d.error === "Email already registered" ? "এই ইমেইলে আগেই অ্যাকাউন্ট আছে" : d.error ?? "সমস্যা হয়েছে");
+        setSignupError(d.error === "Email already registered" ? "An account with this email already exists" : d.error ?? "Something went wrong");
         return;
       }
       await refetch();
       setLocation("/dashboard");
     } catch {
-      setSignupError("সমস্যা হয়েছে, আবার চেষ্টা করুন");
+      setSignupError("Something went wrong, please try again");
     } finally {
       setSignupLoading(false);
     }
@@ -131,11 +131,11 @@ export default function LandingPage() {
         <div className="relative z-10 space-y-8">
           <div className="space-y-4">
             <h1 className="text-3xl xl:text-4xl font-bold text-sidebar-foreground leading-snug">
-              আপনার সব কিস্তির হিসাব<br />
-              <span className="text-sidebar-primary">এক জায়গায়</span>
+              All your installments,<br />
+              <span className="text-sidebar-primary">in one place</span>
             </h1>
             <p className="text-sidebar-foreground/70 text-base leading-relaxed max-w-sm">
-              মাসিক কিস্তি ট্র্যাক করুন, বাকি পরিমাণ দেখুন এবং সময়মতো পরিশোধ করুন — সবকিছু এক অ্যাপে।
+              Track monthly installments, view outstanding balances, and stay on top of payments — all in one app.
             </p>
           </div>
 
@@ -157,9 +157,9 @@ export default function LandingPage() {
           {/* Stats row */}
           <div className="flex gap-6 pt-2">
             {[
-              { label: "সক্রিয় ব্যবহারকারী", value: "১০০+" },
-              { label: "EMI ট্র্যাক হয়েছে", value: "৫০০+" },
-              { label: "সাশ্রয়ী সিদ্ধান্ত", value: "১০০%" },
+              { label: "Active Users", value: "100+" },
+              { label: "EMIs Tracked", value: "500+" },
+              { label: "Smart Savings", value: "100%" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-sidebar-primary font-bold text-lg">{s.value}</p>
@@ -194,7 +194,7 @@ export default function LandingPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              লগইন
+              Login
             </button>
             <button
               type="button"
@@ -205,7 +205,7 @@ export default function LandingPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              নিবন্ধন
+              Sign Up
             </button>
           </div>
 
@@ -213,13 +213,13 @@ export default function LandingPage() {
           {tab === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5">
-                <p className="text-xl font-bold text-foreground">স্বাগতম!</p>
-                <p className="text-sm text-muted-foreground">আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+                <p className="text-xl font-bold text-foreground">Welcome back!</p>
+                <p className="text-sm text-muted-foreground">Sign in to your account</p>
               </div>
 
               <div className="space-y-4 pt-1">
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-email">ইমেইল</Label>
+                  <Label htmlFor="login-email">Email</Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -229,11 +229,11 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-password">পাসওয়ার্ড</Label>
+                  <Label htmlFor="login-password">Password</Label>
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="আপনার পাসওয়ার্ড"
+                    placeholder="Your password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm((p) => ({ ...p, password: e.target.value }))}
                   />
@@ -243,13 +243,13 @@ export default function LandingPage() {
               {loginError && <p className="text-sm text-destructive">{loginError}</p>}
 
               <Button type="submit" className="w-full" disabled={loginLoading}>
-                {loginLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
+                {loginLoading ? "Signing in..." : "Sign In"}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                অ্যাকাউন্ট নেই?{" "}
+                Don't have an account?{" "}
                 <button type="button" onClick={() => setTab("signup")} className="text-primary font-medium hover:underline">
-                  নিবন্ধন করুন
+                  Sign up
                 </button>
               </p>
             </form>
@@ -259,41 +259,41 @@ export default function LandingPage() {
           {tab === "signup" && (
             <form onSubmit={handleSignup} className="space-y-3">
               <div className="space-y-1.5">
-                <p className="text-xl font-bold text-foreground">নতুন অ্যাকাউন্ট</p>
-                <p className="text-sm text-muted-foreground">EMI Tracker-এ যোগ দিন</p>
+                <p className="text-xl font-bold text-foreground">Create Account</p>
+                <p className="text-sm text-muted-foreground">Join EMI Tracker</p>
               </div>
 
               <div className="space-y-3 pt-1">
                 <div className="space-y-1.5">
-                  <Label htmlFor="su-name">পূর্ণ নাম <span className="text-destructive">*</span></Label>
-                  <Input id="su-name" placeholder="যেমন: রহিম উদ্দিন" value={signupForm.name}
+                  <Label htmlFor="su-name">Full Name <span className="text-destructive">*</span></Label>
+                  <Input id="su-name" placeholder="e.g. John Smith" value={signupForm.name}
                     onChange={(e) => setSignupForm((p) => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="su-email">ইমেইল <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="su-email">Email <span className="text-destructive">*</span></Label>
                   <Input id="su-email" type="email" placeholder="example@gmail.com" value={signupForm.email}
                     onChange={(e) => setSignupForm((p) => ({ ...p, email: e.target.value }))} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="su-phone">ফোন</Label>
+                    <Label htmlFor="su-phone">Phone</Label>
                     <Input id="su-phone" type="tel" placeholder="01XXXXXXXXX" value={signupForm.phone}
                       onChange={(e) => setSignupForm((p) => ({ ...p, phone: e.target.value }))} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="su-address">ঠিকানা</Label>
-                    <Input id="su-address" placeholder="ঢাকা" value={signupForm.address}
+                    <Label htmlFor="su-address">Address</Label>
+                    <Input id="su-address" placeholder="City" value={signupForm.address}
                       onChange={(e) => setSignupForm((p) => ({ ...p, address: e.target.value }))} />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="su-pass">পাসওয়ার্ড <span className="text-destructive">*</span></Label>
-                  <Input id="su-pass" type="password" placeholder="কমপক্ষে ৮ অক্ষর" value={signupForm.password}
+                  <Label htmlFor="su-pass">Password <span className="text-destructive">*</span></Label>
+                  <Input id="su-pass" type="password" placeholder="At least 8 characters" value={signupForm.password}
                     onChange={(e) => setSignupForm((p) => ({ ...p, password: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="su-confirm">পাসওয়ার্ড নিশ্চিত করুন <span className="text-destructive">*</span></Label>
-                  <Input id="su-confirm" type="password" placeholder="পুনরায় লিখুন" value={signupForm.confirmPassword}
+                  <Label htmlFor="su-confirm">Confirm Password <span className="text-destructive">*</span></Label>
+                  <Input id="su-confirm" type="password" placeholder="Re-enter password" value={signupForm.confirmPassword}
                     onChange={(e) => setSignupForm((p) => ({ ...p, confirmPassword: e.target.value }))} />
                 </div>
               </div>
@@ -301,13 +301,13 @@ export default function LandingPage() {
               {signupError && <p className="text-sm text-destructive">{signupError}</p>}
 
               <Button type="submit" className="w-full" disabled={signupLoading}>
-                {signupLoading ? "তৈরি হচ্ছে..." : "অ্যাকাউন্ট তৈরি করুন"}
+                {signupLoading ? "Creating account..." : "Create Account"}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                আগে থেকে অ্যাকাউন্ট আছে?{" "}
+                Already have an account?{" "}
                 <button type="button" onClick={() => setTab("login")} className="text-primary font-medium hover:underline">
-                  লগইন করুন
+                  Sign in
                 </button>
               </p>
             </form>

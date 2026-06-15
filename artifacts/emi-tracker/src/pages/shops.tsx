@@ -68,44 +68,44 @@ function ShopForm({
     <form onSubmit={onSubmit} className="space-y-5 pt-2">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="name">দোকানের নাম <span className="text-destructive">*</span></Label>
-          <Input id="name" value={formData.name} onChange={set("name")} placeholder="যেমন: ওয়ালটন প্লাজা" required />
+          <Label htmlFor="name">Shop Name <span className="text-destructive">*</span></Label>
+          <Input id="name" value={formData.name} onChange={set("name")} placeholder="e.g. Walton Plaza" required />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="branch">শাখার নাম</Label>
-          <Input id="branch" value={formData.branch} onChange={set("branch")} placeholder="যেমন: ধানমন্ডি শাখা" />
+          <Label htmlFor="branch">Branch Name</Label>
+          <Input id="branch" value={formData.branch} onChange={set("branch")} placeholder="e.g. Dhanmondi Branch" />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="contactPerson">ম্যানেজার / সেলস পার্সন</Label>
-          <Input id="contactPerson" value={formData.contactPerson} onChange={set("contactPerson")} placeholder="যোগাযোগের ব্যক্তির নাম" />
+          <Label htmlFor="contactPerson">Manager / Sales Person</Label>
+          <Input id="contactPerson" value={formData.contactPerson} onChange={set("contactPerson")} placeholder="Contact person name" />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">ফোন নম্বর</Label>
-          <Input id="phone" value={formData.phone} onChange={set("phone")} placeholder="যেমন: 01700000000" />
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input id="phone" value={formData.phone} onChange={set("phone")} placeholder="e.g. 01700000000" />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">ইমেইল</Label>
-          <Input id="email" type="email" value={formData.email} onChange={set("email")} placeholder="যেমন: info@shop.com" />
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" value={formData.email} onChange={set("email")} placeholder="e.g. info@shop.com" />
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="address">ঠিকানা</Label>
-          <Input id="address" value={formData.address} onChange={set("address")} placeholder="সম্পূর্ণ ঠিকানা" />
+          <Label htmlFor="address">Address</Label>
+          <Input id="address" value={formData.address} onChange={set("address")} placeholder="Full address" />
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="website">ওয়েবসাইট / Facebook পেজ</Label>
-          <Input id="website" value={formData.website} onChange={set("website")} placeholder="যেমন: https://facebook.com/waltonplaza" />
+          <Label htmlFor="website">Website / Facebook Page</Label>
+          <Input id="website" value={formData.website} onChange={set("website")} placeholder="e.g. https://facebook.com/waltonplaza" />
         </div>
       </div>
 
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "সেভ হচ্ছে..." : submitLabel}
+          {isPending ? "Saving..." : submitLabel}
         </Button>
       </div>
     </form>
@@ -151,10 +151,10 @@ export default function Shops() {
           queryClient.invalidateQueries({ queryKey: getListShopsQueryKey() });
           setAddOpen(false);
           setAddForm(emptyForm);
-          toast({ title: "দোকান যোগ হয়েছে!" });
+          toast({ title: "Shop added successfully!" });
         },
         onError: () => {
-          toast({ title: "দোকান যোগ ব্যর্থ হয়েছে", variant: "destructive" });
+          toast({ title: "Failed to add shop", variant: "destructive" });
         },
       }
     );
@@ -180,23 +180,23 @@ export default function Shops() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListShopsQueryKey() });
           setEditShop(null);
-          toast({ title: "দোকানের তথ্য আপডেট হয়েছে!" });
+          toast({ title: "Shop updated successfully!" });
         },
         onError: () => {
-          toast({ title: "আপডেট ব্যর্থ হয়েছে", variant: "destructive" });
+          toast({ title: "Failed to update shop", variant: "destructive" });
         },
       }
     );
   };
 
   const handleDelete = (id: number) => {
-    if (!confirm("এই দোকানটি মুছে ফেলবেন? এর সাথে সংযুক্ত সব EMI ডেটা থেকে যাবে।")) return;
+    if (!confirm("Delete this shop? All associated EMI data will remain.")) return;
     deleteShop.mutate(
       { id },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListShopsQueryKey() });
-          toast({ title: "দোকান মুছে ফেলা হয়েছে" });
+          toast({ title: "Shop deleted" });
         },
       }
     );
@@ -206,26 +206,26 @@ export default function Shops() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">দোকান / শোরুম</h2>
-          <p className="text-muted-foreground mt-1">আপনার দোকান ও শোরুমের তথ্য পরিচালনা করুন।</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Shops / Showrooms</h2>
+          <p className="text-muted-foreground mt-1">Manage your shops and showroom information.</p>
         </div>
 
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button className="shrink-0">
-              <Plus className="mr-2 h-4 w-4" /> নতুন দোকান যোগ
+              <Plus className="mr-2 h-4 w-4" /> Add Shop
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>নতুন দোকান / শোরুম যোগ করুন</DialogTitle>
+              <DialogTitle>Add New Shop / Showroom</DialogTitle>
             </DialogHeader>
             <ShopForm
               formData={addForm}
               setFormData={setAddForm}
               onSubmit={handleAdd}
               isPending={createShop.isPending}
-              submitLabel="দোকান সেভ করুন"
+              submitLabel="Save Shop"
             />
           </DialogContent>
         </Dialog>
@@ -235,14 +235,14 @@ export default function Shops() {
       <Dialog open={!!editShop} onOpenChange={(open) => { if (!open) setEditShop(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>দোকানের তথ্য সম্পাদনা করুন</DialogTitle>
+            <DialogTitle>Edit Shop</DialogTitle>
           </DialogHeader>
           <ShopForm
             formData={editForm}
             setFormData={setEditForm}
             onSubmit={handleEdit}
             isPending={updateShop.isPending}
-            submitLabel="আপডেট করুন"
+            submitLabel="Update"
           />
         </DialogContent>
       </Dialog>
@@ -262,8 +262,8 @@ export default function Shops() {
         ) : shops?.length === 0 ? (
           <div className="col-span-full py-12 text-center border rounded-lg bg-muted/20">
             <Store className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
-            <h3 className="text-lg font-medium">কোনো দোকান নেই</h3>
-            <p className="text-muted-foreground text-sm mt-1">প্রথম দোকানটি যোগ করুন EMI ট্র্যাক শুরু করতে।</p>
+            <h3 className="text-lg font-medium">No shops yet</h3>
+            <p className="text-muted-foreground text-sm mt-1">Add your first shop to start tracking EMIs.</p>
           </div>
         ) : (
           shops?.map((shop) => (
@@ -366,7 +366,7 @@ export default function Shops() {
                 )}
 
                 {!shop.phone && !shop.email && !shop.address && !shop.website && !shop.contactPerson && (
-                  <p className="text-xs text-muted-foreground italic">কোনো বিস্তারিত তথ্য নেই</p>
+                  <p className="text-xs text-muted-foreground italic">No details added</p>
                 )}
               </CardContent>
             </Card>

@@ -53,12 +53,12 @@ export default function EmiOrders() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">আমার EMI</h2>
-          <p className="text-muted-foreground mt-1">আমার সকল কিস্তির তালিকা।</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">My EMIs</h2>
+          <p className="text-muted-foreground mt-1">All your installment orders.</p>
         </div>
         <Link href="/emi-orders/new">
           <Button className="shrink-0">
-            <Plus className="mr-2 h-4 w-4" /> নতুন EMI
+            <Plus className="mr-2 h-4 w-4" /> New EMI
           </Button>
         </Link>
       </div>
@@ -69,7 +69,7 @@ export default function EmiOrders() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="পণ্য বা দোকান দিয়ে খুঁজুন..."
+                placeholder="Search by product or shop..."
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -79,10 +79,10 @@ export default function EmiOrders() {
               <Select value={selectedShopId} onValueChange={setSelectedShopId}>
                 <SelectTrigger className="w-[180px] bg-background">
                   <Store className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="সব দোকান" />
+                  <SelectValue placeholder="All Shops" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">সব দোকান</SelectItem>
+                  <SelectItem value="all">All Shops</SelectItem>
                   {shops?.map((shop) => (
                     <SelectItem key={shop.id} value={shop.id.toString()}>
                       {shop.name}
@@ -96,9 +96,9 @@ export default function EmiOrders() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">সব</SelectItem>
-                  <SelectItem value="active">চলমান</SelectItem>
-                  <SelectItem value="completed">সম্পন্ন</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -126,8 +126,8 @@ export default function EmiOrders() {
         ) : filteredOrders?.length === 0 ? (
           <div className="py-12 text-center border rounded-lg bg-muted/20">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-3" />
-            <h3 className="text-lg font-medium">কোনো EMI পাওয়া যায়নি</h3>
-            <p className="text-muted-foreground text-sm mt-1">প্রথম EMI যোগ করতে উপরের বোতামে ক্লিক করুন।</p>
+            <h3 className="text-lg font-medium">No EMIs found</h3>
+            <p className="text-muted-foreground text-sm mt-1">Click the button above to add your first EMI.</p>
           </div>
         ) : (
           filteredOrders?.map((order) => (
@@ -148,7 +148,7 @@ export default function EmiOrders() {
                             variant={order.status === "completed" ? "outline" : "default"}
                             className={order.status === "completed" ? "bg-green-500/10 text-green-700 border-green-500/20" : ""}
                           >
-                            {order.status === "completed" ? "সম্পন্ন" : "চলমান"}
+                            {order.status === "completed" ? "Completed" : "Active"}
                           </Badge>
                           {getDueBadge(order.nextDueDate, order.status)}
                         </div>
@@ -157,17 +157,17 @@ export default function EmiOrders() {
                         </p>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
                           <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" /> কেনা: {formatDate(order.purchaseDate)}
+                            <Calendar className="h-3 w-3" /> Bought: {formatDate(order.purchaseDate)}
                           </span>
-                          <span>{order.emiMonths} মাস • {formatCurrency(order.monthlyAmount)}/মাস</span>
+                          <span>{order.emiMonths} months • {formatCurrency(order.monthlyAmount)}/mo</span>
                           <span>
-                            {order.installmentsPaid ?? 0}/{order.emiMonths} কিস্তি দেওয়া
+                            {order.installmentsPaid ?? 0}/{order.emiMonths} paid
                           </span>
                         </div>
                         {order.status === "active" && order.nextDueDate && (
                           <div className={`flex items-center gap-1 text-xs pt-1 ${getDueDateColor(order.nextDueDate, order.status)}`}>
                             <AlertCircle className="h-3 w-3" />
-                            পরবর্তী কিস্তি: {formatDate(order.nextDueDate)}
+                            Next installment: {formatDate(order.nextDueDate)}
                           </div>
                         )}
                       </div>
@@ -175,11 +175,11 @@ export default function EmiOrders() {
 
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-4 sm:gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 mt-1 sm:mt-0 min-w-[160px]">
                       <div className="text-left sm:text-right">
-                        <p className="text-xs text-muted-foreground">মোট দাম</p>
+                        <p className="text-xs text-muted-foreground">Total Price</p>
                         <p className="font-bold text-base">{formatCurrency(order.totalPrice)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">বাকি আছে</p>
+                        <p className="text-xs text-muted-foreground">Remaining</p>
                         <p className={`font-bold text-lg ${(order.remainingAmount ?? 0) > 0 ? "text-destructive" : "text-green-600"}`}>
                           {formatCurrency(order.remainingAmount ?? 0)}
                         </p>

@@ -18,7 +18,7 @@ export default function CompleteProfile({ onComplete }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
-      toast({ title: "নাম লিখুন", variant: "destructive" });
+      toast({ title: "Please enter your name", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -30,10 +30,10 @@ export default function CompleteProfile({ onComplete }: Props) {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Failed");
-      toast({ title: "প্রোফাইল সম্পন্ন হয়েছে!" });
+      toast({ title: "Profile completed!" });
       onComplete?.();
     } catch {
-      toast({ title: "সমস্যা হয়েছে, আবার চেষ্টা করুন", variant: "destructive" });
+      toast({ title: "Something went wrong, please try again", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -46,20 +46,20 @@ export default function CompleteProfile({ onComplete }: Props) {
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-2xl mx-auto">
             ৳
           </div>
-          <h1 className="text-2xl font-bold text-foreground">আপনার তথ্য দিন</h1>
+          <h1 className="text-2xl font-bold text-foreground">Complete Your Profile</h1>
           <p className="text-sm text-muted-foreground">
-            একবারই লাগবে — পরে settings থেকে পরিবর্তন করা যাবে
+            Only needed once — you can update it later from settings
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">
-              পূর্ণ নাম <span className="text-destructive">*</span>
+              Full Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
-              placeholder="যেমন: রহিম উদ্দিন"
+              placeholder="e.g. John Smith"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
@@ -67,28 +67,28 @@ export default function CompleteProfile({ onComplete }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">ফোন নম্বর</Label>
+            <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
               type="tel"
-              placeholder="যেমন: 01XXXXXXXXX"
+              placeholder="e.g. 01XXXXXXXXX"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">ঠিকানা</Label>
+            <Label htmlFor="address">Address</Label>
             <Input
               id="address"
-              placeholder="যেমন: ঢাকা, বাংলাদেশ"
+              placeholder="e.g. Dhaka, Bangladesh"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
             />
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "সংরক্ষণ হচ্ছে..." : "শুরু করুন →"}
+            {loading ? "Saving..." : "Get Started →"}
           </Button>
         </form>
       </div>

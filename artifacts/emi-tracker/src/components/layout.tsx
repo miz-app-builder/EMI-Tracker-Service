@@ -31,7 +31,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex-col hidden md:flex">
         <div className="p-6">
           <h1 className="text-xl font-bold text-sidebar-primary tracking-tight">EMI Tracker</h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-1">আমার কিস্তির হিসাব</p>
+          <p className="text-xs text-sidebar-foreground/60 mt-1">My installment records</p>
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => {
@@ -76,7 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/profile">
                 <DropdownMenuItem className="gap-2 cursor-pointer">
                   <Settings className="h-4 w-4" />
-                  প্রোফাইল সেটিংস
+                  Profile Settings
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
@@ -85,7 +85,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
-                লগআউট
+                Log Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -117,7 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/profile">
                 <DropdownMenuItem className="gap-2 cursor-pointer">
                   <Settings className="h-4 w-4" />
-                  প্রোফাইল
+                  Profile
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
@@ -126,7 +126,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
-                লগআউট
+                Log Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

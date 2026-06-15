@@ -48,12 +48,12 @@ export default function ProfilePage() {
           address: infoForm.address || null,
         }),
       });
-      if (!res.ok) { setInfoError("সমস্যা হয়েছে, আবার চেষ্টা করুন"); return; }
+      if (!res.ok) { setInfoError("Something went wrong, please try again"); return; }
       await refetch();
       setInfoSuccess(true);
       setTimeout(() => setInfoSuccess(false), 3000);
     } catch {
-      setInfoError("সমস্যা হয়েছে, আবার চেষ্টা করুন");
+      setInfoError("Something went wrong, please try again");
     } finally {
       setInfoLoading(false);
     }
@@ -69,9 +69,9 @@ export default function ProfilePage() {
     e.preventDefault();
     setPwError("");
     setPwSuccess(false);
-    if (!pwForm.current) { setPwError("বর্তমান পাসওয়ার্ড লিখুন"); return; }
-    if (pwForm.next.length < 8) { setPwError("নতুন পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে"); return; }
-    if (pwForm.next !== pwForm.confirm) { setPwError("নতুন পাসওয়ার্ড দুটি মিলছে না"); return; }
+    if (!pwForm.current) { setPwError("Please enter your current password"); return; }
+    if (pwForm.next.length < 8) { setPwError("New password must be at least 8 characters"); return; }
+    if (pwForm.next !== pwForm.confirm) { setPwError("New passwords do not match"); return; }
     setPwLoading(true);
     try {
       const res = await fetch(`${basePath}/api/users/me/change-password`, {
@@ -84,8 +84,8 @@ export default function ProfilePage() {
         const d = await res.json();
         setPwError(
           d.error === "Current password is incorrect"
-            ? "বর্তমান পাসওয়ার্ড ভুল"
-            : "সমস্যা হয়েছে, আবার চেষ্টা করুন"
+            ? "Current password is incorrect"
+            : "Something went wrong, please try again"
         );
         return;
       }
@@ -94,7 +94,7 @@ export default function ProfilePage() {
       setPwForm({ current: "", next: "", confirm: "" });
       setTimeout(() => setPwSuccess(false), 3000);
     } catch {
-      setPwError("সমস্যা হয়েছে, আবার চেষ্টা করুন");
+      setPwError("Something went wrong, please try again");
     } finally {
       setPwLoading(false);
     }
@@ -108,8 +108,8 @@ export default function ProfilePage() {
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { setPhotoError("শুধুমাত্র ছবি আপলোড করুন"); return; }
-    if (file.size > 5 * 1024 * 1024) { setPhotoError("ছবির আকার সর্বোচ্চ ৫MB"); return; }
+    if (!file.type.startsWith("image/")) { setPhotoError("Please upload an image file only"); return; }
+    if (file.size > 5 * 1024 * 1024) { setPhotoError("Image size must be 5MB or less"); return; }
 
     setPhotoError("");
     setPhotoLoading(true);
@@ -138,7 +138,7 @@ export default function ProfilePage() {
 
       await refetch();
     } catch {
-      setPhotoError("ছবি আপলোড করতে সমস্যা হয়েছে, আবার চেষ্টা করুন");
+      setPhotoError("Failed to upload photo, please try again");
     } finally {
       setPhotoLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -148,14 +148,14 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">প্রোফাইল সেটিংস</h1>
-        <p className="text-sm text-muted-foreground mt-1">আপনার অ্যাকাউন্টের তথ্য পরিবর্তন করুন</p>
+        <h1 className="text-2xl font-bold text-foreground">Profile Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Update your account information</p>
       </div>
 
       {/* ── Photo card ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">প্রোফাইল ছবি</CardTitle>
+          <CardTitle className="text-base">Profile Photo</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center gap-6">
           <div className="relative">
@@ -185,9 +185,9 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
             >
               <Camera className="h-4 w-4" />
-              ছবি পরিবর্তন করুন
+              Change Photo
             </Button>
-            <p className="text-xs text-muted-foreground">JPG, PNG, WebP — সর্বোচ্চ ৫MB</p>
+            <p className="text-xs text-muted-foreground">JPG, PNG, WebP — max 5MB</p>
             {photoError && <p className="text-xs text-destructive">{photoError}</p>}
           </div>
         </CardContent>
@@ -196,31 +196,31 @@ export default function ProfilePage() {
       {/* ── Account info card ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">অ্যাকাউন্টের তথ্য</CardTitle>
+          <CardTitle className="text-base">Account Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* Read-only account metadata */}
           <div className="grid grid-cols-2 gap-4 text-sm p-3 rounded-lg bg-muted/50">
             <div>
-              <p className="text-muted-foreground text-xs">ইমেইল</p>
+              <p className="text-muted-foreground text-xs">Email</p>
               <p className="font-medium mt-0.5">{user?.email}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">অ্যাকাউন্ট তৈরির তারিখ</p>
+              <p className="text-muted-foreground text-xs">Account Created</p>
               <p className="font-medium mt-0.5">
                 {user?.createdAt ? format(new Date(user.createdAt), "dd MMM yyyy") : "—"}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">সর্বশেষ সক্রিয়</p>
+              <p className="text-muted-foreground text-xs">Last Active</p>
               <p className="font-medium mt-0.5">
                 {user?.lastActiveAt ? format(new Date(user.lastActiveAt), "dd MMM yyyy, hh:mm a") : "—"}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">পাসওয়ার্ড পরিবর্তন</p>
+              <p className="text-muted-foreground text-xs">Password Changed</p>
               <p className="font-medium mt-0.5">
-                {user?.passwordChangedAt ? format(new Date(user.passwordChangedAt), "dd MMM yyyy") : "কখনো পরিবর্তন হয়নি"}
+                {user?.passwordChangedAt ? format(new Date(user.passwordChangedAt), "dd MMM yyyy") : "Never changed"}
               </p>
             </div>
           </div>
@@ -230,17 +230,17 @@ export default function ProfilePage() {
           {/* Editable fields */}
           <form onSubmit={handleInfoSave} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="p-name">পূর্ণ নাম</Label>
+              <Label htmlFor="p-name">Full Name</Label>
               <Input
                 id="p-name"
-                placeholder="আপনার নাম"
+                placeholder="Your name"
                 value={infoForm.name}
                 onChange={(e) => setInfoForm((p) => ({ ...p, name: e.target.value }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="p-phone">ফোন নম্বর</Label>
+                <Label htmlFor="p-phone">Phone Number</Label>
                 <Input
                   id="p-phone"
                   type="tel"
@@ -250,10 +250,10 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="p-address">ঠিকানা</Label>
+                <Label htmlFor="p-address">Address</Label>
                 <Input
                   id="p-address"
-                  placeholder="ঢাকা"
+                  placeholder="City"
                   value={infoForm.address}
                   onChange={(e) => setInfoForm((p) => ({ ...p, address: e.target.value }))}
                 />
@@ -263,13 +263,13 @@ export default function ProfilePage() {
             {infoError && <p className="text-sm text-destructive">{infoError}</p>}
             {infoSuccess && (
               <p className="text-sm text-green-600 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> তথ্য সংরক্ষিত হয়েছে
+                <CheckCircle2 className="h-4 w-4" /> Information saved
               </p>
             )}
 
             <Button type="submit" size="sm" disabled={infoLoading} className="gap-2">
               {infoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              সংরক্ষণ করুন
+              Save
             </Button>
           </form>
         </CardContent>
@@ -278,37 +278,37 @@ export default function ProfilePage() {
       {/* ── Password card ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">পাসওয়ার্ড পরিবর্তন</CardTitle>
+          <CardTitle className="text-base">Change Password</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="pw-current">বর্তমান পাসওয়ার্ড</Label>
+              <Label htmlFor="pw-current">Current Password</Label>
               <Input
                 id="pw-current"
                 type="password"
-                placeholder="বর্তমান পাসওয়ার্ড"
+                placeholder="Current password"
                 value={pwForm.current}
                 onChange={(e) => setPwForm((p) => ({ ...p, current: e.target.value }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="pw-new">নতুন পাসওয়ার্ড</Label>
+                <Label htmlFor="pw-new">New Password</Label>
                 <Input
                   id="pw-new"
                   type="password"
-                  placeholder="কমপক্ষে ৮ অক্ষর"
+                  placeholder="At least 8 characters"
                   value={pwForm.next}
                   onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pw-confirm">নিশ্চিত করুন</Label>
+                <Label htmlFor="pw-confirm">Confirm</Label>
                 <Input
                   id="pw-confirm"
                   type="password"
-                  placeholder="পুনরায় লিখুন"
+                  placeholder="Re-enter password"
                   value={pwForm.confirm}
                   onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
                 />
@@ -318,13 +318,13 @@ export default function ProfilePage() {
             {pwError && <p className="text-sm text-destructive">{pwError}</p>}
             {pwSuccess && (
               <p className="text-sm text-green-600 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> পাসওয়ার্ড পরিবর্তন হয়েছে
+                <CheckCircle2 className="h-4 w-4" /> Password changed successfully
               </p>
             )}
 
             <Button type="submit" size="sm" variant="outline" disabled={pwLoading} className="gap-2">
               {pwLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              পাসওয়ার্ড পরিবর্তন করুন
+              Change Password
             </Button>
           </form>
         </CardContent>
