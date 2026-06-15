@@ -6,12 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Store, Plus, MapPin, Phone, Trash2, User2, Mail, Globe, GitBranch, Pencil } from "lucide-react";
+import { Store, Plus, MapPin, Phone, Trash2, User2, Mail, Globe, Pencil, Building2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Shop } from "@workspace/api-client-react";
+
+function shopFaviconUrl(website: string | null | undefined): string | null {
+  if (!website) return null;
+  try {
+    const url = website.startsWith("http") ? website : `https://${website}`;
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  } catch {
+    return null;
+  }
+}
 
 const emptyForm = {
   name: "",
@@ -260,15 +271,29 @@ export default function Shops() {
               <CardHeader className="bg-muted/30 pb-4 border-b">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="p-2 bg-primary/10 rounded-md shrink-0 mt-0.5">
-                      <Store className="h-5 w-5 text-primary" />
+                    <div className="p-2 bg-primary/10 rounded-md shrink-0 mt-0.5 flex items-center justify-center w-10 h-10">
+                      {shopFaviconUrl(shop.website) ? (
+                        <img
+                          src={shopFaviconUrl(shop.website)!}
+                          alt={shop.name}
+                          className="w-6 h-6 object-contain"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                            (e.currentTarget.nextSibling as HTMLElement).style.display = "block";
+                          }}
+                        />
+                      ) : null}
+                      <Store
+                        className="h-5 w-5 text-primary"
+                        style={{ display: shopFaviconUrl(shop.website) ? "none" : "block" }}
+                      />
                     </div>
                     <div className="min-w-0">
                       <CardTitle className="text-lg leading-tight">{shop.name}</CardTitle>
                       {shop.branch && (
                         <div className="mt-1.5">
                           <Badge variant="secondary" className="text-xs font-normal gap-1">
-                            <GitBranch className="h-3 w-3" />
+                            <Building2 className="h-3 w-3" />
                             {shop.branch}
                           </Badge>
                         </div>
