@@ -468,155 +468,179 @@ export default function EmiOrderDetail() {
         </div>
       )}
 
-      {/* ── Summary + Details cards ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-3 border-b">
-            <CardTitle>Financial Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Price</p>
-                <p className="font-bold text-xl">{formatCurrency(order.totalPrice)}</p>
-                {(order.discount ?? 0) > 0 && (
-                  <p className="text-xs text-green-600 font-medium">Discount: -{formatCurrency(order.discount ?? 0)}</p>
-                )}
+      {/* ── Details card ── */}
+      <Card>
+        <CardHeader className="pb-4 border-b">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-4 w-4 text-primary" />
+            Order Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-5">
+            <div className="flex gap-3 items-start">
+              <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                <Store className="h-4 w-4 text-muted-foreground" />
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Down Payment</p>
-                <p className="font-semibold text-lg">{formatCurrency(order.downPayment)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Paid</p>
-                <p className="font-semibold text-lg text-primary">{formatCurrency(order.totalPaid ?? 0)}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Still Owed</p>
-                <p className={`font-bold text-xl ${(order.remainingAmount ?? 0) > 0 ? "text-destructive" : "text-green-600"}`}>
-                  {formatCurrency(order.remainingAmount ?? 0)}
-                </p>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Shop / Showroom</p>
+                <p className="font-semibold text-sm">{order.shopName}</p>
               </div>
             </div>
+            <div className="flex gap-3 items-start">
+              <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Product</p>
+                <p className="font-semibold text-sm">{order.productName}</p>
+              </div>
+            </div>
+            {order.modelNumber && (
+              <div className="flex gap-3 items-start">
+                <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Model Number</p>
+                  <p className="font-semibold text-sm font-mono">{order.modelNumber}</p>
+                </div>
+              </div>
+            )}
+            {order.warrantyInfo && (
+              <div className="flex gap-3 items-start">
+                <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Warranty</p>
+                  <p className="font-semibold text-sm">{order.warrantyInfo}</p>
+                </div>
+              </div>
+            )}
+            {order.customerId && (
+              <div className="flex gap-3 items-start">
+                <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Customer ID</p>
+                  <p className="font-semibold text-sm font-mono">{order.customerId}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex gap-3 items-start">
+              <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Purchase Date</p>
+                <p className="font-semibold text-sm">{formatDate(order.purchaseDate)}</p>
+              </div>
+            </div>
+            {order.dueDayOfMonth && (
+              <div className="flex gap-3 items-start">
+                <div className="p-1.5 bg-muted rounded-md shrink-0 mt-0.5">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Monthly Due Day</p>
+                  <p className="font-semibold text-sm">Day <span className="text-primary">{order.dueDayOfMonth}</span> of each month</p>
+                </div>
+              </div>
+            )}
+            {order.status === "active" && order.nextDueDate && (
+              <div className="flex gap-3 items-start">
+                <div className="p-1.5 bg-orange-100 dark:bg-orange-950/40 rounded-md shrink-0 mt-0.5">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-orange-600 uppercase font-medium tracking-wider mb-0.5">Next Due Date</p>
+                  <p className="font-semibold text-sm text-orange-700">{formatDate(order.nextDueDate)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-            <div className="mt-8 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium text-primary">Payment Progress</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${progress === 100 ? "bg-green-500" : "bg-primary"}`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground text-right">
-                {order.installmentsPaid ?? 0} / {order.emiMonths} installments paid
+      {/* ── Financial Summary card ── */}
+      <Card>
+        <CardHeader className="pb-4 border-b">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CreditCard className="h-4 w-4 text-primary" />
+            Financial Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-8">
+          {/* 4 stat boxes */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="rounded-xl border bg-muted/30 p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Price</p>
+              <p className="font-bold text-xl">{formatCurrency(order.totalPrice)}</p>
+              {(order.discount ?? 0) > 0 && (
+                <p className="text-xs text-green-600 font-medium">Discount: -{formatCurrency(order.discount ?? 0)}</p>
+              )}
+            </div>
+            <div className="rounded-xl border bg-muted/30 p-4 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Down Payment</p>
+              <p className="font-bold text-xl">{formatCurrency(order.downPayment)}</p>
+            </div>
+            <div className="rounded-xl border bg-primary/5 border-primary/20 p-4 space-y-1">
+              <p className="text-xs text-primary/70 font-medium uppercase tracking-wider">Total Paid</p>
+              <p className="font-bold text-xl text-primary">{formatCurrency(order.totalPaid ?? 0)}</p>
+            </div>
+            <div className={`rounded-xl border p-4 space-y-1 ${(order.remainingAmount ?? 0) > 0 ? "bg-destructive/5 border-destructive/20" : "bg-green-500/5 border-green-500/20"}`}>
+              <p className={`text-xs font-medium uppercase tracking-wider ${(order.remainingAmount ?? 0) > 0 ? "text-destructive/70" : "text-green-600/70"}`}>Still Owed</p>
+              <p className={`font-bold text-xl ${(order.remainingAmount ?? 0) > 0 ? "text-destructive" : "text-green-600"}`}>
+                {formatCurrency(order.remainingAmount ?? 0)}
               </p>
             </div>
+          </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-6 pt-6 border-t">
-              <div className="flex gap-3">
-                <div className="p-2 bg-muted rounded-md h-fit">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">EMI Duration</p>
-                  <p className="font-medium">{order.emiMonths} months</p>
-                </div>
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-semibold text-foreground">Payment Progress</span>
+              <span className={`font-bold text-base ${progress === 100 ? "text-green-600" : "text-primary"}`}>{progress}%</span>
+            </div>
+            <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? "bg-green-500" : "bg-primary"}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {order.installmentsPaid ?? 0} of {order.emiMonths} installments paid
+            </p>
+          </div>
+
+          {/* Duration + Next installment */}
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+            <div className="flex gap-3 items-start">
+              <div className="p-2 bg-muted rounded-lg shrink-0">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div className="flex gap-3">
-                <div className="p-2 bg-primary/10 rounded-md h-fit">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Next Installment</p>
-                  <p className="font-bold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</p>
-                  {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
-                    <p className="text-xs text-muted-foreground">Original: {formatCurrency(order.monthlyAmount)}</p>
-                  )}
-                </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">EMI Duration</p>
+                <p className="font-semibold">{order.emiMonths} months</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3 border-b">
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              <div className="p-4 flex gap-3 items-start">
-                <Store className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Shop / Showroom</p>
-                  <p className="font-medium">{order.shopName}</p>
-                </div>
+            <div className="flex gap-3 items-start">
+              <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                <CreditCard className="h-5 w-5 text-primary" />
               </div>
-              <div className="p-4 flex gap-3 items-start">
-                <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Product</p>
-                  <p className="font-medium">{order.productName}</p>
-                </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-0.5">Monthly Installment</p>
+                <p className="font-bold text-primary text-lg">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</p>
+                {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+                  <p className="text-xs text-muted-foreground">Original: {formatCurrency(order.monthlyAmount)}</p>
+                )}
               </div>
-              {order.modelNumber && (
-                <div className="p-4 flex gap-3 items-start">
-                  <Hash className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Model Number</p>
-                    <p className="font-medium font-mono">{order.modelNumber}</p>
-                  </div>
-                </div>
-              )}
-              {order.warrantyInfo && (
-                <div className="p-4 flex gap-3 items-start">
-                  <ShieldCheck className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Guarantee / Warranty</p>
-                    <p className="font-medium">{order.warrantyInfo}</p>
-                  </div>
-                </div>
-              )}
-              {order.customerId && (
-                <div className="p-4 flex gap-3 items-start">
-                  <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Customer ID</p>
-                    <p className="font-medium font-mono">{order.customerId}</p>
-                  </div>
-                </div>
-              )}
-              <div className="p-4 flex gap-3 items-start">
-                <Calendar className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Purchase Date</p>
-                  <p className="font-medium">{formatDate(order.purchaseDate)}</p>
-                </div>
-              </div>
-              {order.dueDayOfMonth && (
-                <div className="p-4 flex gap-3 items-start">
-                  <CalendarDays className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Monthly Due Day</p>
-                    <p className="font-medium">Day <span className="font-bold text-primary">{order.dueDayOfMonth}</span> of each month</p>
-                  </div>
-                </div>
-              )}
-              {order.status === "active" && order.nextDueDate && (
-                <div className="p-4 flex gap-3 items-start bg-orange-50 dark:bg-orange-950/20">
-                  <AlertCircle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-orange-600 uppercase font-medium tracking-wider mb-1">Next Installment</p>
-                    <p className="font-bold text-orange-700">{formatDate(order.nextDueDate)}</p>
-                  </div>
-                </div>
-              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── Payment History ── */}
       <Card>
