@@ -23,6 +23,8 @@ export default function NewEmiOrder() {
     shopId: "",
     productId: "",
     productName: "",
+    modelNumber: "",
+    warrantyInfo: "",
     totalPrice: "",
     discount: "",
     downPayment: "",
@@ -82,6 +84,8 @@ export default function NewEmiOrder() {
           shopId: Number(formData.shopId),
           productId: formData.productId ? Number(formData.productId) : null,
           productName: formData.productName,
+          modelNumber: formData.modelNumber || null,
+          warrantyInfo: formData.warrantyInfo || null,
           totalPrice: Number(formData.totalPrice),
           discount: discountAmt || 0,
           downPayment: Number(formData.downPayment) || 0,
@@ -182,6 +186,27 @@ export default function NewEmiOrder() {
                     value={formData.productName}
                     onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
                     placeholder="যেমন: LG AC 1.5 Ton"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="modelNumber">মডেল নম্বর (ঐচ্ছিক)</Label>
+                  <Input
+                    id="modelNumber"
+                    value={formData.modelNumber}
+                    onChange={(e) => setFormData({ ...formData, modelNumber: e.target.value })}
+                    placeholder="যেমন: LG-A18LFNZAA"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="warrantyInfo">গ্যারান্টি / ওয়ারেন্টি (ঐচ্ছিক)</Label>
+                  <Input
+                    id="warrantyInfo"
+                    value={formData.warrantyInfo}
+                    onChange={(e) => setFormData({ ...formData, warrantyInfo: e.target.value })}
+                    placeholder="যেমন: ২ বছর কম্প্রেসার ওয়ারেন্টি"
                   />
                 </div>
               </div>

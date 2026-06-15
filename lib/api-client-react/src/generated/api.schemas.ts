@@ -60,6 +60,10 @@ export interface EmiOrder {
   nextMonthlyAmount?: number;
   /** @nullable */
   dueDayOfMonth?: number | null;
+  /** @nullable */
+  modelNumber?: string | null;
+  /** @nullable */
+  warrantyInfo?: string | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;
@@ -83,6 +87,10 @@ export interface EmiOrderInput {
   emiMonths: number;
   /** @nullable */
   dueDayOfMonth?: number | null;
+  /** @nullable */
+  modelNumber?: string | null;
+  /** @nullable */
+  warrantyInfo?: string | null;
   purchaseDate: string;
 }
 
@@ -94,6 +102,10 @@ export interface EmiOrderUpdate {
   monthlyAmount?: number;
   status?: string;
   purchaseDate?: string;
+  /** @nullable */
+  modelNumber?: string | null;
+  /** @nullable */
+  warrantyInfo?: string | null;
 }
 
 export interface EmiPayment {
@@ -126,6 +138,10 @@ export interface EmiOrderDetail {
   nextMonthlyAmount?: number;
   /** @nullable */
   dueDayOfMonth?: number | null;
+  /** @nullable */
+  modelNumber?: string | null;
+  /** @nullable */
+  warrantyInfo?: string | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;

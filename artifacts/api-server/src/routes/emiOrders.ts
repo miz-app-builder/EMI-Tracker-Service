@@ -80,6 +80,8 @@ router.get("/emi-orders", async (req, res) => {
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
       dueDayOfMonth: emiOrdersTable.dueDayOfMonth,
+      modelNumber: emiOrdersTable.modelNumber,
+      warrantyInfo: emiOrdersTable.warrantyInfo,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
       shopName: shopsTable.name,
@@ -142,6 +144,8 @@ router.post("/emi-orders", async (req, res) => {
       emiMonths: body.emiMonths,
       monthlyAmount: String(monthlyAmount),
       dueDayOfMonth: body.dueDayOfMonth ?? null,
+      modelNumber: body.modelNumber ?? null,
+      warrantyInfo: body.warrantyInfo ?? null,
       purchaseDate: body.purchaseDate,
       status: "active",
     })
@@ -170,6 +174,8 @@ router.get("/emi-orders/:id", async (req, res) => {
       emiMonths: emiOrdersTable.emiMonths,
       monthlyAmount: emiOrdersTable.monthlyAmount,
       dueDayOfMonth: emiOrdersTable.dueDayOfMonth,
+      modelNumber: emiOrdersTable.modelNumber,
+      warrantyInfo: emiOrdersTable.warrantyInfo,
       status: emiOrdersTable.status,
       purchaseDate: emiOrdersTable.purchaseDate,
       shopName: shopsTable.name,
@@ -214,6 +220,8 @@ router.put("/emi-orders/:id", async (req, res) => {
   if (body.monthlyAmount !== undefined) updateData.monthlyAmount = String(body.monthlyAmount);
   if (body.status !== undefined) updateData.status = body.status;
   if (body.purchaseDate !== undefined) updateData.purchaseDate = body.purchaseDate;
+  if (body.modelNumber !== undefined) updateData.modelNumber = body.modelNumber ?? null;
+  if (body.warrantyInfo !== undefined) updateData.warrantyInfo = body.warrantyInfo ?? null;
 
   if (
     (body.totalPrice !== undefined || body.downPayment !== undefined || body.emiMonths !== undefined) &&

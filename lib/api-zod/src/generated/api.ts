@@ -164,6 +164,8 @@ export const CreateEmiOrderBody = zod.object({
   "downPayment": zod.number(),
   "emiMonths": zod.number(),
   "dueDayOfMonth": zod.number().min(1).max(31).nullish(),
+  "modelNumber": zod.string().nullish(),
+  "warrantyInfo": zod.string().nullish(),
   "purchaseDate": zod.string()
 })
 
@@ -216,7 +218,9 @@ export const UpdateEmiOrderBody = zod.object({
   "emiMonths": zod.number().optional(),
   "monthlyAmount": zod.number().optional(),
   "status": zod.string().optional(),
-  "purchaseDate": zod.string().optional()
+  "purchaseDate": zod.string().optional(),
+  "modelNumber": zod.string().nullish(),
+  "warrantyInfo": zod.string().nullish()
 })
 
 export const UpdateEmiOrderResponse = zod.object({
