@@ -53,23 +53,28 @@ function Row({ label, value, highlight, warn }: { label: string; value: string; 
   );
 }
 
+type RateMode = "monthly" | "yearly";
+
 export default function CalculatorPage() {
   const [totalPrice, setTotalPrice] = useState("50000");
   const [downPayment, setDownPayment] = useState("10000");
   const [discount, setDiscount] = useState("0");
   const [months, setMonths] = useState(12);
-  const [annualRate, setAnnualRate] = useState("0");
+  const [rateInput, setRateInput] = useState("0");
+  const [rateMode, setRateMode] = useState<RateMode>("yearly");
 
   const calc = useMemo(() => {
     const tp = parseNum(totalPrice);
     const dp = parseNum(downPayment);
     const dc = parseNum(discount);
-    const rate = Math.min(parseNum(annualRate), 100);
+    const rateVal = Math.max(0, parseNum(rateInput));
+
+    const monthlyRate = rateMode === "monthly" ? rateVal / 100 : rateVal / 100 / 12;
+    const annualRate = rateMode === "monthly" ? rateVal * 12 : rateVal;
+    const isZeroRate = monthlyRate === 0;
 
     const effectivePrice = Math.max(0, tp - dc);
     const principal = Math.max(0, effectivePrice - dp);
-    const monthlyRate = rate / 100 / 12;
-    const isZeroRate = rate === 0 || monthlyRate === 0;
 
     let monthly = 0;
     if (principal > 0 && months > 0) {
@@ -86,45 +91,40 @@ export default function CalculatorPage() {
     const totalCost = dp + totalEmiPaid;
     const totalInterest = Math.max(0, totalEmiPaid - principal);
 
-    // Payment schedule with amortization
-    const schedule = Array.from({ length: Math.min(months, 12) }, (_, i) => {
-      if (isZeroRate) {
-        const paidEmi = monthly * (i + 1);
-        return {
+    // Amortization schedule (first 12 months)
+    const schedule = (() => {
+      const rows = [];
+      let balance = principal;
+      for (let i = 0; i < Math.min(months, 12); i++) {
+        let interestPart = 0;
+        let principalPart = 0;
+        if (isZeroRate) {
+          principalPart = monthly;
+          interestPart = 0;
+        } else {
+          interestPart = Math.round(balance * monthlyRate);
+          principalPart = monthly - interestPart;
+        }
+        balance = Math.max(0, balance - principalPart);
+        const cumulativeEmi = monthly * (i + 1);
+        rows.push({
           month: i + 1,
           emi: monthly,
-          principal: monthly,
-          interest: 0,
-          cumulative: dp + paidEmi,
-          remaining: Math.max(0, principal - paidEmi),
-        };
+          principal: principalPart,
+          interest: interestPart,
+          cumulative: dp + cumulativeEmi,
+          remaining: balance,
+        });
       }
-      // Amortization schedule
-      let balance = principal;
-      let interestThisMonth = 0;
-      let principalThisMonth = 0;
-      for (let m = 0; m <= i; m++) {
-        interestThisMonth = Math.round(balance * monthlyRate);
-        principalThisMonth = monthly - interestThisMonth;
-        balance = Math.max(0, balance - principalThisMonth);
-      }
-      const cumulativeEmi = monthly * (i + 1);
-      return {
-        month: i + 1,
-        emi: monthly,
-        principal: principalThisMonth,
-        interest: interestThisMonth,
-        cumulative: dp + cumulativeEmi,
-        remaining: Math.max(0, balance),
-      };
-    });
+      return rows;
+    })();
 
     return {
       tp, dp, dc, effectivePrice, principal,
       monthly, totalEmiPaid, totalCost, totalInterest,
-      isZeroRate, rate, schedule,
+      isZeroRate, monthlyRate, annualRate, rateVal, schedule,
     };
-  }, [totalPrice, downPayment, discount, months, annualRate]);
+  }, [totalPrice, downPayment, discount, months, rateInput, rateMode]);
 
   const newOrderParams = new URLSearchParams({
     totalPrice: calc.tp.toString(),
@@ -133,6 +133,14 @@ export default function CalculatorPage() {
     emiMonths: months.toString(),
     monthlyAmount: calc.monthly.toString(),
   }).toString();
+
+  const equivalentHint = (() => {
+    if (calc.isZeroRate) return "0% — shop is offering interest-free EMI";
+    if (rateMode === "monthly") {
+      return `${calc.rateVal}% monthly = ${calc.annualRate.toFixed(2)}% yearly`;
+    }
+    return `${calc.rateVal}% yearly = ${(calc.monthlyRate * 100).toFixed(2)}% monthly`;
+  })();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -176,31 +184,56 @@ export default function CalculatorPage() {
             {/* Interest Rate */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Annual Interest Rate</Label>
+                <Label className="text-sm font-medium">Interest Rate</Label>
                 {calc.isZeroRate ? (
                   <Badge variant="outline" className="border-green-500 text-green-600 text-xs">0% EMI</Badge>
                 ) : (
-                  <Badge variant="outline" className="border-orange-400 text-orange-600 text-xs">{calc.rate}% per year</Badge>
+                  <Badge variant="outline" className="border-orange-400 text-orange-600 text-xs">
+                    {calc.rateVal}% {rateMode === "monthly" ? "per month" : "per year"}
+                  </Badge>
                 )}
               </div>
+
+              {/* Monthly / Yearly toggle */}
+              <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+                <button
+                  type="button"
+                  onClick={() => setRateMode("monthly")}
+                  className={`flex-1 py-1.5 font-medium transition-colors ${
+                    rateMode === "monthly"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Monthly (%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRateMode("yearly")}
+                  className={`flex-1 py-1.5 font-medium transition-colors ${
+                    rateMode === "yearly"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Yearly (%)
+                </button>
+              </div>
+
               <div className="relative">
                 <Input
                   type="number"
                   min={0}
-                  max={100}
+                  max={rateMode === "monthly" ? 20 : 100}
                   step={0.5}
-                  value={annualRate}
-                  onChange={(e) => setAnnualRate(e.target.value)}
+                  value={rateInput}
+                  onChange={(e) => setRateInput(e.target.value)}
                   className="pr-8"
                   placeholder="0"
                 />
                 <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                {calc.isZeroRate
-                  ? "0% — shop is offering interest-free EMI"
-                  : `Monthly rate: ${(calc.rate / 12).toFixed(2)}% — shop charges interest`}
-              </p>
+              <p className="text-xs text-muted-foreground">{equivalentHint}</p>
             </div>
 
             {/* EMI Duration */}
@@ -241,7 +274,7 @@ export default function CalculatorPage() {
 
         {/* Result Panel */}
         <div className="space-y-4">
-          <Card className={`border-primary/20 ${calc.isZeroRate ? "bg-primary/5" : "bg-orange-500/5 border-orange-400/20"}`}>
+          <Card className={`${calc.isZeroRate ? "border-primary/20 bg-primary/5" : "bg-orange-500/5 border-orange-400/20"}`}>
             <CardContent className="pt-6 pb-4">
               <div className="text-center mb-4">
                 <p className="text-sm text-muted-foreground mb-1">Monthly Installment</p>
@@ -254,7 +287,10 @@ export default function CalculatorPage() {
               {!calc.isZeroRate && calc.totalInterest > 0 && (
                 <div className="flex items-center justify-center gap-1.5 text-xs text-orange-600 bg-orange-100/50 rounded-lg py-1.5 px-3">
                   <TrendingUp className="h-3.5 w-3.5 shrink-0" />
-                  <span>You pay <strong>{formatCurrency(calc.totalInterest)}</strong> extra as interest ({calc.rate}% p.a.)</span>
+                  <span>
+                    Extra interest: <strong>{formatCurrency(calc.totalInterest)}</strong>
+                    {" "}({rateMode === "monthly" ? `${calc.rateVal}%/mo` : `${calc.rateVal}%/yr`})
+                  </span>
                 </div>
               )}
             </CardContent>
@@ -272,10 +308,13 @@ export default function CalculatorPage() {
               <Row label="Principal (EMI Amount)" value={formatCurrency(calc.principal)} />
               <Separator className="my-2" />
               {!calc.isZeroRate && (
-                <Row label={`+ Interest (${calc.rate}% p.a. × ${months} mo)`} value={`+ ${formatCurrency(calc.totalInterest)}`} warn />
+                <Row
+                  label={`+ Interest (${rateMode === "monthly" ? `${calc.rateVal}% × ${months} mo` : `${calc.rateVal}% p.a.`})`}
+                  value={`+ ${formatCurrency(calc.totalInterest)}`}
+                  warn
+                />
               )}
-              <Row label="Monthly × Months" value={`${formatCurrency(calc.monthly)} × ${months}`} />
-              <Row label="Total EMI Paid" value={formatCurrency(calc.totalEmiPaid)} />
+              <Row label={`${formatCurrency(calc.monthly)} × ${months} months`} value={formatCurrency(calc.totalEmiPaid)} />
               <Row label="Total Cost (incl. down payment)" value={formatCurrency(calc.totalCost)} highlight />
             </CardContent>
           </Card>
@@ -293,7 +332,7 @@ export default function CalculatorPage() {
             <CardDescription>
               {calc.isZeroRate
                 ? "Month-by-month installment breakdown"
-                : "Amortization schedule — interest + principal per month"}
+                : "Amortization schedule — interest + principal breakdown per month"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -320,7 +359,7 @@ export default function CalculatorPage() {
                       <td className="py-2 pr-3 text-right font-semibold text-primary">{formatCurrency(row.emi)}</td>
                       {!calc.isZeroRate && (
                         <>
-                          <td className="py-2 pr-3 text-right text-foreground">{formatCurrency(row.principal)}</td>
+                          <td className="py-2 pr-3 text-right">{formatCurrency(row.principal)}</td>
                           <td className="py-2 pr-3 text-right text-orange-600">{formatCurrency(row.interest)}</td>
                         </>
                       )}
