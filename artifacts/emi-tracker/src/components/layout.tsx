@@ -75,7 +75,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex-col hidden md:flex">
+      <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex-col hidden md:flex print:hidden">
         <div className="p-6">
           <h1 className="text-xl font-bold text-sidebar-primary tracking-tight">EMI Tracker</h1>
           <p className="text-xs text-sidebar-foreground/60 mt-1">My installment records</p>
@@ -107,7 +107,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-card border-b border-border shrink-0">
+        <header className="flex items-center justify-between px-4 md:px-6 py-3 bg-card border-b border-border shrink-0 print:hidden">
           <div className="flex items-center gap-3">
             <span className="md:hidden text-base font-bold text-primary">EMI Tracker</span>
             <span className="hidden md:block text-base font-semibold text-foreground">
