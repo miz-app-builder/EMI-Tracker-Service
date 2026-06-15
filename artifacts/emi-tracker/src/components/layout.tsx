@@ -1,14 +1,30 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User } from "lucide-react";
+import { useClerk, useUser } from "@clerk/react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { signOut } = useClerk();
+  const { user } = useUser();
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/shops", label: "Shops", icon: Store },
     { href: "/emi-orders", label: "My EMIs", icon: FileText },
   ];
+
+  const initials = user?.firstName?.[0] ?? user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ?? "U";
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -36,11 +52,70 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        <div className="p-4 border-t border-sidebar-border">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground px-3">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={user?.imageUrl} />
+                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">{initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium truncate">{user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress ?? "User"}</p>
+                  <p className="text-xs text-sidebar-foreground/50 truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-56">
+              <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none">
+                <User className="h-4 w-4" />
+                <span className="truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                onClick={() => signOut({ redirectUrl: basePath || "/" })}
+              >
+                <LogOut className="h-4 w-4" />
+                লগআউট
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border">
           <h1 className="text-lg font-bold text-primary">EMI Tracker</h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.imageUrl} />
+                  <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <DropdownMenuItem className="gap-2 cursor-pointer">
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </DropdownMenuItem>
+                </Link>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                onClick={() => signOut({ redirectUrl: basePath || "/" })}
+              >
+                <LogOut className="h-4 w-4" />
+                লগআউট
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
         <div className="flex-1 overflow-auto p-4 md:p-8">
