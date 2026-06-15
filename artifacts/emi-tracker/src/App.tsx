@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
-import { shadcn } from "@clerk/themes";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,7 +13,6 @@ import Shops from "@/pages/shops";
 import EmiOrders from "@/pages/emi-orders/index";
 import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
-import LandingPage from "@/pages/landing";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,57 +43,16 @@ if (!clerkPubKey) {
 }
 
 const clerkAppearance = {
-  theme: shadcn,
   cssLayerName: "clerk",
-  options: {
-    logoPlacement: "inside" as const,
-    logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
-  },
   variables: {
     colorPrimary: "hsl(175,70%,25%)",
-    colorForeground: "hsl(220,15%,15%)",
-    colorMutedForeground: "hsl(220,10%,40%)",
-    colorDanger: "hsl(0,70%,50%)",
-    colorBackground: "hsl(0,0%,100%)",
-    colorInput: "hsl(220,15%,90%)",
-    colorInputForeground: "hsl(220,15%,15%)",
-    colorNeutral: "hsl(220,15%,90%)",
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
     borderRadius: "0.5rem",
-  },
-  elements: {
-    rootBox: "w-full flex justify-center",
-    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    headerTitle: "text-foreground font-bold",
-    headerSubtitle: "text-muted-foreground",
-    socialButtonsBlockButtonText: "text-foreground",
-    formFieldLabel: "text-foreground font-medium",
-    footerActionLink: "text-primary font-medium hover:underline",
-    footerActionText: "text-muted-foreground",
-    dividerText: "text-muted-foreground",
-    identityPreviewEditButton: "text-primary",
-    formFieldSuccessText: "text-green-600",
-    alertText: "text-foreground",
-    logoBox: "flex justify-center mb-2",
-    logoImage: "h-12 w-12 rounded-xl",
-    socialButtonsBlockButton: "border border-border bg-background hover:bg-muted",
-    formButtonPrimary: "bg-primary text-white hover:bg-primary/90 font-semibold",
-    formFieldInput: "border-border bg-background text-foreground",
-    footerAction: "border-t border-border",
-    dividerLine: "bg-border",
-    alert: "border border-border rounded-lg",
-    otpCodeFieldInput: "border-border bg-background text-foreground",
-    formFieldRow: "gap-3",
-    main: "gap-4",
   },
 };
 
 function SignInPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <SignIn
         routing="path"
         path={`${basePath}/sign-in`}
@@ -107,7 +64,7 @@ function SignInPage() {
 
 function SignUpPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <SignUp
         routing="path"
         path={`${basePath}/sign-up`}
@@ -124,7 +81,7 @@ function HomeRedirect() {
         <Redirect to="/dashboard" />
       </Show>
       <Show when="signed-out">
-        <LandingPage />
+        <Redirect to="/sign-in" />
       </Show>
     </>
   );
@@ -174,20 +131,6 @@ function ClerkProviderWithRoutes() {
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
-      localization={{
-        signIn: {
-          start: {
-            title: "স্বাগতম!",
-            subtitle: "আপনার অ্যাকাউন্টে লগইন করুন",
-          },
-        },
-        signUp: {
-          start: {
-            title: "নতুন অ্যাকাউন্ট",
-            subtitle: "EMI Tracker এ যোগ দিন",
-          },
-        },
-      }}
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
