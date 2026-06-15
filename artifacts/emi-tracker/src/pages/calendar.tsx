@@ -24,14 +24,6 @@ interface DayEmi {
   orderId: string;
 }
 
-function getStatus(dueDate: Date, today: Date, orderStatus: string): DayStatus {
-  if (orderStatus === "completed") return "completed";
-  const due = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
-  const tod = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (due < tod) return "overdue";
-  return "due";
-}
-
 export default function CalendarPage() {
   const today = useMemo(() => new Date(), []);
   const [viewDate, setViewDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -44,26 +36,49 @@ export default function CalendarPage() {
     const map = new Map<number, DayEmi[]>();
     if (!orders) return map;
 
-    orders.forEach((order: any) => {
-      const dueStr = order.nextDueDate || order.startDate;
-      if (!dueStr) return;
-      const due = new Date(dueStr);
+    const viewYear = viewDate.getFullYear();
+    const viewMonth = viewDate.getMonth();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-      // Check if due date falls in current view month/year
-      if (due.getFullYear() === viewDate.getFullYear() && due.getMonth() === viewDate.getMonth()) {
-        const day = due.getDate();
-        const status = getStatus(due, today, order.status);
-        const entry: DayEmi = {
-          id: order.id,
-          productName: order.productName || order.product?.name || "Product",
-          shopName: order.shopName || order.shop?.name || "Shop",
-          monthlyAmount: Number(order.monthlyInstallment ?? order.monthlyAmount ?? 0),
-          status,
-          orderId: order.id,
-        };
-        if (!map.has(day)) map.set(day, []);
-        map.get(day)!.push(entry);
-      }
+    orders.forEach((order: any) => {
+      if (order.status === "completed") return;
+
+      const purchaseDate: string = order.purchaseDate;
+      if (!purchaseDate) return;
+
+      const [pyStr, pmStr, pdStr] = purchaseDate.split("-");
+      const purchaseYear = parseInt(pyStr);
+      const purchaseMonthIdx = parseInt(pmStr) - 1;
+      const purchaseDay = parseInt(pdStr);
+
+      const installmentsPaid = Number(order.installmentsPaid ?? 0);
+      const emiMonths = Number(order.emiMonths ?? 0);
+      const dueDayOfMonth: number | null = order.dueDayOfMonth ?? null;
+
+      // Which installment number (1-based) falls in the viewed month?
+      // installment #n is due at purchaseDate + n months
+      const monthsDiff = (viewYear - purchaseYear) * 12 + (viewMonth - purchaseMonthIdx);
+
+      // Show if this installment is unpaid and within the EMI period
+      if (monthsDiff <= 0 || monthsDiff <= installmentsPaid || monthsDiff > emiMonths) return;
+
+      const baseDay = dueDayOfMonth ?? purchaseDay;
+      const lastDayOfViewMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      const dueDay = Math.min(baseDay, lastDayOfViewMonth);
+
+      const dueMidnight = new Date(viewYear, viewMonth, dueDay);
+      const status: DayStatus = dueMidnight < todayMidnight ? "overdue" : "due";
+
+      const entry: DayEmi = {
+        id: String(order.id),
+        productName: order.productName || "Product",
+        shopName: order.shopName || "Shop",
+        monthlyAmount: Number(order.nextMonthlyAmount ?? order.monthlyAmount ?? 0),
+        status,
+        orderId: String(order.id),
+      };
+      if (!map.has(dueDay)) map.set(dueDay, []);
+      map.get(dueDay)!.push(entry);
     });
     return map;
   }, [orders, viewDate, today]);
