@@ -53,16 +53,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: summary } = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
   const overdueCount = summary?.overdueOrders ?? 0;
 
-  const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/shops", label: "Shops", icon: Store },
-    { href: "/emi-orders", label: "My EMIs", icon: FileText },
-    { href: "/reports", label: "Reports", icon: BarChart2 },
-    { href: "/debt-overview", label: "Debt Overview", icon: Layers },
-    { href: "/calculator", label: "Calculator", icon: Calculator },
-    { href: "/calendar", label: "Calendar", icon: CalendarDays },
-    { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
-    { href: "/activity-log", label: "Activity Log", icon: Activity },
+  const navGroups = [
+    {
+      label: "মূল",
+      items: [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
+      ],
+    },
+    {
+      label: "EMI ব্যবস্থাপনা",
+      items: [
+        { href: "/emi-orders", label: "My EMIs", icon: FileText },
+        { href: "/shops", label: "Shops", icon: Store },
+        { href: "/calendar", label: "Calendar", icon: CalendarDays },
+      ],
+    },
+    {
+      label: "বিশ্লেষণ",
+      items: [
+        { href: "/reports", label: "Reports", icon: BarChart2 },
+        { href: "/debt-overview", label: "Debt Overview", icon: Layers },
+        { href: "/calculator", label: "Calculator", icon: Calculator },
+      ],
+    },
+    {
+      label: "টুলস",
+      items: [
+        { href: "/activity-log", label: "Activity Log", icon: Activity },
+      ],
+    },
   ];
 
   const { theme, toggle: toggleTheme } = useTheme(user?.themePreference);
@@ -117,29 +137,40 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <h1 className="text-xl font-bold text-sidebar-primary tracking-tight">EMI Tracker</h1>
           <p className="text-xs text-sidebar-foreground/60 mt-1">My installment records</p>
         </div>
-        <nav className="flex-1 px-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-            return (
-              <Link key={item.href} href={item.href}>
-                <div
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer ${
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  }`}
-                >
-                  <item.icon className={`h-5 w-5 ${"badge" in item && item.badge && !isActive ? "text-destructive" : ""}`} />
-                  <span className="flex-1">{item.label}</span>
-                  {"badge" in item && item.badge ? (
-                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none ${isActive ? "bg-white/20 text-white" : "bg-destructive text-white"}`}>
-                      {item.badge}
-                    </span>
-                  ) : null}
+        <nav className="flex-1 px-3 overflow-y-auto">
+          <div className="space-y-4 py-2">
+            {navGroups.map((group) => (
+              <div key={group.label}>
+                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 select-none">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+                    return (
+                      <Link key={item.href} href={item.href}>
+                        <div
+                          className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                            isActive
+                              ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm"
+                              : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          }`}
+                        >
+                          <item.icon className={`h-4 w-4 shrink-0 ${"badge" in item && item.badge && !isActive ? "text-destructive" : ""}`} />
+                          <span className="flex-1 text-sm">{item.label}</span>
+                          {"badge" in item && item.badge ? (
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none ${isActive ? "bg-white/20 text-white" : "bg-destructive text-white"}`}>
+                              {item.badge}
+                            </span>
+                          ) : null}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              </Link>
-            );
-          })}
+              </div>
+            ))}
+          </div>
         </nav>
       </aside>
 
