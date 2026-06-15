@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw } from "lucide-react";
+import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { usePinLock } from "@/hooks/usePinLock";
@@ -123,6 +123,78 @@ export default function ProfilePage() {
 
   // ── Export ──
   const [exportLoading, setExportLoading] = useState(false);
+
+  // ── Import ──
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<{ shops: number; emiOrders: number; payments: number } | null>(null);
+  const [importError, setImportError] = useState("");
+  const [importLoading, setImportLoading] = useState(false);
+  const [importResult, setImportResult] = useState<{ shops: number; emiOrders: number; payments: number } | null>(null);
+
+  function handleImportFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setImportFile(file);
+    setImportError("");
+    setImportResult(null);
+    setImportPreview(null);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target?.result as string);
+        if (!json || typeof json !== "object") throw new Error();
+        setImportPreview({
+          shops: Array.isArray(json.shops) ? json.shops.length : 0,
+          emiOrders: Array.isArray(json.emiOrders) ? json.emiOrders.length : 0,
+          payments: Array.isArray(json.payments) ? json.payments.length : 0,
+        });
+      } catch {
+        setImportError("Invalid file. Please upload a JSON file exported from EMI Tracker.");
+        setImportFile(null);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  async function handleImport() {
+    if (!importFile || !importPreview) return;
+    setImportLoading(true);
+    setImportError("");
+    setImportResult(null);
+    try {
+      const text = await importFile.text();
+      const json = JSON.parse(text);
+      const res = await fetch(`${basePath}/api/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(json),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error ?? "Import failed");
+      }
+      const result = await res.json();
+      setImportResult(result);
+      setImportFile(null);
+      setImportPreview(null);
+      if (importFileRef.current) importFileRef.current.value = "";
+      toast({ title: "Import successful!", description: `${result.shops} shops, ${result.emiOrders} orders, ${result.payments} payments imported.` });
+    } catch (err: any) {
+      setImportError(err.message ?? "Something went wrong");
+    } finally {
+      setImportLoading(false);
+    }
+  }
+
+  function clearImport() {
+    setImportFile(null);
+    setImportPreview(null);
+    setImportError("");
+    setImportResult(null);
+    if (importFileRef.current) importFileRef.current.value = "";
+  }
 
   async function fetchExportData() {
     const res = await fetch(`${basePath}/api/export`, { credentials: "include" });
@@ -364,6 +436,130 @@ export default function ProfilePage() {
               </button>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Import card ── */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Upload className="h-4 w-4 text-primary" />
+                Import Data
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Restore from a previously exported EMI Tracker JSON file. Existing data will not be overwritten.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <input
+            ref={importFileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={handleImportFileChange}
+          />
+
+          {/* Upload zone */}
+          {!importFile && !importResult && (
+            <button
+              type="button"
+              onClick={() => importFileRef.current?.click()}
+              className="w-full flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-colors py-10 cursor-pointer"
+            >
+              <div className="p-3 rounded-full bg-primary/10">
+                <Upload className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-foreground">Click to select a file</p>
+                <p className="text-xs text-muted-foreground mt-0.5">JSON file exported from EMI Tracker</p>
+              </div>
+            </button>
+          )}
+
+          {/* Preview */}
+          {importFile && importPreview && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                <FileText className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{importFile.name}</p>
+                  <p className="text-xs text-muted-foreground">{(importFile.size / 1024).toFixed(1)} KB</p>
+                </div>
+                <button onClick={clearImport} className="text-muted-foreground hover:text-destructive transition-colors text-xs shrink-0">
+                  Remove
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Shops", count: importPreview.shops, icon: Store, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" },
+                  { label: "EMI Orders", count: importPreview.emiOrders, icon: Package, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800" },
+                  { label: "Payments", count: importPreview.payments, icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" },
+                ].map((item) => (
+                  <div key={item.label} className={`rounded-lg border p-3 text-center ${item.bg}`}>
+                    <item.icon className={`h-5 w-5 mx-auto mb-1 ${item.color}`} />
+                    <p className={`text-xl font-bold ${item.color}`}>{item.count}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {importError && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {importError}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button onClick={handleImport} disabled={importLoading} className="gap-2">
+                  {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {importLoading ? "Importing…" : "Import Now"}
+                </Button>
+                <Button variant="outline" onClick={clearImport} disabled={importLoading}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Error (no file selected) */}
+          {importError && !importFile && (
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {importError}
+            </div>
+          )}
+
+          {/* Success result */}
+          {importResult && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                <span className="font-medium">Import complete!</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Shops", count: importResult.shops, icon: Store, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" },
+                  { label: "EMI Orders", count: importResult.emiOrders, icon: Package, color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800" },
+                  { label: "Payments", count: importResult.payments, icon: CreditCard, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" },
+                ].map((item) => (
+                  <div key={item.label} className={`rounded-lg border p-3 text-center ${item.bg}`}>
+                    <item.icon className={`h-5 w-5 mx-auto mb-1 ${item.color}`} />
+                    <p className={`text-xl font-bold ${item.color}`}>{item.count}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => { setImportResult(null); }} className="gap-2">
+                <Upload className="h-3.5 w-3.5" /> Import another file
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
