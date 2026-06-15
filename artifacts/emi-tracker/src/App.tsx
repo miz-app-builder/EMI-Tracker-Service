@@ -11,6 +11,7 @@ import Shops from "@/pages/shops";
 import EmiOrders from "@/pages/emi-orders/index";
 import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
+import ProfilePage from "@/pages/profile";
 import LandingPage from "@/pages/landing";
 
 export const queryClient = new QueryClient({
@@ -51,6 +52,7 @@ function Routes() {
       <Route path="/emi-orders" component={() => <ProtectedRoute component={EmiOrders} />} />
       <Route path="/emi-orders/new" component={() => <ProtectedRoute component={NewEmiOrder} />} />
       <Route path="/emi-orders/:id" component={() => <ProtectedRoute component={EmiOrderDetail} />} />
+      <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
       <Route component={NotFound} />
     </Switch>
   );

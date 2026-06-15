@@ -7,6 +7,10 @@ export const usersTable = pgTable("users", {
   name: text("name"),
   phone: text("phone"),
   address: text("address"),
+  profilePhotoUrl: text("profile_photo_url"),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  passwordChangedAt: timestamp("password_changed_at", { withTimezone: true }),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -8,6 +8,11 @@ export interface AuthUser {
   name: string | null;
   phone?: string | null;
   address?: string | null;
+  profilePhotoUrl?: string | null;
+  emailVerifiedAt?: string | null;
+  passwordChangedAt?: string | null;
+  lastActiveAt?: string | null;
+  createdAt?: string;
 }
 
 interface AuthContextType {

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -22,6 +24,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
+  const photoSrc = user?.profilePhotoUrl ? `${basePath}/api/users/me/photo` : undefined;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -55,6 +58,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground px-3">
                 <Avatar className="h-7 w-7">
+                  {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left min-w-0">
@@ -68,6 +72,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <User className="h-4 w-4" />
                 <span className="truncate">{user?.email ?? ""}</span>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <Link href="/profile">
+                <DropdownMenuItem className="gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" />
+                  প্রোফাইল সেটিংস
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-destructive focus:text-destructive cursor-pointer"
@@ -88,6 +99,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Avatar className="h-8 w-8">
+                  {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
                   <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -101,6 +113,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </DropdownMenuItem>
                 </Link>
               ))}
+              <DropdownMenuSeparator />
+              <Link href="/profile">
+                <DropdownMenuItem className="gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" />
+                  প্রোফাইল
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-destructive focus:text-destructive cursor-pointer"

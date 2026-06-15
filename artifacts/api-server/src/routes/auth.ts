@@ -41,6 +41,7 @@ router.post("/auth/signup", async (req, res) => {
       name: name ?? null,
       phone: phone ?? null,
       address: address ?? null,
+      lastActiveAt: new Date(),
     })
     .returning();
 
@@ -71,6 +72,7 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
+  await db.update(usersTable).set({ lastActiveAt: new Date() }).where(eq(usersTable.email, email.toLowerCase()));
   const token = jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
   res.json({ id: user.id, email: user.email, name: user.name });
@@ -91,7 +93,18 @@ router.get("/auth/me", async (req, res) => {
   try {
     const payload = jwt.verify(token, secret) as { userId: string; email: string };
     const [user] = await db
-      .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, phone: usersTable.phone, address: usersTable.address })
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        name: usersTable.name,
+        phone: usersTable.phone,
+        address: usersTable.address,
+        profilePhotoUrl: usersTable.profilePhotoUrl,
+        emailVerifiedAt: usersTable.emailVerifiedAt,
+        passwordChangedAt: usersTable.passwordChangedAt,
+        lastActiveAt: usersTable.lastActiveAt,
+        createdAt: usersTable.createdAt,
+      })
       .from(usersTable)
       .where(eq(usersTable.id, payload.userId));
     if (!user) { res.status(401).json({ error: "User not found" }); return; }
