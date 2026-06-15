@@ -80,6 +80,8 @@ export interface EmiOrder {
   modelNumber?: string | null;
   /** @nullable */
   warrantyInfo?: string | null;
+  /** @nullable */
+  customerId?: string | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;
@@ -107,6 +109,8 @@ export interface EmiOrderInput {
   modelNumber?: string | null;
   /** @nullable */
   warrantyInfo?: string | null;
+  /** @nullable */
+  customerId?: string | null;
   purchaseDate: string;
 }
 
@@ -122,6 +126,8 @@ export interface EmiOrderUpdate {
   modelNumber?: string | null;
   /** @nullable */
   warrantyInfo?: string | null;
+  /** @nullable */
+  customerId?: string | null;
 }
 
 export interface EmiPayment {
@@ -158,6 +164,8 @@ export interface EmiOrderDetail {
   modelNumber?: string | null;
   /** @nullable */
   warrantyInfo?: string | null;
+  /** @nullable */
+  customerId?: string | null;
   totalPaid?: number;
   remainingAmount?: number;
   installmentsPaid?: number;

@@ -19,6 +19,7 @@ export const emiOrdersTable = pgTable("emi_orders", {
   dueDayOfMonth: integer("due_day_of_month"),
   modelNumber: text("model_number"),
   warrantyInfo: text("warranty_info"),
+  customerId: text("customer_id"),
   status: text("status").notNull().default("active"),
   purchaseDate: date("purchase_date", { mode: "string" }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

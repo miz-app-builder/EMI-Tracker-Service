@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText, CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText, CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, IdCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -423,6 +423,15 @@ export default function EmiOrderDetail() {
                   <div>
                     <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">গ্যারান্টি / ওয়ারেন্টি</p>
                     <p className="font-medium">{order.warrantyInfo}</p>
+                  </div>
+                </div>
+              )}
+              {order.customerId && (
+                <div className="p-4 flex gap-3 items-start">
+                  <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase font-medium tracking-wider mb-1">Customer ID</p>
+                    <p className="font-medium font-mono">{order.customerId}</p>
                   </div>
                 </div>
               )}

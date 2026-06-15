@@ -186,6 +186,7 @@ export const CreateEmiOrderBody = zod.object({
   "dueDayOfMonth": zod.number().min(1).max(31).nullish(),
   "modelNumber": zod.string().nullish(),
   "warrantyInfo": zod.string().nullish(),
+  "customerId": zod.string().nullish(),
   "purchaseDate": zod.string()
 })
 
@@ -240,7 +241,8 @@ export const UpdateEmiOrderBody = zod.object({
   "status": zod.string().optional(),
   "purchaseDate": zod.string().optional(),
   "modelNumber": zod.string().nullish(),
-  "warrantyInfo": zod.string().nullish()
+  "warrantyInfo": zod.string().nullish(),
+  "customerId": zod.string().nullish()
 })
 
 export const UpdateEmiOrderResponse = zod.object({
