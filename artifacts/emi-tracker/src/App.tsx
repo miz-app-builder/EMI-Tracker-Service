@@ -14,6 +14,7 @@ import EmiOrderDetail from "@/pages/emi-orders/detail";
 import ProfilePage from "@/pages/profile";
 import LandingPage from "@/pages/landing";
 import OverduePage from "@/pages/overdue";
+import ReportsPage from "@/pages/reports";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ function Routes() {
       <Route path="/emi-orders/:id" component={() => <ProtectedRoute component={EmiOrderDetail} />} />
       <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
       <Route path="/overdue" component={() => <ProtectedRoute component={OverduePage} />} />
+      <Route path="/reports" component={() => <ProtectedRoute component={ReportsPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

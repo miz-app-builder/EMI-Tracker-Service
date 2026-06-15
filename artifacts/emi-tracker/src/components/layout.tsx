@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/shops": "Shops",
   "/emi-orders": "My EMIs",
+  "/reports": "Reports",
   "/overdue": "Overdue",
   "/profile": "Profile Settings",
 };
@@ -39,6 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/shops", label: "Shops", icon: Store },
     { href: "/emi-orders", label: "My EMIs", icon: FileText },
+    { href: "/reports", label: "Reports", icon: BarChart2 },
     { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
   ];
 

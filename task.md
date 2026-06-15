@@ -14,7 +14,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## 📊 Analytics & Reporting
 
-- [ ] **T01 — Monthly Report Page**
+- [x] **T01 — Monthly Report Page**
   Charts showing how much paid per month, per shop breakdown, outstanding balances over time.
   _Suggested: bar chart by month, pie chart by shop_
 
