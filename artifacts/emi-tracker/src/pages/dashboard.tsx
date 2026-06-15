@@ -5,9 +5,9 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { Activity, Wallet, AlertCircle, Calendar, Clock } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Activity, Wallet, AlertCircle, Calendar, Clock, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 function getDaysUntil(dateStr: string | null | undefined) {
@@ -104,22 +104,31 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className={summary?.overdueOrders ? "border-destructive/30 bg-destructive/5" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertCircle className={`h-4 w-4 ${summary?.overdueOrders ? "text-destructive" : "text-muted-foreground"}`} />
-          </CardHeader>
-          <CardContent>
-            {loadingSummary ? <Skeleton className="h-8 w-16" /> : (
-              <div className={`text-2xl font-bold ${summary?.overdueOrders ? "text-destructive" : ""}`}>
-                {summary?.overdueOrders || 0}
+        <Link href="/overdue">
+          <Card className={`cursor-pointer transition-colors hover:border-destructive/50 ${summary?.overdueOrders ? "border-destructive/30 bg-destructive/5" : ""}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+              <AlertCircle className={`h-4 w-4 ${summary?.overdueOrders ? "text-destructive" : "text-muted-foreground"}`} />
+            </CardHeader>
+            <CardContent>
+              {loadingSummary ? <Skeleton className="h-8 w-16" /> : (
+                <div className={`text-2xl font-bold ${summary?.overdueOrders ? "text-destructive" : ""}`}>
+                  {summary?.overdueOrders || 0}
+                </div>
+              )}
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs text-muted-foreground">
+                  {summary?.overdueOrders ? "Needs attention!" : "All up to date"}
+                </p>
+                {summary?.overdueOrders ? (
+                  <span className="text-xs text-destructive flex items-center gap-0.5 font-medium">
+                    View all <ArrowRight className="h-3 w-3" />
+                  </span>
+                ) : null}
               </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {summary?.overdueOrders ? "Needs attention!" : "All up to date"}
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

@@ -86,7 +86,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T17 — Total Debt Overview**
   One-screen summary of all active EMIs combined: total owed, months left, projected payoff date.
 
-- [ ] **T18 — Overdue Summary Page**
+- [x] **T18 — Overdue Summary Page**
   Dedicated page listing all overdue EMIs sorted by how late they are.
 
 ---
@@ -138,6 +138,13 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 ---
 
 ## ✅ Completed Tasks
+
+- [x] **T18 — Overdue Summary Page** _(2026-06-15)_
+  - **No new backend needed** — filters `GET /api/emi-orders?status=active` on frontend for `nextDueDate < today`.
+  - **New page** `pages/overdue.tsx` — lists overdue EMIs sorted by days overdue (most late first), with 3-stat summary banner (count, this month's installments due, total remaining), per-card progress bar, and "Pay Now" button linking to detail page. Green "All clear!" empty state when none overdue.
+  - **Sidebar** — "Overdue" nav link added with red count badge (fetches `dashboard/summary`); badge only appears when `overdueOrders > 0`.
+  - **Dashboard** — Overdue stat card is now clickable (wrapped in `<Link href="/overdue">`); shows "View all →" when there are overdue EMIs.
+  - **Router** — `/overdue` route added as a protected route.
 
 - [x] **T08 — Edit / Delete Payment** _(2026-06-15)_
   - **Backend:** Added `PATCH /api/payments/:paymentId` route for editing any field of a payment. Fixed `DELETE /api/payments/:paymentId` to revert order status from `completed` → `active` when total paid drops below threshold after deletion. Both routes recalculate and auto-update order completion status.

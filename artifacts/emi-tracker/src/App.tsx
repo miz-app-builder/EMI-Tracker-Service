@@ -13,6 +13,7 @@ import NewEmiOrder from "@/pages/emi-orders/new";
 import EmiOrderDetail from "@/pages/emi-orders/detail";
 import ProfilePage from "@/pages/profile";
 import LandingPage from "@/pages/landing";
+import OverduePage from "@/pages/overdue";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +54,7 @@ function Routes() {
       <Route path="/emi-orders/new" component={() => <ProtectedRoute component={NewEmiOrder} />} />
       <Route path="/emi-orders/:id" component={() => <ProtectedRoute component={EmiOrderDetail} />} />
       <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
+      <Route path="/overdue" component={() => <ProtectedRoute component={OverduePage} />} />
       <Route component={NotFound} />
     </Switch>
   );
