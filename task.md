@@ -101,6 +101,42 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ---
 
+## 📷 Product Documentation
+
+- [ ] **T21 — Product Photo Upload**
+  Attach photos of the purchased product, box, or warranty card to an EMI order. Viewable in the detail page.
+
+- [ ] **T22 — Serial Number / IMEI Tracker**
+  Save serial number, IMEI, or barcode of the product per EMI order. Useful for insurance or warranty claims.
+
+---
+
+## 🔐 Security & Trust
+
+- [ ] **T23 — PIN Lock**
+  4-digit PIN to open the app (protects sensitive financial data from others who have phone access).
+
+- [ ] **T24 — Activity Log**
+  History of all important actions: login, payment recorded, order created, profile changed — with timestamp.
+
+- [ ] **T25 — Auto Logout**
+  Automatically log out after a configurable period of inactivity (e.g. 15 min, 30 min, 1 hour).
+
+---
+
+## 🌐 Integration Ideas
+
+- [ ] **T26 — bKash / Nagad SMS Parser**
+  Paste a payment SMS and the app auto-fills amount and transaction ID in the payment form.
+
+- [ ] **T27 — WhatsApp Reminder**
+  Send a due date reminder message via WhatsApp (wa.me link with pre-filled message, or API integration).
+
+- [ ] **T28 — Google Calendar Sync**
+  Export all EMI due dates as a .ics file so they appear in Google Calendar or any calendar app.
+
+---
+
 ## ✅ Completed Tasks
 
 _(Tasks will be moved here once done, with a summary of what was built.)_
