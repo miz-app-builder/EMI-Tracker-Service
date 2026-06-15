@@ -614,7 +614,7 @@ export default function EmiOrderDetail() {
                             size="icon"
                             className="h-7 w-7 text-muted-foreground hover:text-teal-600"
                             title="View Receipt"
-                            onClick={() => navigate(`/emi-orders/${orderId}/payments/${payment.id}/receipt`)}
+                            onClick={() => setLocation(`/emi-orders/${orderId}/payments/${payment.id}/receipt`)}
                           >
                             <Receipt className="h-3.5 w-3.5" />
                           </Button>
