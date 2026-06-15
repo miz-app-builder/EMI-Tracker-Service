@@ -320,6 +320,24 @@ export const DeleteEmiPaymentParams = zod.object({
 
 
 /**
+ * @summary Update a payment record
+ */
+export const UpdateEmiPaymentParams = zod.object({
+  "paymentId": zod.coerce.number()
+})
+
+export const UpdateEmiPaymentBody = zod.object({
+  "amount": zod.number().optional(),
+  "paymentDate": zod.string().optional(),
+  "paymentMethod": zod.string().optional(),
+  "bankName": zod.string().nullish(),
+  "accountNumber": zod.string().nullish(),
+  "transactionId": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
  * @summary Get dashboard summary stats
  */
 export const GetDashboardSummaryResponse = zod.object({

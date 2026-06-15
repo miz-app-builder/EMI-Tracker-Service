@@ -1241,6 +1241,46 @@ export const useDeleteEmiPayment = <TError = ErrorType<unknown>,
       return useMutation(getDeleteEmiPaymentMutationOptions(options));
     }
 
+export const getUpdateEmiPaymentUrl = (paymentId: number) => {
+  return `/api/payments/${paymentId}`
+}
+
+export const updateEmiPayment = async (paymentId: number, data: Partial<EmiPaymentInput>, options?: RequestInit): Promise<EmiPayment> => {
+  return customFetch<EmiPayment>(getUpdateEmiPaymentUrl(paymentId), {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(data),
+  });
+}
+
+export const getUpdateEmiPaymentMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateEmiPayment>>, TError, { paymentId: number; data: Partial<EmiPaymentInput> }, TContext>; request?: SecondParameter<typeof customFetch> }
+): UseMutationOptions<Awaited<ReturnType<typeof updateEmiPayment>>, TError, { paymentId: number; data: Partial<EmiPaymentInput> }, TContext> => {
+  const mutationKey = ['updateEmiPayment'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEmiPayment>>, { paymentId: number; data: Partial<EmiPaymentInput> }> = (props) => {
+    const { paymentId, data } = props ?? {};
+    return updateEmiPayment(paymentId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+}
+
+export type UpdateEmiPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof updateEmiPayment>>>
+export type UpdateEmiPaymentMutationError = ErrorType<unknown>
+
+export const useUpdateEmiPayment = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateEmiPayment>>, TError, { paymentId: number; data: Partial<EmiPaymentInput> }, TContext>; request?: SecondParameter<typeof customFetch> }
+): UseMutationResult<Awaited<ReturnType<typeof updateEmiPayment>>, TError, { paymentId: number; data: Partial<EmiPaymentInput> }, TContext> => {
+  return useMutation(getUpdateEmiPaymentMutationOptions(options));
+}
+
 export const getGetDashboardSummaryUrl = () => {
 
 

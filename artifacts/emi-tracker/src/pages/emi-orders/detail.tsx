@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { useGetEmiOrder, getGetEmiOrderQueryKey, useCreateEmiPayment, useUpdateEmiOrder, getListEmiOrdersQueryKey } from "@workspace/api-client-react";
+import {
+  useGetEmiOrder, getGetEmiOrderQueryKey,
+  useCreateEmiPayment, useDeleteEmiPayment, useUpdateEmiPayment,
+  useUpdateEmiOrder, getListEmiOrdersQueryKey,
+} from "@workspace/api-client-react";
+import type { EmiPayment } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText, CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, IdCard } from "lucide-react";
+import {
+  ArrowLeft, CreditCard, Calendar, CalendarDays, Store, FileText,
+  CheckCircle2, AlertCircle, Clock, Hash, ShieldCheck, Pencil, Trash2,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +38,124 @@ function getNextDueBadge(nextDueDate: string | null | undefined, status: string)
   return { label: `${diffDays} day(s) remaining`, color: "bg-primary/5 text-primary border-primary/20" };
 }
 
+const PAYMENT_METHODS = ["Cash", "Bank Transfer", "bKash", "Nagad", "Rocket"];
+
+type PaymentFormData = {
+  amount: string;
+  paymentDate: string;
+  paymentMethod: string;
+  bankName: string;
+  accountNumber: string;
+  transactionId: string;
+  notes: string;
+};
+
+function emptyPaymentForm(defaults?: Partial<PaymentFormData>): PaymentFormData {
+  return {
+    amount: "",
+    paymentDate: new Date().toISOString().split("T")[0],
+    paymentMethod: "Cash",
+    bankName: "",
+    accountNumber: "",
+    transactionId: "",
+    notes: "",
+    ...defaults,
+  };
+}
+
+function paymentToForm(p: EmiPayment): PaymentFormData {
+  return {
+    amount: String(p.amount),
+    paymentDate: p.paymentDate,
+    paymentMethod: p.paymentMethod,
+    bankName: p.bankName ?? "",
+    accountNumber: p.accountNumber ?? "",
+    transactionId: p.transactionId ?? "",
+    notes: p.notes ?? "",
+  };
+}
+
+function PaymentFormFields({
+  data,
+  setData,
+}: {
+  data: PaymentFormData;
+  setData: React.Dispatch<React.SetStateAction<PaymentFormData>>;
+}) {
+  const set = (key: keyof PaymentFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setData((p) => ({ ...p, [key]: e.target.value }));
+
+  const isBankTransfer = data.paymentMethod === "Bank Transfer";
+  const isMobile = ["bKash", "Nagad", "Rocket"].includes(data.paymentMethod);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="pf-amount">Amount (BDT) <span className="text-destructive">*</span></Label>
+          <Input id="pf-amount" type="number" value={data.amount} onChange={set("amount")} required className="font-bold text-lg" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pf-date">Date</Label>
+          <Input id="pf-date" type="date" value={data.paymentDate} onChange={set("paymentDate")} required />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Method</Label>
+        <Select value={data.paymentMethod} onValueChange={(v) => setData((p) => ({ ...p, paymentMethod: v, bankName: "", accountNumber: "", transactionId: "" }))}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {isBankTransfer && (
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bank Transfer Details</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="pf-bank">Bank Name</Label>
+              <Input id="pf-bank" value={data.bankName} onChange={set("bankName")} placeholder="e.g. Dutch-Bangla Bank" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pf-acc">Account Number</Label>
+              <Input id="pf-acc" value={data.accountNumber} onChange={set("accountNumber")} placeholder="e.g. 1234567890" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pf-txn">Transaction ID / Reference</Label>
+            <Input id="pf-txn" value={data.transactionId} onChange={set("transactionId")} placeholder="e.g. TXN123456789" />
+          </div>
+        </div>
+      )}
+
+      {isMobile && (
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{data.paymentMethod} Details</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="pf-mob">{data.paymentMethod} Number</Label>
+              <Input id="pf-mob" type="tel" value={data.accountNumber} onChange={set("accountNumber")} placeholder="01XXXXXXXXX" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pf-txn2">Transaction ID</Label>
+              <Input id="pf-txn2" value={data.transactionId} onChange={set("transactionId")} placeholder="e.g. ABC1234567890" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor="pf-notes">Note (optional)</Label>
+        <Textarea id="pf-notes" value={data.notes} onChange={set("notes")} placeholder="Any comments..." />
+      </div>
+    </div>
+  );
+}
+
 export default function EmiOrderDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
@@ -39,51 +165,94 @@ export default function EmiOrderDetail() {
     query: { enabled: !!orderId, queryKey: getGetEmiOrderQueryKey(orderId) },
   });
 
-  const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // ── Mutations ──
   const createPayment = useCreateEmiPayment();
-  const updateOrder = useUpdateEmiOrder();
+  const deletePayment = useDeleteEmiPayment();
+  const updatePayment = useUpdateEmiPayment();
+  const updateOrder   = useUpdateEmiOrder();
 
-  const [paymentData, setPaymentData] = useState({
-    amount: "",
-    paymentDate: new Date().toISOString().split("T")[0],
-    paymentMethod: "Cash",
-    bankName: "",
-    accountNumber: "",
-    transactionId: "",
-    notes: "",
-  });
+  // ── Add Payment dialog ──
+  const [addOpen, setAddOpen] = useState(false);
+  const [addForm, setAddForm] = useState<PaymentFormData>(emptyPaymentForm());
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
+  // ── Edit Payment dialog ──
+  const [editPayment, setEditPayment] = useState<EmiPayment | null>(null);
+  const [editForm, setEditForm] = useState<PaymentFormData>(emptyPaymentForm());
+
+  function invalidate() {
+    queryClient.invalidateQueries({ queryKey: getGetEmiOrderQueryKey(orderId) });
+    queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
+  }
+
+  // ── Handlers ──
+  const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!paymentData.amount) return;
-
+    if (!addForm.amount) return;
     createPayment.mutate(
       {
         id: orderId,
         data: {
-          amount: Number(paymentData.amount),
-          paymentDate: paymentData.paymentDate,
-          paymentMethod: paymentData.paymentMethod,
-          bankName: paymentData.bankName || null,
-          accountNumber: paymentData.accountNumber || null,
-          transactionId: paymentData.transactionId || null,
-          notes: paymentData.notes || null,
+          amount: Number(addForm.amount),
+          paymentDate: addForm.paymentDate,
+          paymentMethod: addForm.paymentMethod,
+          bankName: addForm.bankName || null,
+          accountNumber: addForm.accountNumber || null,
+          transactionId: addForm.transactionId || null,
+          notes: addForm.notes || null,
         },
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetEmiOrderQueryKey(orderId) });
-          queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
-          setOpen(false);
-          setPaymentData({ amount: "", paymentDate: new Date().toISOString().split("T")[0], paymentMethod: "Cash", bankName: "", accountNumber: "", transactionId: "", notes: "" });
+          invalidate();
+          setAddOpen(false);
+          setAddForm(emptyPaymentForm());
           toast({ title: "Payment recorded!" });
         },
-        onError: () => {
-          toast({ title: "Failed to record payment", variant: "destructive" });
+        onError: () => toast({ title: "Failed to record payment", variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPayment || !editForm.amount) return;
+    updatePayment.mutate(
+      {
+        paymentId: editPayment.id,
+        data: {
+          amount: Number(editForm.amount),
+          paymentDate: editForm.paymentDate,
+          paymentMethod: editForm.paymentMethod,
+          bankName: editForm.bankName || null,
+          accountNumber: editForm.accountNumber || null,
+          transactionId: editForm.transactionId || null,
+          notes: editForm.notes || null,
         },
+      },
+      {
+        onSuccess: () => {
+          invalidate();
+          setEditPayment(null);
+          toast({ title: "Payment updated!" });
+        },
+        onError: () => toast({ title: "Failed to update payment", variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleDelete = (payment: EmiPayment) => {
+    if (!confirm(`Delete this payment of ${formatCurrency(payment.amount)}? This cannot be undone.`)) return;
+    deletePayment.mutate(
+      { paymentId: payment.id },
+      {
+        onSuccess: () => {
+          invalidate();
+          toast({ title: "Payment deleted" });
+        },
+        onError: () => toast({ title: "Failed to delete payment", variant: "destructive" }),
       }
     );
   };
@@ -93,11 +262,7 @@ export default function EmiOrderDetail() {
     updateOrder.mutate(
       { id: orderId, data: { status: "completed" } },
       {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetEmiOrderQueryKey(orderId) });
-          queryClient.invalidateQueries({ queryKey: getListEmiOrdersQueryKey() });
-          toast({ title: "EMI marked as completed" });
-        },
+        onSuccess: () => { invalidate(); toast({ title: "EMI marked as completed" }); },
       }
     );
   };
@@ -122,6 +287,7 @@ export default function EmiOrderDetail() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => setLocation("/emi-orders")}>
@@ -149,10 +315,10 @@ export default function EmiOrderDetail() {
               <Button variant="outline" onClick={handleStatusComplete} className="text-green-600 border-green-200 hover:bg-green-50">
                 <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Complete
               </Button>
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog open={addOpen} onOpenChange={setAddOpen}>
                 <DialogTrigger asChild>
                   <Button
-                    onClick={() => setPaymentData((p) => ({ ...p, amount: (order.nextMonthlyAmount ?? order.monthlyAmount).toString() }))}
+                    onClick={() => setAddForm(emptyPaymentForm({ amount: String(order.nextMonthlyAmount ?? order.monthlyAmount) }))}
                   >
                     <CreditCard className="mr-2 h-4 w-4" /> Pay Installment
                   </Button>
@@ -161,127 +327,15 @@ export default function EmiOrderDetail() {
                   <DialogHeader>
                     <DialogTitle>Record Payment</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handlePaymentSubmit} className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Amount (BDT) <span className="text-destructive">*</span></Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        value={paymentData.amount}
-                        onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                        required
-                        className="font-bold text-lg"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Suggested: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
-                        {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
-                          <span className="ml-1 text-muted-foreground">(original: {formatCurrency(order.monthlyAmount)})</span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="paymentDate">Date</Label>
-                        <Input
-                          id="paymentDate"
-                          type="date"
-                          value={paymentData.paymentDate}
-                          onChange={(e) => setPaymentData({ ...paymentData, paymentDate: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="paymentMethod">Method</Label>
-                        <Select
-                          value={paymentData.paymentMethod}
-                          onValueChange={(val) => setPaymentData({ ...paymentData, paymentMethod: val, bankName: "", accountNumber: "", transactionId: "" })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Cash">Cash</SelectItem>
-                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                            <SelectItem value="bKash">bKash</SelectItem>
-                            <SelectItem value="Nagad">Nagad</SelectItem>
-                            <SelectItem value="Rocket">Rocket</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {paymentData.paymentMethod === "Bank Transfer" && (
-                      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bank Transfer Details</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-2">
-                            <Label htmlFor="bankName">Bank Name</Label>
-                            <Input
-                              id="bankName"
-                              value={paymentData.bankName}
-                              onChange={(e) => setPaymentData({ ...paymentData, bankName: e.target.value })}
-                              placeholder="e.g. Dutch-Bangla Bank"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="accountNumber">Account Number</Label>
-                            <Input
-                              id="accountNumber"
-                              value={paymentData.accountNumber}
-                              onChange={(e) => setPaymentData({ ...paymentData, accountNumber: e.target.value })}
-                              placeholder="e.g. 1234567890"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="transactionId">Transaction ID / Reference</Label>
-                          <Input
-                            id="transactionId"
-                            value={paymentData.transactionId}
-                            onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
-                            placeholder="e.g. TXN123456789"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {(paymentData.paymentMethod === "bKash" || paymentData.paymentMethod === "Nagad" || paymentData.paymentMethod === "Rocket") && (
-                      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{paymentData.paymentMethod} Details</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-2">
-                            <Label htmlFor="accountNumber">{paymentData.paymentMethod} Number</Label>
-                            <Input
-                              id="accountNumber"
-                              type="tel"
-                              value={paymentData.accountNumber}
-                              onChange={(e) => setPaymentData({ ...paymentData, accountNumber: e.target.value })}
-                              placeholder="e.g. 01XXXXXXXXX"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="transactionId">Transaction ID</Label>
-                            <Input
-                              id="transactionId"
-                              value={paymentData.transactionId}
-                              onChange={(e) => setPaymentData({ ...paymentData, transactionId: e.target.value })}
-                              placeholder="e.g. ABC1234567890"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Note (optional)</Label>
-                      <Textarea
-                        id="notes"
-                        value={paymentData.notes}
-                        onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
-                        placeholder="Any comments..."
-                      />
-                    </div>
-                    <div className="flex justify-end pt-4">
+                  <form onSubmit={handleAdd} className="space-y-4 pt-2">
+                    <p className="text-xs text-muted-foreground">
+                      Suggested: <span className="font-semibold text-primary">{formatCurrency(order.nextMonthlyAmount ?? order.monthlyAmount)}</span>
+                      {order.nextMonthlyAmount && order.nextMonthlyAmount !== order.monthlyAmount && (
+                        <span className="ml-1">(original: {formatCurrency(order.monthlyAmount)})</span>
+                      )}
+                    </p>
+                    <PaymentFormFields data={addForm} setData={setAddForm} />
+                    <div className="flex justify-end pt-2">
                       <Button type="submit" disabled={createPayment.isPending}>
                         {createPayment.isPending ? "Saving..." : "Save Payment"}
                       </Button>
@@ -294,7 +348,24 @@ export default function EmiOrderDetail() {
         </div>
       </div>
 
-      {/* Next due date banner */}
+      {/* ── Edit Payment dialog ── */}
+      <Dialog open={!!editPayment} onOpenChange={(open) => { if (!open) setEditPayment(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4 pt-2">
+            <PaymentFormFields data={editForm} setData={setEditForm} />
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={updatePayment.isPending}>
+                {updatePayment.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Status banners ── */}
       {order.status === "active" && order.nextDueDate && nextDueBadge && (
         <div className={`flex items-center gap-3 p-4 rounded-lg border ${nextDueBadge.color}`}>
           <Clock className="h-5 w-5 shrink-0" />
@@ -316,6 +387,7 @@ export default function EmiOrderDetail() {
         </div>
       )}
 
+      {/* ── Summary + Details cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardHeader className="pb-3 border-b">
@@ -465,10 +537,11 @@ export default function EmiOrderDetail() {
         </Card>
       </div>
 
+      {/* ── Payment History ── */}
       <Card>
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
-          <CardDescription>All installments recorded so far.</CardDescription>
+          <CardDescription>All installments recorded so far. Hover a row to edit or delete.</CardDescription>
         </CardHeader>
         <CardContent>
           {order.payments && order.payments.length > 0 ? (
@@ -480,21 +553,22 @@ export default function EmiOrderDetail() {
                     <TableHead>Method</TableHead>
                     <TableHead>Note</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {/* Down payment row — no edit/delete */}
                   {order.downPayment > 0 && (
                     <TableRow className="bg-secondary/20">
                       <TableCell>{formatDate(order.purchaseDate)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">Initial</Badge>
-                      </TableCell>
+                      <TableCell><Badge variant="outline">Initial</Badge></TableCell>
                       <TableCell className="text-muted-foreground italic">Down Payment</TableCell>
                       <TableCell className="text-right font-medium">{formatCurrency(order.downPayment)}</TableCell>
+                      <TableCell />
                     </TableRow>
                   )}
                   {order.payments.map((payment, idx) => (
-                    <TableRow key={payment.id}>
+                    <TableRow key={payment.id} className="group">
                       <TableCell className="font-medium">
                         <div>{formatDate(payment.paymentDate)}</div>
                         <div className="text-xs text-muted-foreground">Installment #{idx + 1}</div>
@@ -508,7 +582,7 @@ export default function EmiOrderDetail() {
                           <div className="text-xs text-muted-foreground">{payment.bankName}</div>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm max-w-[200px]">
+                      <TableCell className="text-muted-foreground text-sm max-w-[180px]">
                         {payment.transactionId && (
                           <div className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded inline-block mb-1">
                             {payment.transactionId}
@@ -517,7 +591,33 @@ export default function EmiOrderDetail() {
                         {payment.notes && <div className="truncate">{payment.notes}</div>}
                         {!payment.transactionId && !payment.notes && "-"}
                       </TableCell>
-                      <TableCell className="text-right font-bold text-primary">{formatCurrency(payment.amount)}</TableCell>
+                      <TableCell className="text-right font-bold text-primary">
+                        {formatCurrency(payment.amount)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => {
+                              setEditPayment(payment);
+                              setEditForm(paymentToForm(payment));
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDelete(payment)}
+                            disabled={deletePayment.isPending}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

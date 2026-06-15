@@ -12,6 +12,8 @@ import {
   CreateEmiPaymentBody,
   CreateEmiPaymentParams,
   DeleteEmiPaymentParams,
+  UpdateEmiPaymentParams,
+  UpdateEmiPaymentBody,
 } from "@workspace/api-zod";
 import { resolveUserId } from "../lib/resolveUserId";
 
@@ -326,13 +328,79 @@ router.delete("/payments/:paymentId", async (req, res) => {
   const userId = await resolveUserId((req as any).userId);
   if (!userId) { res.status(401).json({ error: "User not found" }); return; }
   const { paymentId } = DeleteEmiPaymentParams.parse({ paymentId: Number(req.params.paymentId) });
-  const [payment] = await db.select({ id: emiPaymentsTable.id })
+
+  const [row] = await db
+    .select({ id: emiPaymentsTable.id, emiOrderId: emiPaymentsTable.emiOrderId })
     .from(emiPaymentsTable)
     .innerJoin(emiOrdersTable, and(eq(emiPaymentsTable.emiOrderId, emiOrdersTable.id), eq(emiOrdersTable.userId, userId)))
     .where(eq(emiPaymentsTable.id, paymentId));
-  if (!payment) { res.status(404).json({ error: "Payment not found" }); return; }
+  if (!row) { res.status(404).json({ error: "Payment not found" }); return; }
+
   await db.delete(emiPaymentsTable).where(eq(emiPaymentsTable.id, paymentId));
+
+  // Revert order status to active if total paid drops below threshold
+  const [order] = await db.select().from(emiOrdersTable).where(eq(emiOrdersTable.id, row.emiOrderId));
+  if (order) {
+    const totals = await db
+      .select({ total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)` })
+      .from(emiPaymentsTable)
+      .where(eq(emiPaymentsTable.emiOrderId, row.emiOrderId));
+    const totalPaid = Number(totals[0]?.total ?? 0);
+    const emiTotal = Number(order.totalPrice) - Number(order.discount ?? 0) - Number(order.downPayment);
+    if (totalPaid < emiTotal && order.status === "completed") {
+      await db.update(emiOrdersTable).set({ status: "active" }).where(eq(emiOrdersTable.id, row.emiOrderId));
+    }
+  }
+
   res.status(204).send();
+});
+
+router.patch("/payments/:paymentId", async (req, res) => {
+  const userId = await resolveUserId((req as any).userId);
+  if (!userId) { res.status(401).json({ error: "User not found" }); return; }
+  const { paymentId } = UpdateEmiPaymentParams.parse({ paymentId: Number(req.params.paymentId) });
+  const body = UpdateEmiPaymentBody.parse(req.body);
+
+  const [row] = await db
+    .select({ id: emiPaymentsTable.id, emiOrderId: emiPaymentsTable.emiOrderId })
+    .from(emiPaymentsTable)
+    .innerJoin(emiOrdersTable, and(eq(emiPaymentsTable.emiOrderId, emiOrdersTable.id), eq(emiOrdersTable.userId, userId)))
+    .where(eq(emiPaymentsTable.id, paymentId));
+  if (!row) { res.status(404).json({ error: "Payment not found" }); return; }
+
+  const updateData: Record<string, unknown> = {};
+  if (body.amount !== undefined) updateData.amount = String(body.amount);
+  if (body.paymentDate !== undefined) updateData.paymentDate = body.paymentDate;
+  if (body.paymentMethod !== undefined) updateData.paymentMethod = body.paymentMethod;
+  if ("bankName" in body) updateData.bankName = body.bankName ?? null;
+  if ("accountNumber" in body) updateData.accountNumber = body.accountNumber ?? null;
+  if ("transactionId" in body) updateData.transactionId = body.transactionId ?? null;
+  if ("notes" in body) updateData.notes = body.notes ?? null;
+
+  const [updated] = await db
+    .update(emiPaymentsTable)
+    .set(updateData)
+    .where(eq(emiPaymentsTable.id, paymentId))
+    .returning();
+
+  // Recalculate order status after edit
+  const [order] = await db.select().from(emiOrdersTable).where(eq(emiOrdersTable.id, row.emiOrderId));
+  if (order) {
+    const totals = await db
+      .select({ total: sql<string>`COALESCE(SUM(${emiPaymentsTable.amount}), 0)` })
+      .from(emiPaymentsTable)
+      .where(eq(emiPaymentsTable.emiOrderId, row.emiOrderId));
+    const totalPaid = Number(totals[0]?.total ?? 0);
+    const emiTotal = Number(order.totalPrice) - Number(order.discount ?? 0) - Number(order.downPayment);
+    const shouldBeCompleted = totalPaid >= emiTotal;
+    if (shouldBeCompleted && order.status !== "completed") {
+      await db.update(emiOrdersTable).set({ status: "completed" }).where(eq(emiOrdersTable.id, row.emiOrderId));
+    } else if (!shouldBeCompleted && order.status === "completed") {
+      await db.update(emiOrdersTable).set({ status: "active" }).where(eq(emiOrdersTable.id, row.emiOrderId));
+    }
+  }
+
+  res.json({ ...updated, amount: Number(updated.amount), createdAt: updated.createdAt.toISOString() });
 });
 
 export default router;

@@ -44,7 +44,7 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 - [ ] **T07 — Payment Receipt (Printable)**
   Each recorded payment gets a printable/downloadable receipt page.
 
-- [ ] **T08 — Edit / Delete Payment**
+- [x] **T08 — Edit / Delete Payment**
   Allow correcting a mistakenly recorded payment entry.
 
 ---
@@ -139,7 +139,10 @@ When a task is done, mark it `[x]` and add a short note under **Done** with what
 
 ## ✅ Completed Tasks
 
-_(Tasks will be moved here once done, with a summary of what was built.)_
+- [x] **T08 — Edit / Delete Payment** _(2026-06-15)_
+  - **Backend:** Added `PATCH /api/payments/:paymentId` route for editing any field of a payment. Fixed `DELETE /api/payments/:paymentId` to revert order status from `completed` → `active` when total paid drops below threshold after deletion. Both routes recalculate and auto-update order completion status.
+  - **API Client:** Added `useUpdateEmiPayment` hook (manually) to `lib/api-client-react/src/generated/api.ts` following the same pattern as `useDeleteEmiPayment`.
+  - **Frontend:** Refactored `detail.tsx` — extracted shared `PaymentFormFields` component used by both Add and Edit dialogs. Each payment row now shows ✏️ Edit and 🗑️ Delete buttons on hover. Edit opens a pre-filled dialog; delete prompts confirmation before removing. Down payment row has no edit/delete controls.
 
 ---
 
