@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Store, FileText, LogOut, User } from "lucide-react";
-import { useClerk, useUser } from "@clerk/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,14 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,11 +21,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/emi-orders", label: "My EMIs", icon: FileText },
   ];
 
-  const initials = user?.firstName?.[0] ?? user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ?? "U";
+  const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex flex-col hidden md:flex">
+      <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex-col hidden md:flex">
         <div className="p-6">
           <h1 className="text-xl font-bold text-sidebar-primary tracking-tight">EMI Tracker</h1>
           <p className="text-xs text-sidebar-foreground/60 mt-1">আমার কিস্তির হিসাব</p>
@@ -58,24 +55,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground px-3">
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={user?.imageUrl} />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress ?? "User"}</p>
-                  <p className="text-xs text-sidebar-foreground/50 truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
+                  <p className="text-sm font-medium truncate">{user?.name ?? user?.email ?? "User"}</p>
+                  <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email ?? ""}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-56">
               <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none">
                 <User className="h-4 w-4" />
-                <span className="truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</span>
+                <span className="truncate">{user?.email ?? ""}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-                onClick={() => signOut({ redirectUrl: basePath || "/" })}
+                onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
                 লগআউট
@@ -92,7 +88,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.imageUrl} />
                   <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -109,7 +104,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-                onClick={() => signOut({ redirectUrl: basePath || "/" })}
+                onClick={logout}
               >
                 <LogOut className="h-4 w-4" />
                 লগআউট
