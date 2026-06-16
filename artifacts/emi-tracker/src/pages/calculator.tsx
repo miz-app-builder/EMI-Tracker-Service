@@ -150,7 +150,17 @@ function EmiCalculatorTab() {
                 <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">{months} month{months !== 1 ? "s" : ""}</span>
               </div>
               <Slider min={1} max={36} step={1} value={[months]} onValueChange={([v]) => setMonths(v)} className="w-full" />
-              <div className="flex justify-between text-xs text-muted-foreground"><span>1 mo</span><span>6</span><span>12</span><span>18</span><span>24</span><span>36 mo</span></div>
+              <div className="relative h-4 text-xs text-muted-foreground">
+                {([1, 6, 12, 18, 24, 36] as const).map((v) => (
+                  <span
+                    key={v}
+                    className="absolute -translate-x-1/2"
+                    style={{ left: `${((v - 1) / (36 - 1)) * 100}%` }}
+                  >
+                    {v === 1 ? "1 mo" : v === 36 ? "36 mo" : v}
+                  </span>
+                ))}
+              </div>
             </div>
 
             <Link href={`/emi-orders/new?${newOrderParams}`}>
