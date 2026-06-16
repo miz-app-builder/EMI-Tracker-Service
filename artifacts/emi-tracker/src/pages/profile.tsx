@@ -254,25 +254,31 @@ export default function ProfilePage() {
     setPhotoError("");
     setPhotoLoading(true);
     try {
-      const urlRes = await fetch(`${basePath}/api/users/me/photo/request-url`, {
-        method: "POST",
-        credentials: "include",
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const MAX = 400;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = objectUrl;
       });
-      if (!urlRes.ok) throw new Error("URL generation failed");
-      const { uploadURL, objectPath } = await urlRes.json();
-
-      const uploadRes = await fetch(uploadURL, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error("Upload failed");
 
       const patchRes = await fetch(`${basePath}/api/users/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ profilePhotoUrl: objectPath }),
+        body: JSON.stringify({ profilePhotoUrl: dataUrl }),
       });
       if (!patchRes.ok) throw new Error("Save failed");
 

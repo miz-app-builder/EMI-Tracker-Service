@@ -102,30 +102,19 @@ router.get("/users/me/photo", async (req, res) => {
       .where(eq(usersTable.id, userId));
     if (!user?.profilePhotoUrl) { res.status(404).json({ error: "No photo set" }); return; }
 
-    const objectPath = user.profilePhotoUrl.startsWith("/objects/")
-      ? user.profilePhotoUrl
-      : `/objects/${user.profilePhotoUrl}`;
-
-    const file = await objectStorageService.getObjectEntityFile(objectPath);
-    const response = await objectStorageService.downloadObject(file);
-    const contentType = response.headers.get("content-type");
-    if (contentType) res.setHeader("Content-Type", contentType);
-    res.setHeader("Cache-Control", "private, max-age=86400");
-
-    const reader = (response.body as any).getReader();
-    const pump = async () => {
-      const { done, value } = await reader.read();
-      if (done) { res.end(); return; }
-      res.write(value);
-      await pump();
-    };
-    await pump();
-  } catch (error) {
-    if (error instanceof ObjectNotFoundError) {
-      res.status(404).json({ error: "Photo not found" });
-    } else {
-      res.status(500).json({ error: "Failed to serve photo" });
+    if (user.profilePhotoUrl.startsWith("data:")) {
+      const [meta, data] = user.profilePhotoUrl.split(",");
+      const contentType = meta.split(":")[1]?.split(";")[0] ?? "image/jpeg";
+      const buffer = Buffer.from(data, "base64");
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "private, max-age=86400");
+      res.send(buffer);
+      return;
     }
+
+    res.status(404).json({ error: "Photo not found" });
+  } catch {
+    res.status(500).json({ error: "Failed to serve photo" });
   }
 });
 
