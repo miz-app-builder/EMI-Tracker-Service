@@ -59,10 +59,7 @@ export default function ActivityLogPage() {
     : logs;
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      </div>
-
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
