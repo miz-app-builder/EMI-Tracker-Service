@@ -117,7 +117,7 @@ export default function NewEmiOrder() {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={() => setLocation("/emi-orders")}>
           <ArrowLeft className="h-4 w-4" />

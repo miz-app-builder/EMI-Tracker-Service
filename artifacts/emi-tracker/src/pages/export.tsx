@@ -152,7 +152,7 @@ export default function ExportPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-muted-foreground mt-1">
