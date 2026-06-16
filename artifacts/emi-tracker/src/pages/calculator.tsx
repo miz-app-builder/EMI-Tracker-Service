@@ -52,9 +52,9 @@ type Tab = "emi" | "payoff";
 // ─── EMI Calculator ───────────────────────────────────────────────────────────
 
 function EmiCalculatorTab() {
-  const [totalPrice, setTotalPrice] = useState("50000");
-  const [downPayment, setDownPayment] = useState("10000");
-  const [discount, setDiscount] = useState("0");
+  const [totalPrice, setTotalPrice] = useState("");
+  const [downPayment, setDownPayment] = useState("");
+  const [discount, setDiscount] = useState("");
   const [months, setMonths] = useState(12);
   const [rateInput, setRateInput] = useState("0");
   const [rateMode, setRateMode] = useState<RateMode>("yearly");
