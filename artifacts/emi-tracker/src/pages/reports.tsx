@@ -123,15 +123,56 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
+      {/* Summary Cards + Export button — same row */}
+      <div className="flex flex-col sm:flex-row gap-4 items-stretch">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 flex-1">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Paid (All Time)</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loadingSummary ? <Skeleton className="h-8 w-32" /> : (
+                <div className="text-2xl font-bold text-primary">{formatCurrency(summary?.totalPaidAmount ?? 0)}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Across all EMI orders</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loadingSummary ? <Skeleton className="h-8 w-32" /> : (
+                <div className="text-2xl font-bold">{formatCurrency(summary?.totalDueAmount ?? 0)}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Remaining to be paid</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-primary/5 border-primary/10 col-span-2 sm:col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active EMIs</CardTitle>
+              <Activity className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              {loadingSummary ? <Skeleton className="h-8 w-16" /> : (
+                <div className="text-2xl font-bold text-primary">{summary?.totalActiveOrders ?? 0}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">of {summary?.totalOrders ?? 0} total orders</p>
+            </CardContent>
+          </Card>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="shrink-0">
-              <Download className="mr-2 h-4 w-4" />
-              Export
-              <ChevronDown className="ml-2 h-4 w-4" />
+            <Button variant="outline" className="shrink-0 self-start sm:self-stretch sm:flex-col sm:h-auto sm:py-4 sm:px-3 gap-2">
+              <Download className="h-4 w-4" />
+              <span>Export</span>
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -155,48 +196,6 @@ export default function ReportsPage() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Paid (All Time)</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {loadingSummary ? <Skeleton className="h-8 w-32" /> : (
-              <div className="text-2xl font-bold text-primary">{formatCurrency(summary?.totalPaidAmount ?? 0)}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">Across all EMI orders</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {loadingSummary ? <Skeleton className="h-8 w-32" /> : (
-              <div className="text-2xl font-bold">{formatCurrency(summary?.totalDueAmount ?? 0)}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">Remaining to be paid</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-primary/5 border-primary/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active EMIs</CardTitle>
-            <Activity className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            {loadingSummary ? <Skeleton className="h-8 w-16" /> : (
-              <div className="text-2xl font-bold text-primary">{summary?.totalActiveOrders ?? 0}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">of {summary?.totalOrders ?? 0} total orders</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Bar Chart */}
