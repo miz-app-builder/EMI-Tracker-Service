@@ -132,9 +132,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     <div className="min-h-screen flex w-full bg-background print:block print:h-auto">
       <aside className="w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-shrink-0 flex-col hidden md:flex print:hidden">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-sidebar-primary tracking-tight">EMI Tracker</h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-1">My installment records</p>
+        <div className="p-5 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">৳</div>
+          <div>
+            <h1 className="text-base font-bold text-sidebar-foreground tracking-tight leading-tight">EMI Tracker</h1>
+            <p className="text-[11px] text-sidebar-foreground/50 leading-tight">My installment records</p>
+          </div>
         </div>
         <nav className="flex-1 px-3 overflow-y-auto">
           <div className="space-y-4 py-2">
