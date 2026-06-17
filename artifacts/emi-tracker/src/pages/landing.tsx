@@ -352,20 +352,20 @@ export default function LandingPage() {
           <div className="w-full max-w-sm mx-auto">
             <AuthForm {...formProps} idPrefix="m" />
 
-            {/* Features grid */}
+            {/* Features row */}
             <div className="mt-8 pt-6 border-t border-border">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Features</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                 {features.map((f) => (
                   <button
                     key={f.title}
                     onClick={() => setSelectedFeature(f)}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center"
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center flex-shrink-0 w-20"
                   >
                     <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
                       <f.icon className="h-4 w-4 text-primary" />
                     </div>
-                    <span className="text-[10px] font-medium text-foreground leading-tight break-words w-full">{f.title}</span>
+                    <span className="text-[10px] font-medium text-foreground leading-tight w-full break-words">{f.title}</span>
                   </button>
                 ))}
               </div>
