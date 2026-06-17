@@ -318,30 +318,31 @@ export default function LandingPage() {
       <div className="md:hidden flex flex-col min-h-screen w-full">
         {/* Top hero panel — smaller when signup is active */}
         <div
-          className="relative bg-sidebar flex flex-col items-center justify-end px-6 overflow-hidden transition-all duration-300"
-          style={{ minHeight: tab === "signup" ? "22%" : "40%", paddingTop: tab === "signup" ? "2.5rem" : "3.5rem", paddingBottom: tab === "signup" ? "1.5rem" : "2.5rem" }}
+          className="relative bg-sidebar flex flex-col justify-start px-6 overflow-hidden transition-all duration-500"
+          style={{ minHeight: tab === "signup" ? "20%" : "42%", paddingTop: "env(safe-area-inset-top, 2.5rem)", paddingBottom: tab === "signup" ? "1.2rem" : "2.5rem" }}
         >
-          <div className="absolute -top-16 -left-16 w-52 h-52 rounded-full bg-sidebar-primary/20" />
-          <div className="absolute -top-8 right-4 w-32 h-32 rounded-full bg-sidebar-primary/15" />
-          <div className="absolute bottom-0 -right-10 w-40 h-40 rounded-full bg-sidebar-primary/10" />
+          {/* Decorative circles */}
+          <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-sidebar-primary/25" />
+          <div className="absolute -top-6 right-0 w-40 h-40 rounded-full bg-sidebar-primary/15" />
+          <div className="absolute top-1/2 -right-16 w-52 h-52 rounded-full bg-white/5" />
+          <div className="absolute bottom-2 left-1/3 w-20 h-20 rounded-full bg-sidebar-primary/10" />
 
-          <div className="relative z-10 w-full">
+          <div className="relative z-10 w-full pt-10">
             {/* Logo row */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className={`rounded-xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-lg transition-all duration-300 ${tab === "signup" ? "w-8 h-8 text-base" : "w-10 h-10 text-lg"}`}>৳</div>
-              <span className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-base" : "text-lg"}`}>EMI Tracker</span>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className={`rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-xl transition-all duration-300 ${tab === "signup" ? "w-8 h-8 text-base" : "w-11 h-11 text-xl"}`}>৳</div>
+              <span className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-base" : "text-xl"}`}>EMI Tracker</span>
             </div>
 
             {tab === "login" && (
               <>
-                <h1 className="text-3xl font-bold text-sidebar-foreground leading-snug">
+                <h1 className="text-[2rem] font-extrabold text-sidebar-foreground leading-tight">
                   All your installments,<br />
                   <span className="text-sidebar-primary">in one place</span>
                 </h1>
-                <p className="text-sidebar-foreground/60 text-sm mt-3 leading-relaxed max-w-xs">
+                <p className="text-sidebar-foreground/55 text-[13px] mt-2.5 leading-relaxed max-w-xs">
                   Track monthly installments, view outstanding balances, and stay on top of payments — all in one app.
                 </p>
-
               </>
             )}
           </div>
