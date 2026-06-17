@@ -371,7 +371,7 @@ export default function LandingPage() {
             </div>
 
             {/* Stats */}
-            <div className="flex gap-6 mt-6 pt-4 border-t border-border">
+            <div className="flex gap-6 mt-6 pt-4 border-t border-border justify-center">
               {[
                 { label: "Active Users", value: "100+" },
                 { label: "EMIs Tracked", value: "500+" },
