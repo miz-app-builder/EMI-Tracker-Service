@@ -56,11 +56,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const bottomNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/emi-orders", label: "My EMIs", icon: FileText },
-    { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
     { href: "/shops", label: "Shops", icon: Store },
   ];
 
   const moreNavItems = [
+    { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
     { href: "/calendar", label: "Calendar", icon: CalendarDays },
     { href: "/reports", label: "Reports", icon: BarChart2 },
     { href: "/debt-overview", label: "Debt Overview", icon: Layers },
@@ -319,6 +319,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       >
                         <item.icon className="h-4 w-4 shrink-0" />
                         <span className="text-sm">{item.label}</span>
+                        {"badge" in item && item.badge ? (
+                          <span className="ml-auto text-[10px] font-bold bg-destructive text-white px-1.5 py-0.5 rounded-full leading-none">{item.badge}</span>
+                        ) : null}
                       </div>
                     </Link>
                   );
@@ -327,6 +330,40 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </>
           )}
         </div>
+
+        {/* Profile button */}
+        <div className="flex-1 relative">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full flex flex-col items-center justify-center gap-0.5 py-2 text-muted-foreground transition-colors hover:text-primary">
+                <Avatar className="h-5 w-5">
+                  {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
+                  <AvatarFallback className="bg-primary text-white text-[10px] font-bold">{initials}</AvatarFallback>
+                </Avatar>
+                <span className="text-[10px] leading-tight font-medium">Profile</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="w-52 mb-2">
+              <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none text-xs">
+                <User className="h-3.5 w-3.5" />
+                <span className="truncate">{user?.email ?? ""}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <Link href="/profile">
+                <DropdownMenuItem className="gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" />
+                  Profile Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive cursor-pointer" onClick={logout}>
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
       </div>
     </nav>
     </>
