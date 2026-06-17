@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { authFetch } from "@/lib/token";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import {
   LogIn, LogOut, UserPlus, CreditCard, Trash2, Pencil, User, Key,
   Activity, Search, ShieldCheck,
 } from "lucide-react";
+
 import { format, formatDistanceToNow } from "date-fns";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -60,7 +61,7 @@ export default function ActivityLogPage() {
     : logs;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-4 animate-in fade-in duration-500">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -72,10 +73,6 @@ export default function ActivityLogPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent Activity</CardTitle>
-          <CardDescription className="text-xs">Last 200 actions — newest first</CardDescription>
-        </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-3 p-6">
