@@ -154,34 +154,32 @@ export default function Dashboard() {
                   return (
                     <div
                       key={order.id}
-                      className={`flex flex-col gap-2 p-4 border rounded-lg transition-colors mb-2 ${isOverdue ? "border-destructive/30 bg-destructive/[0.02]" : "hover:bg-muted/30"}`}
+                      className={`flex items-center justify-between p-4 border rounded-lg transition-colors mb-2 ${isOverdue ? "border-destructive/30 bg-destructive/[0.02]" : "hover:bg-muted/30"}`}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-base md:text-sm truncate">{order.productName}</p>
-                          <p className="text-base md:text-sm text-muted-foreground">{order.shopName}</p>
-                          {order.nextDueDate && (
-                            <p className={`text-sm md:text-xs mt-1 ${isOverdue ? "text-destructive" : isUrgent ? "text-orange-600" : "text-muted-foreground"}`}>
-                              Due: {formatDate(order.nextDueDate)}
-                              {isOverdue && ` (${Math.abs(days!)} day(s) ago)`}
-                              {days === 0 && " (Today!)"}
-                              {isUrgent && days! > 0 && ` (${days} day(s) left)`}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className={`font-bold text-base md:text-sm ${isOverdue ? "text-destructive" : "text-primary"}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{order.productName}</p>
+                        <p className="text-sm text-muted-foreground">{order.shopName}</p>
+                        {order.nextDueDate && (
+                          <p className={`text-xs mt-1 ${isOverdue ? "text-destructive" : isUrgent ? "text-orange-600" : "text-muted-foreground"}`}>
+                            Due: {formatDate(order.nextDueDate)}
+                            {isOverdue && ` (${Math.abs(days!)} day(s) ago)`}
+                            {days === 0 && " (Today!)"}
+                            {isUrgent && days! > 0 && ` (${days} day(s) left)`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 ml-3 shrink-0">
+                        <div className="text-right mr-2">
+                          <p className={`font-bold ${isOverdue ? "text-destructive" : "text-primary"}`}>
                             {formatCurrency(order.monthlyAmount)}
                           </p>
                           <Badge
                             variant="outline"
-                            className={`mt-1 text-sm md:text-xs ${isOverdue ? "border-destructive text-destructive" : isUrgent ? "border-orange-400 text-orange-600" : ""}`}
+                            className={`mt-1 text-xs ${isOverdue ? "border-destructive text-destructive" : isUrgent ? "border-orange-400 text-orange-600" : ""}`}
                           >
                             {isOverdue ? "Overdue" : "Due"}
                           </Badge>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 justify-end">
                         <Button
                           size="sm"
                           variant={isOverdue ? "destructive" : "default"}
