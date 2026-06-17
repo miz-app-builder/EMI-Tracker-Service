@@ -340,9 +340,9 @@ export default function LandingPage() {
         <div
           className="relative bg-sidebar flex-shrink-0 flex flex-col justify-start px-6 overflow-hidden transition-all duration-500"
           style={{
-            height: tab === "signup" ? "88px" : "42%",
-            paddingTop: tab === "signup" ? "1rem" : "2.75rem",
-            paddingBottom: tab === "signup" ? "0" : "2rem",
+            height: tab === "signup" ? "80px" : "36%",
+            paddingTop: tab === "signup" ? "1rem" : "2.5rem",
+            paddingBottom: tab === "signup" ? "0" : "1rem",
           }}
         >
           {/* Decorative circles */}
@@ -374,7 +374,7 @@ export default function LandingPage() {
 
         {/* Form card — fills remaining height, no scroll */}
         <div className="flex-1 bg-background rounded-t-3xl -mt-5 relative z-10 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-col px-6 pt-6 pb-4 overflow-hidden">
+          <div className="flex-1 flex flex-col px-6 pt-6 overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}>
             <div className="w-full max-w-sm mx-auto flex flex-col flex-1 overflow-hidden">
 
               <AuthForm {...formProps} idPrefix="m" compact />
