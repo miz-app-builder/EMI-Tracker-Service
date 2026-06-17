@@ -9,7 +9,7 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "EMI Tracker Frontend"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -18,23 +18,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "EMI Tracker Frontend"
+args = "API Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "API Server"
-
-[[workflows.workflow]]
-name = "EMI Tracker Frontend"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "EMI Tracker Frontend"
 
 [[workflows.workflow]]
 name = "API Server"
@@ -47,6 +35,18 @@ waitForPort = 8080
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "EMI Tracker Frontend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [agent]
 stack = "BEST_EFFORT_FALLBACK"
@@ -63,10 +63,6 @@ externalPort = 3001
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 8000
-externalPort = 8000
 
 [[ports]]
 localPort = 8080
