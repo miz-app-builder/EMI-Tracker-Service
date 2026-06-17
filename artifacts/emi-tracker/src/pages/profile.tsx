@@ -604,12 +604,12 @@ export default function ProfilePage() {
       {/* ── Password card ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">পাসওয়ার্ড পরিবর্তন</CardTitle>
+          <CardTitle className="text-base">Change Password</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="pw-current">বর্তমান পাসওয়ার্ড</Label>
+              <Label htmlFor="pw-current">Current Password</Label>
               <Input
                 id="pw-current"
                 type="password"
@@ -620,21 +620,21 @@ export default function ProfilePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="pw-new">নতুন পাসওয়ার্ড</Label>
+                <Label htmlFor="pw-new">New Password</Label>
                 <Input
                   id="pw-new"
                   type="password"
-                  placeholder="কমপক্ষে ৮ অক্ষর"
+                  placeholder="At least 8 characters"
                   value={pwForm.next}
                   onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pw-confirm">নিশ্চিত করুন</Label>
+                <Label htmlFor="pw-confirm">Confirm Password</Label>
                 <Input
                   id="pw-confirm"
                   type="password"
-                  placeholder="পুনরায় লিখুন"
+                  placeholder="Re-enter password"
                   value={pwForm.confirm}
                   onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
                 />
@@ -644,13 +644,13 @@ export default function ProfilePage() {
             {pwError && <p className="text-sm text-destructive">{pwError}</p>}
             {pwSuccess && (
               <p className="text-sm text-green-600 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> পাসওয়ার্ড পরিবর্তন হয়েছে
+                <CheckCircle2 className="h-4 w-4" /> Password changed
               </p>
             )}
 
             <Button type="submit" size="sm" variant="outline" disabled={pwLoading} className="gap-2">
               {pwLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              পাসওয়ার্ড পরিবর্তন করুন
+              Change Password
             </Button>
           </form>
 
@@ -658,7 +658,7 @@ export default function ProfilePage() {
             <div className="md:hidden pt-4 border-t space-y-3">
               <p className="text-sm font-medium flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
-                PIN পরিবর্তন
+                Change PIN
               </p>
               <ChangePinSection />
             </div>
@@ -687,10 +687,10 @@ function ChangePinSection() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (step === "enter") {
-      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("৪-digit সংখ্যা দিন"); return; }
+      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("Enter a 4-digit number"); return; }
       setStep("confirm"); setPin2(""); setError(""); return;
     }
-    if (pin1 !== pin2) { setError("PIN মিলছে না"); setPin2(""); return; }
+    if (pin1 !== pin2) { setError("PINs do not match"); setPin2(""); return; }
     setLoading(true);
     const res = await authFetch(`${basePath}/api/auth/set-pin-login`, {
       method: "POST",
@@ -698,9 +698,9 @@ function ChangePinSection() {
       body: JSON.stringify({ pin: pin1 }),
     });
     setLoading(false);
-    if (!res.ok) { setError("PIN সেভ করা যায়নি"); return; }
+    if (!res.ok) { setError("Could not save PIN"); return; }
     await refetch();
-    setSuccess("PIN পরিবর্তন হয়েছে!");
+    setSuccess("PIN changed!");
     reset();
     setTimeout(() => setSuccess(""), 3000);
   }
@@ -711,7 +711,7 @@ function ChangePinSection() {
         type="password"
         inputMode="numeric"
         maxLength={4}
-        placeholder={step === "enter" ? "নতুন PIN (৪ সংখ্যা)" : "PIN নিশ্চিত করুন"}
+        placeholder={step === "enter" ? "New PIN (4 digits)" : "Confirm PIN"}
         value={step === "enter" ? pin1 : pin2}
         onChange={(e) => {
           const v = e.target.value.replace(/\D/g, "").slice(0, 4);
@@ -725,9 +725,9 @@ function ChangePinSection() {
       <div className="flex gap-2">
         <Button type="submit" size="sm" variant="outline" disabled={loading} className="gap-2">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-          {step === "enter" ? "পরবর্তী" : "সেভ করুন"}
+          {step === "enter" ? "Next" : "Save"}
         </Button>
-        {step === "confirm" && <Button type="button" size="sm" variant="ghost" onClick={reset}>বাতিল</Button>}
+        {step === "confirm" && <Button type="button" size="sm" variant="ghost" onClick={reset}>Cancel</Button>}
       </div>
     </form>
   );
@@ -753,10 +753,10 @@ function PinLoginCard() {
     setBioLoading(true);
     if (bioEnabled) {
       bioDisable();
-      setBioMsg("Biometric login বন্ধ করা হয়েছে।");
+      setBioMsg("Biometric login disabled.");
     } else {
       const ok = await bioRegister();
-      setBioMsg(ok ? "Biometric login চালু হয়েছে!" : "Biometric register করা যায়নি। আবার চেষ্টা করুন।");
+      setBioMsg(ok ? "Biometric login enabled!" : "Could not register biometric. Please try again.");
     }
     setBioLoading(false);
     setTimeout(() => setBioMsg(""), 3000);
@@ -769,11 +769,11 @@ function PinLoginCard() {
       setLoading(true);
       const res = await authFetch(`${basePath}/api/auth/pin-login`, { method: "DELETE" });
       setLoading(false);
-      if (!res.ok) { setError("PIN সরানো যায়নি"); return; }
+      if (!res.ok) { setError("Could not remove PIN"); return; }
       localStorage.removeItem("emi_pin_login_active");
       bioDisable();
       await refetch();
-      setSuccess("PIN login বন্ধ করা হয়েছে।");
+      setSuccess("PIN login disabled.");
       setError("");
     } else {
       setMode("set");
@@ -785,10 +785,10 @@ function PinLoginCard() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (step === "enter") {
-      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("৪-digit সংখ্যা দিন"); return; }
+      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("Enter a 4-digit number"); return; }
       setStep("confirm"); setPin2(""); setError(""); return;
     }
-    if (pin1 !== pin2) { setError("PIN মিলছে না"); setPin2(""); return; }
+    if (pin1 !== pin2) { setError("PINs do not match"); setPin2(""); return; }
     setLoading(true);
     const res = await authFetch(`${basePath}/api/auth/set-pin-login`, {
       method: "POST",
@@ -796,11 +796,11 @@ function PinLoginCard() {
       body: JSON.stringify({ pin: pin1 }),
     });
     setLoading(false);
-    if (!res.ok) { setError("PIN সেভ করা যায়নি"); return; }
+    if (!res.ok) { setError("Could not save PIN"); return; }
     localStorage.setItem("emi_pin_login_active", "true");
     if (user?.email) localStorage.setItem("emi_last_email", user.email.toLowerCase());
     await refetch();
-    setSuccess("PIN login চালু হয়েছে!");
+    setSuccess("PIN login enabled!");
     reset();
   }
 
@@ -814,7 +814,7 @@ function PinLoginCard() {
               PIN Login
             </CardTitle>
             <CardDescription className="mt-0.5">
-              Mobile-এ 4-digit PIN দিয়ে দ্রুত লগিন করুন
+              Sign in quickly on mobile with a 4-digit PIN
             </CardDescription>
           </div>
           <button
@@ -838,7 +838,7 @@ function PinLoginCard() {
           {mode === "set" && (
             <form onSubmit={handleSubmit} className="space-y-3 max-w-xs">
               <Label className="text-xs text-muted-foreground">
-                {step === "enter" ? "PIN লিখুন (৪ সংখ্যা)" : "PIN নিশ্চিত করুন"}
+                {step === "enter" ? "Enter PIN (4 digits)" : "Confirm PIN"}
               </Label>
               <Input
                 type="password"
@@ -858,9 +858,9 @@ function PinLoginCard() {
               <div className="flex gap-2">
                 <Button type="submit" size="sm" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                  {step === "enter" ? "পরবর্তী" : "সেভ করুন"}
+                  {step === "enter" ? "Next" : "Save"}
                 </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={reset}>বাতিল</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={reset}>Cancel</Button>
               </div>
             </form>
           )}
@@ -873,14 +873,14 @@ function PinLoginCard() {
                   <span className="text-sm font-medium">Biometric Login</span>
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                  {bioEnabled ? "চালু" : "বন্ধ"}
+                  {bioEnabled ? "On" : "Off"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {!bioSupported ? "আপনার device biometric সাপোর্ট করে না।" : "Fingerprint বা Face ID দিয়ে লগিন করুন।"}
+                {!bioSupported ? "Your device does not support biometric." : "Sign in with fingerprint or Face ID."}
               </p>
               {bioMsg && (
-                <p className={`text-xs font-medium ${bioMsg.includes("চালু") ? "text-green-600" : "text-muted-foreground"}`}>
+                <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : "text-muted-foreground"}`}>
                   {bioMsg}
                 </p>
               )}
@@ -892,7 +892,7 @@ function PinLoginCard() {
                 disabled={bioLoading || !bioSupported}
               >
                 {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                {bioEnabled ? "Biometric বন্ধ করুন" : "Biometric চালু করুন"}
+                {bioEnabled ? "Disable Biometric" : "Enable Biometric"}
               </Button>
             </div>
           )}
