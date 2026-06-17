@@ -3,7 +3,7 @@ import { saveToken, clearToken, authFetch } from "@/lib/token";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 5_000;
 
 export interface AuthUser {
   id: string;
