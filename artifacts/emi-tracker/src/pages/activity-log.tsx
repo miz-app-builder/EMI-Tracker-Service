@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { authFetch } from "@/lib/token";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +41,7 @@ export default function ActivityLogPage() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    fetch(`${BASE}/api/activity-logs`, { credentials: "include" })
+    authFetch(`${BASE}/api/activity-logs`)
       .then((r) => r.json())
       .then((d) => setLogs(Array.isArray(d) ? d : []))
       .catch(() => setLogs([]))

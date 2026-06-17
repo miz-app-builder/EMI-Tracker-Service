@@ -5,6 +5,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { getToken } from "@/lib/token";
+
+setAuthTokenGetter(() => getToken());
 
 import Dashboard from "@/pages/dashboard";
 import Shops from "@/pages/shops";

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { authFetch } from "@/lib/token";
 
 type Theme = "light" | "dark";
 
@@ -24,9 +25,8 @@ function applyTheme(theme: Theme) {
 
 async function saveThemeToServer(theme: Theme) {
   try {
-    await fetch(`${basePath}/api/users/me`, {
+    await authFetch(`${basePath}/api/users/me`, {
       method: "PATCH",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ themePreference: theme }),
     });

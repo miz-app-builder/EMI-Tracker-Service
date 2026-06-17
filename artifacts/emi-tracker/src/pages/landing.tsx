@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { saveToken } from "@/lib/token";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -71,6 +72,8 @@ export default function LandingPage() {
         setLoginError(d.error === "Invalid credentials" ? "Incorrect email or password" : "Something went wrong");
         return;
       }
+      const data = await res.json();
+      if (data.token) saveToken(data.token);
       await refetch();
       setLocation("/dashboard");
     } catch {
@@ -103,6 +106,8 @@ export default function LandingPage() {
         setSignupError(d.error === "Email already registered" ? "An account with this email already exists" : d.error ?? "Something went wrong");
         return;
       }
+      const data = await res.json();
+      if (data.token) saveToken(data.token);
       await refetch();
       setLocation("/dashboard");
     } catch {

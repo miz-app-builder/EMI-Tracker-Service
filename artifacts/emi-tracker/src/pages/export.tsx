@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { authFetch } from "@/lib/token";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +56,7 @@ export default function ExportPage() {
     if (data) return data;
     setLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/export`, { credentials: "include" });
+      const res = await authFetch(`${BASE}/api/export`);
       if (!res.ok) throw new Error("Failed to fetch export data");
       const json: ExportData = await res.json();
       setData(json);

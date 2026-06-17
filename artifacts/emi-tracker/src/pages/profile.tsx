@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { authFetch } from "@/lib/token";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,10 +60,9 @@ export default function ProfilePage() {
     setInfoSuccess(false);
     setInfoLoading(true);
     try {
-      const res = await fetch(`${basePath}/api/users/me`, {
+      const res = await authFetch(`${basePath}/api/users/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           name: infoForm.name || null,
           phone: infoForm.phone || null,
@@ -95,10 +95,9 @@ export default function ProfilePage() {
     if (pwForm.next !== pwForm.confirm) { setPwError("New passwords do not match"); return; }
     setPwLoading(true);
     try {
-      const res = await fetch(`${basePath}/api/users/me/change-password`, {
+      const res = await authFetch(`${basePath}/api/users/me/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
       });
       if (!res.ok) {
@@ -180,10 +179,9 @@ export default function ProfilePage() {
     try {
       const text = await importFile.text();
       const json = JSON.parse(text);
-      const res = await fetch(`${basePath}/api/import?mode=${importMode}`, {
+      const res = await authFetch(`${basePath}/api/import?mode=${importMode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(json),
       });
       if (!res.ok) {
@@ -212,7 +210,7 @@ export default function ProfilePage() {
   }
 
   async function fetchExportData() {
-    const res = await fetch(`${basePath}/api/export`, { credentials: "include" });
+    const res = await authFetch(`${basePath}/api/export`);
     if (!res.ok) throw new Error("Failed");
     return res.json();
   }
@@ -274,10 +272,9 @@ export default function ProfilePage() {
         img.src = objectUrl;
       });
 
-      const patchRes = await fetch(`${basePath}/api/users/me`, {
+      const patchRes = await authFetch(`${basePath}/api/users/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ profilePhotoUrl: dataUrl }),
       });
       if (!patchRes.ok) throw new Error("Save failed");
@@ -852,7 +849,7 @@ function SessionsCard() {
 
   function load() {
     setLoading(true);
-    fetch(`${basePath}/api/sessions`, { credentials: "include" })
+    authFetch(`${basePath}/api/sessions`)
       .then((r) => r.json())
       .then((d) => setSessions(Array.isArray(d) ? d : []))
       .catch(() => setSessions([]))
@@ -864,14 +861,14 @@ function SessionsCard() {
 
   async function revoke(sessionId: string) {
     setRevoking(sessionId);
-    await fetch(`${basePath}/api/sessions/${sessionId}`, { method: "DELETE", credentials: "include" });
+    await authFetch(`${basePath}/api/sessions/${sessionId}`, { method: "DELETE" });
     setSessions((s) => s.filter((r) => r.id !== sessionId));
     setRevoking(null);
   }
 
   async function revokeOthers() {
     setRevokingAll(true);
-    await fetch(`${basePath}/api/sessions`, { method: "DELETE", credentials: "include" });
+    await authFetch(`${basePath}/api/sessions`, { method: "DELETE" });
     setSessions((s) => s.filter((r) => r.isCurrent));
     setRevokingAll(false);
   }

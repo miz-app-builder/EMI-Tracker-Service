@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { authFetch } from "@/lib/token";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -23,10 +24,9 @@ export default function CompleteProfile({ onComplete }: Props) {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${basePath}/api/users/me`, {
+      const res = await authFetch(`${basePath}/api/users/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Failed");
