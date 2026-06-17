@@ -47,6 +47,131 @@ function AuthForm({
 }) {
   const sp = compact ? "space-y-1" : "space-y-1.5";
   const fieldGap = compact ? "space-y-2" : "space-y-4";
+
+  const [forgotStep, setForgotStep] = useState<null | "form" | "success">(null);
+  const [forgotForm, setForgotForm] = useState({ email: "", phone: "", newPassword: "", confirmPassword: "" });
+  const [forgotError, setForgotError] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  async function handleForgotSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setForgotError("");
+    if (!forgotForm.email.trim()) { setForgotError("Email প্রয়োজন"); return; }
+    if (!forgotForm.phone.trim()) { setForgotError("ফোন নম্বর প্রয়োজন"); return; }
+    if (forgotForm.newPassword.length < 8) { setForgotError("Password কমপক্ষে ৮ অক্ষর হতে হবে"); return; }
+    if (forgotForm.newPassword !== forgotForm.confirmPassword) { setForgotError("Password মিলছে না"); return; }
+    setForgotLoading(true);
+    try {
+      const res = await fetch(`${basePath}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotForm.email, phone: forgotForm.phone, newPassword: forgotForm.newPassword }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        setForgotError(
+          d.error === "No account found with this email" ? "এই email-এ কোনো account নেই" :
+          d.error === "Phone number does not match our records" ? "ফোন নম্বর মিলছে না" :
+          d.error ?? "কিছু একটা সমস্যা হয়েছে"
+        );
+        return;
+      }
+      setForgotStep("success");
+    } catch {
+      setForgotError("কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন");
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
+  function closeForgot() {
+    setForgotStep(null);
+    setForgotForm({ email: "", phone: "", newPassword: "", confirmPassword: "" });
+    setForgotError("");
+  }
+
+  if (forgotStep !== null) {
+    return (
+      <div className={compact ? "space-y-3" : "space-y-4"}>
+        <div className={`flex bg-muted rounded-xl p-1 ${compact ? "mb-3" : "mb-7"}`}>
+          <button type="button" onClick={() => setTab("login")}
+            className="flex-1 py-2 text-sm font-medium rounded-lg bg-white text-foreground shadow-sm text-center">
+            Login
+          </button>
+          <button type="button" onClick={() => setTab("signup")}
+            className="flex-1 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground transition-all">
+            Sign Up
+          </button>
+        </div>
+
+        {forgotStep === "success" ? (
+          <div className="space-y-4 text-center">
+            <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-950/40 flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className={`font-bold text-foreground ${compact ? "text-base" : "text-lg"}`}>Password পরিবর্তন সফল!</p>
+              <p className="text-sm text-muted-foreground mt-1">নতুন password দিয়ে login করুন।</p>
+            </div>
+            <Button className={`w-full ${compact ? "h-9 text-sm" : ""}`} onClick={closeForgot}>
+              Login-এ ফিরে যান
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={handleForgotSubmit} className={compact ? "space-y-3" : "space-y-4"}>
+            <div className={sp}>
+              <p className={`font-bold text-foreground ${compact ? "text-lg" : "text-xl"}`}>Password ভুলে গেছেন?</p>
+              <p className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                Signup-এ দেওয়া email ও ফোন নম্বর দিন
+              </p>
+            </div>
+            <div className={fieldGap}>
+              <div className={sp}>
+                <Label className={compact ? "text-xs" : ""}>Email</Label>
+                <Input type="email" placeholder="example@gmail.com"
+                  className={compact ? "h-9 text-sm" : ""}
+                  value={forgotForm.email}
+                  onChange={(e) => setForgotForm((p) => ({ ...p, email: e.target.value }))} />
+              </div>
+              <div className={sp}>
+                <Label className={compact ? "text-xs" : ""}>ফোন নম্বর</Label>
+                <Input type="tel" placeholder="01XXXXXXXXX"
+                  className={compact ? "h-9 text-sm" : ""}
+                  value={forgotForm.phone}
+                  onChange={(e) => setForgotForm((p) => ({ ...p, phone: e.target.value }))} />
+              </div>
+              <div className={sp}>
+                <Label className={compact ? "text-xs" : ""}>নতুন Password</Label>
+                <Input type="password" placeholder="কমপক্ষে ৮ অক্ষর"
+                  className={compact ? "h-9 text-sm" : ""}
+                  value={forgotForm.newPassword}
+                  onChange={(e) => setForgotForm((p) => ({ ...p, newPassword: e.target.value }))} />
+              </div>
+              <div className={sp}>
+                <Label className={compact ? "text-xs" : ""}>Password নিশ্চিত করুন</Label>
+                <Input type="password" placeholder="আবার লিখুন"
+                  className={compact ? "h-9 text-sm" : ""}
+                  value={forgotForm.confirmPassword}
+                  onChange={(e) => setForgotForm((p) => ({ ...p, confirmPassword: e.target.value }))} />
+              </div>
+            </div>
+            {forgotError && <p className="text-xs text-destructive">{forgotError}</p>}
+            <Button type="submit" className={`w-full ${compact ? "h-9 text-sm" : ""}`} disabled={forgotLoading}>
+              {forgotLoading ? "পরীক্ষা করা হচ্ছে..." : "Password পরিবর্তন করুন"}
+            </Button>
+            <p className={`text-center text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
+              <button type="button" onClick={closeForgot} className="text-primary font-medium hover:underline">
+                ← Login-এ ফিরে যান
+              </button>
+            </p>
+          </form>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       <div className={`flex bg-muted rounded-xl p-1 ${compact ? "mb-3" : "mb-7"}`}>
@@ -100,10 +225,15 @@ function AuthForm({
               </Button>
             )}
           </div>
-          <p className={`text-center text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
-            Don't have an account?{" "}
-            <button type="button" onClick={() => setTab("signup")} className="text-primary font-medium hover:underline">Sign up</button>
-          </p>
+          <div className={`flex flex-col items-center gap-1 ${compact ? "text-xs" : "text-sm"}`}>
+            <p className="text-muted-foreground">
+              Don't have an account?{" "}
+              <button type="button" onClick={() => setTab("signup")} className="text-primary font-medium hover:underline">Sign up</button>
+            </p>
+            <button type="button" onClick={() => setForgotStep("form")} className="text-muted-foreground hover:text-primary hover:underline transition-colors">
+              Forgot password?
+            </button>
+          </div>
         </form>
       )}
 
@@ -567,17 +697,19 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                  {/* Use password instead — same style as "Don't have an account?" */}
-                  <p className="text-center text-xs text-muted-foreground">
-                    Use password instead?{" "}
-                    <button
-                      type="button"
+                  {/* Use password / Forgot PIN */}
+                  <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground">
+                    <p>
+                      Use password instead?{" "}
+                      <button type="button" onClick={() => { setOverridePasswordMode(true); setPinError(""); }}
+                        className="text-primary font-medium hover:underline">Sign in</button>
+                    </p>
+                    <button type="button"
                       onClick={() => { setOverridePasswordMode(true); setPinError(""); }}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      Sign in
+                      className="hover:text-primary hover:underline transition-colors">
+                      Forgot PIN?
                     </button>
-                  </p>
+                  </div>
                 </form>
               ) : (
                 <>

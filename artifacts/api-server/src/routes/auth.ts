@@ -294,4 +294,38 @@ router.post("/auth/pin-login", async (req, res) => {
   res.json({ id: user.id, email: user.email, name: user.name, hasPinLogin: true, token });
 });
 
+// Forgot password: verify email + phone, then reset password
+router.post("/auth/reset-password", async (req, res) => {
+  const { email, phone, newPassword } = req.body;
+  if (!email || !phone || !newPassword) {
+    res.status(400).json({ error: "email, phone and newPassword required" });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+  if (!user) {
+    res.status(404).json({ error: "No account found with this email" });
+    return;
+  }
+
+  const userPhone = (user.phone ?? "").trim().replace(/\s+/g, "");
+  const inputPhone = phone.trim().replace(/\s+/g, "");
+  if (!userPhone || userPhone !== inputPhone) {
+    res.status(401).json({ error: "Phone number does not match our records" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await db.update(usersTable)
+    .set({ passwordHash, passwordChangedAt: new Date() })
+    .where(eq(usersTable.id, user.id));
+
+  logActivity(user.id, "password_reset", "Password reset via phone verification");
+  res.json({ ok: true });
+});
+
 export default router;
