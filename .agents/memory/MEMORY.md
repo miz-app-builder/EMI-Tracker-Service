@@ -1,2 +1,3 @@
 - [Custom JWT Auth](custom-jwt-auth.md) — Clerk removed; custom email+password auth with bcryptjs+jsonwebtoken, httpOnly cookie `emi_token`.
 - [DB Migration Pattern](db-migration-pattern.md) — drizzle-kit push needs TTY; use inline node script with pg client for schema changes in CI/non-TTY.
+- [Port & Workflow Config](port-workflow-config.md) — Frontend must be PORT=5000 (webview); Node 22 required; artifact workflows can't be deleted; fix for 3001/port conflicts.
