@@ -351,21 +351,23 @@ export default function LandingPage() {
           <div className="absolute top-1/2 -right-16 w-52 h-52 rounded-full bg-white/5" />
           <div className="absolute bottom-2 left-1/3 w-20 h-20 rounded-full bg-sidebar-primary/10" />
 
-          <div className="relative z-10 w-full">
-            {/* Logo row */}
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className={`rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-xl transition-all duration-300 ${tab === "signup" ? "w-8 h-8 text-base" : "w-11 h-11 text-xl"}`}>৳</div>
-              <span className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-base" : "text-xl"}`}>EMI Tracker</span>
-            </div>
-
-            {tab === "login" && (
+          <div className="relative z-10 w-full flex flex-col items-center text-center">
+            {tab === "signup" ? (
+              /* Signup: compact horizontal logo row */
+              <div className="flex items-center gap-2 w-full">
+                <div className="w-8 h-8 rounded-xl bg-sidebar-primary flex items-center justify-center text-white font-bold text-base shadow-lg">৳</div>
+                <span className="text-base font-bold text-sidebar-foreground tracking-tight">EMI Tracker</span>
+              </div>
+            ) : (
+              /* Login: centered stacked layout */
               <>
-                <h1 className="text-[2rem] font-extrabold text-sidebar-foreground leading-tight">
-                  All your installments,<br />
-                  <span className="text-sidebar-primary">in one place</span>
+                <div className="w-12 h-12 rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold text-2xl shadow-xl mb-1.5">৳</div>
+                <span className="text-base font-bold text-sidebar-foreground tracking-tight mb-2">EMI Tracker</span>
+                <h1 className="font-extrabold text-sidebar-foreground leading-tight whitespace-nowrap" style={{ fontSize: "clamp(0.95rem, 5.2vw, 1.4rem)" }}>
+                  All your installments, <span className="text-sidebar-primary">in one place</span>
                 </h1>
-                <p className="text-sidebar-foreground/55 text-[13px] mt-2 leading-relaxed max-w-xs">
-                  Track monthly installments, view outstanding balances, and stay on top of payments — all in one app.
+                <p className="text-sidebar-foreground/55 text-[11px] mt-1.5 leading-snug max-w-[260px]">
+                  Track installments, balances &amp; payments — all in one app.
                 </p>
               </>
             )}
