@@ -427,7 +427,7 @@ export default function ProfilePage() {
 
       {/* ── Export / Import card ── */}
       <Card>
-        <CardHeader className="pb-0">
+        <CardHeader className="p-4 md:p-6 space-y-0">
           <button
             className="flex w-full items-center justify-between md:cursor-default"
             onClick={() => { if (window.innerWidth < 768) toggleSection("data"); }}
@@ -618,7 +618,7 @@ export default function ProfilePage() {
 
       {/* ── Password card ── */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 md:p-6 space-y-0">
           <button
             className="flex w-full items-center justify-between md:cursor-default"
             onClick={() => { if (window.innerWidth < 768) toggleSection("password"); }}
@@ -849,7 +849,7 @@ function PinLoginCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => v
 
   return (
     <Card className="md:hidden">
-      <CardHeader>
+      <CardHeader className="p-4 space-y-0">
         <button
           className="flex w-full items-center justify-between"
           onClick={onToggle}
@@ -860,12 +860,10 @@ function PinLoginCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => v
           </CardTitle>
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </button>
-        <CardDescription className={`mt-0.5 ${isOpen ? "block" : "hidden"}`}>
-          Quick sign-in options for mobile
-        </CardDescription>
       </CardHeader>
 
-      <CardContent className={`space-y-3 ${isOpen ? "block" : "hidden"}`}>
+      <CardContent className={`space-y-3 pt-0 ${isOpen ? "block" : "hidden"}`}>
+        <p className="text-sm text-muted-foreground pb-2 border-b">Quick sign-in options for mobile</p>
 
         {/* ── PIN Login inner card ── */}
         <div className="border rounded-lg p-3 space-y-2">
@@ -984,7 +982,7 @@ function AutoLogoutCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 md:p-6 space-y-0">
         <button
           className="flex w-full items-center justify-between md:cursor-default"
           onClick={() => { if (window.innerWidth < 768) onToggle(); }}
@@ -995,7 +993,7 @@ function AutoLogoutCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
           </CardTitle>
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${isOpen ? "rotate-180" : ""}`} />
         </button>
-        <CardDescription className={`${isOpen ? "block" : "hidden"} md:block`}>
+        <CardDescription className={`mt-1.5 ${isOpen ? "block" : "hidden"} md:block`}>
           Automatically log out after a period of inactivity.
         </CardDescription>
       </CardHeader>
@@ -1092,23 +1090,35 @@ function SessionsCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => v
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 md:p-6 space-y-0">
         <button
           className="flex w-full items-center justify-between md:cursor-default"
           onClick={() => { if (window.innerWidth < 768) onToggle(); }}
         >
-          <div className="text-left">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Monitor className="h-4 w-4 text-primary" />
-              Active Sessions
-            </CardTitle>
-            <CardDescription className={`mt-1 ${isOpen ? "block" : "hidden"} md:block`}>
-              All active login sessions on your account across devices. Revoke any session to sign it out.
-            </CardDescription>
-          </div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Monitor className="h-4 w-4 text-primary" />
+            Active Sessions
+          </CardTitle>
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 shrink-0 ml-2 md:hidden ${isOpen ? "rotate-180" : ""}`} />
         </button>
-        <div className={`flex gap-2 flex-shrink-0 mt-2 ${isOpen ? "flex" : "hidden"} md:flex`}>
+        <div className={`mt-1.5 ${isOpen ? "block" : "hidden"} md:block`}>
+          <CardDescription>
+            All active login sessions on your account across devices. Revoke any session to sign it out.
+          </CardDescription>
+          <div className={`flex gap-2 mt-2 md:hidden`}>
+            <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={load} disabled={loading}>
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            {others.length > 0 && (
+              <Button size="sm" variant="destructive" className="gap-1.5 h-8" onClick={revokeOthers} disabled={revokingAll}>
+                {revokingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+                Sign out all others
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="hidden md:flex gap-2 mt-2">
           <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={load} disabled={loading}>
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
