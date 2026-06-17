@@ -365,7 +365,7 @@ export default function LandingPage() {
                     <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
                       <f.icon className="h-4 w-4 text-primary" />
                     </div>
-                    <span className="text-[10px] font-medium text-foreground leading-tight">{f.title}</span>
+                    <span className="text-[10px] font-medium text-foreground leading-tight break-words w-full">{f.title}</span>
                   </button>
                 ))}
               </div>
