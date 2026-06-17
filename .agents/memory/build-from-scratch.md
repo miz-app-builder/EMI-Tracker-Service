@@ -45,7 +45,9 @@ Do NOT add `PORT` to shared env vars — it would cause the artifact workflow to
 
 ---
 
-## Step 4 — Configure the two custom workflows
+## Step 4 — Configure the ONE custom workflow
+
+**⚠️ Only `EMI Tracker Frontend` needs to be created by the agent.** The API Server is handled automatically by Replit's artifact system (`artifacts/api-server: API Server` on port 8080). Do NOT create a custom `API Server` workflow — it will fail with `EADDRINUSE 8080`.
 
 ### 4a. EMI Tracker Frontend (webview, port 5000)
 
@@ -61,27 +63,6 @@ await configureWorkflow({
   waitForPort: 5000,
   outputType: "webview",
   isCanvasWorkflow: true
-});
-```
-
-### 4b. API Server (console, port 8080)
-
-```js
-await configureWorkflow({
-  name: "API Server",
-  command: "PORT=8080 pnpm --filter @workspace/api-server run dev",
-  waitForPort: 8080,
-  outputType: "console"
-});
-```
-
-### 4c. Project (run button — runs both)
-
-```js
-await configureWorkflow({
-  name: "Project",
-  command: "workflow.run EMI Tracker Frontend && workflow.run API Server",
-  outputType: "console"
 });
 ```
 
@@ -136,7 +117,8 @@ If `artifact:v3:default-emi-tracker-frontend` is blank → re-run step 4a.
 |---|---|---|
 | Canvas iframe blank | `isCanvasWorkflow: true` missing on `EMI Tracker Frontend` | Remove and recreate workflow (step 4a) |
 | `EADDRINUSE 5000` | Duplicate frontend workflow | Remove the duplicate, keep `EMI Tracker Frontend` |
-| `EADDRINUSE 8080` | Duplicate API workflow | Remove the duplicate, keep `API Server` |
+| `EADDRINUSE 8080` | Custom `API Server` workflow created — conflicts with artifact-managed one | `removeWorkflow({ name: "API Server" })` — do NOT create custom API Server workflow |
+| 502 on dev URL after fresh setup | Replit proxy timing issue — proxy hasn't registered new workflow yet | Restart `EMI Tracker Frontend` once: `restartWorkflow({ workflowName: "EMI Tracker Frontend" })` |
 | `BASE_PATH is required` / Vite crash | `BASE_PATH` missing from workflow command or shared env | Add `BASE_PATH=/` to workflow command AND shared env |
 | DB connection error | Missing/wrong `SUPABASE_DATABASE_URL` or missing `ssl` config | Check secret; `ssl: { rejectUnauthorized: false }` must stay in `lib/db/src/index.ts` |
 | `codegen` corrupts packages | Running codegen overwrites manually-edited files | NEVER run codegen; `packages/api-zod/` and `packages/api-client-react/` are manually maintained |
