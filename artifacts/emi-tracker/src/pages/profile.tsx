@@ -742,40 +742,40 @@ function PinSettingsCard() {
               )}
             </div>
 
-            {/* Biometric option — mobile only, only when PIN is set */}
-            {hasPin && (
-              <div className="md:hidden border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Fingerprint className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Biometric Login</span>
-                  </div>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                    {bioEnabled ? "On" : "Off"}
-                  </span>
+            {/* Biometric option — mobile only */}
+            <div className="md:hidden border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Biometric Login</span>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {bioSupported
-                    ? "Use fingerprint or Face ID instead of PIN to unlock the app."
-                    : "Your device or browser does not support biometric authentication."}
-                </p>
-                {bioMsg && (
-                  <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : bioMsg.includes("disabled") ? "text-muted-foreground" : "text-destructive"}`}>
-                    {bioMsg}
-                  </p>
-                )}
-                <Button
-                  size="sm"
-                  variant={bioEnabled ? "destructive" : "outline"}
-                  className="gap-2 w-full"
-                  onClick={handleBioToggle}
-                  disabled={bioLoading || !bioSupported}
-                >
-                  {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                  {bioEnabled ? "Disable Biometric" : "Enable Biometric"}
-                </Button>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                  {bioEnabled ? "On" : "Off"}
+                </span>
               </div>
-            )}
+              <p className="text-xs text-muted-foreground">
+                {!hasPin
+                  ? "PIN set করলে biometric login enable করা যাবে।"
+                  : !bioSupported
+                  ? "Your device or browser does not support biometric authentication."
+                  : "Use fingerprint or Face ID instead of PIN to unlock the app."}
+              </p>
+              {bioMsg && (
+                <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : bioMsg.includes("disabled") ? "text-muted-foreground" : "text-destructive"}`}>
+                  {bioMsg}
+                </p>
+              )}
+              <Button
+                size="sm"
+                variant={bioEnabled ? "destructive" : "outline"}
+                className="gap-2 w-full"
+                onClick={!hasPin ? () => { setMode("set"); setSuccess(""); } : handleBioToggle}
+                disabled={bioLoading || (!hasPin ? false : !bioSupported)}
+              >
+                {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                {!hasPin ? "Set PIN First" : bioEnabled ? "Disable Biometric" : "Enable Biometric"}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3 max-w-xs">
