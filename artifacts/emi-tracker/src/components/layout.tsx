@@ -232,37 +232,39 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Button>
             <NotificationBell />
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
-                    <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none">
-                  <User className="h-4 w-4" />
-                  <span className="truncate">{user?.email ?? ""}</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <Link href="/profile">
-                  <DropdownMenuItem className="gap-2 cursor-pointer">
-                    <Settings className="h-4 w-4" />
-                    Profile Settings
+            <div className="hidden md:block">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      {photoSrc && <AvatarImage src={photoSrc} alt={user?.name ?? "User"} />}
+                      <AvatarFallback className="bg-primary text-white text-xs font-bold">{initials}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem className="gap-2 text-muted-foreground pointer-events-none">
+                    <User className="h-4 w-4" />
+                    <span className="truncate">{user?.email ?? ""}</span>
                   </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-                  onClick={logout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuSeparator />
+                  <Link href="/profile">
+                    <DropdownMenuItem className="gap-2 cursor-pointer">
+                      <Settings className="h-4 w-4" />
+                      Profile Settings
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </header>
 
