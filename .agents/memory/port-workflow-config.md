@@ -40,12 +40,29 @@ await configureWorkflow({
 });
 ```
 
+## API Server — DO NOT create a custom workflow
+
+`artifacts/api-server: API Server` (Replit-managed) is automatically started by Replit when artifacts are registered and runs on port 8080. Creating a custom `API Server` workflow causes `EADDRINUSE 8080`. **Only one agent-managed workflow is needed: `EMI Tracker Frontend`.** If a custom `API Server` workflow was accidentally created, remove it:
+
+```js
+await removeWorkflow({ name: "API Server" });
+```
+
+## 502 error on fresh setup
+
+After a fresh clone + workflow configuration, opening the dev URL immediately can return HTTP 502. This is a timing issue — the Replit proxy hasn't fully registered the new workflow connection yet. **Fix: restart `EMI Tracker Frontend` once**, then the URL works.
+
+```js
+await restartWorkflow({ workflowName: "EMI Tracker Frontend" });
+```
+
 ## Symptom → Fix
 
 | Symptom | Fix |
 |---|---|
 | EADDRINUSE 5000 | Two frontend workflows running. Remove the duplicate. |
-| EADDRINUSE 8080 | Two API workflows running. Remove the duplicate. |
+| EADDRINUSE 8080 | Custom `API Server` workflow conflicts with artifact-managed one. Remove custom: `removeWorkflow({ name: "API Server" })` |
+| 502 on dev URL after fresh setup | Replit proxy timing issue. Restart `EMI Tracker Frontend` once. |
 | Preview not visible | `EMI Tracker Frontend` must be PORT=5000. Check workflow command. |
 | PORT env var error | Workflow command missing `PORT=5000` or `BASE_PATH=/`. |
 | Canvas iframe blank (`artifact:v3:default-emi-tracker-frontend`) | `isCanvasWorkflow: true` missing. Remove and recreate the workflow with that flag. |
