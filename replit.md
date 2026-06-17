@@ -80,7 +80,7 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
    await removeWorkflow({ name: "EMI Tracker Frontend" });
    await configureWorkflow({ name: "EMI Tracker Frontend", command: "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev", waitForPort: 5000, outputType: "webview", isCanvasWorkflow: true });
    ```
-3. **Do NOT create a second workflow for the frontend or API** — duplicate workflows cause `EADDRINUSE` port conflicts
+3. **Do NOT create a custom `API Server` workflow** — `artifacts/api-server: API Server` is already managed by Replit on port 8080. Creating a custom one causes `EADDRINUSE 8080`. If accidentally created, remove it: `removeWorkflow({ name: "API Server" })`
 4. **`PORT` must NOT be added to shared env vars** — it would cause the artifact workflow to also grab port 5000 and conflict
 5. **`BASE_PATH=/` IS in shared env vars** — do not delete it
 6. **Artifact-managed workflows (`artifacts/*`) cannot be deleted or reconfigured** — they are Replit-controlled
@@ -88,7 +88,8 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 
 ### Symptom → Fix:
 - `EADDRINUSE 5000`: two frontend workflows running. Remove the duplicate, keep `EMI Tracker Frontend`.
-- `EADDRINUSE 8080`: two API workflows running. Remove the duplicate, keep `artifacts/api-server: API Server`.
+- `EADDRINUSE 8080`: custom `API Server` workflow created — remove it: `removeWorkflow({ name: "API Server" })`. Only `artifacts/api-server: API Server` (Replit-managed) should run on 8080.
+- **502 on dev URL after fresh setup**: Replit proxy timing issue — the proxy hasn't registered the new workflow yet. Fix: restart `EMI Tracker Frontend` once.
 - App not visible in preview pane: `EMI Tracker Frontend` must be on port 5000. Check workflow command.
 - `PORT environment variable is required`: `BASE_PATH` or `PORT` missing from workflow command.
 - **Canvas `artifact:v3:default-emi-tracker-frontend` blank**: `EMI Tracker Frontend` is missing `isCanvasWorkflow: true`. Remove and recreate with that flag (see rule 2 above).
