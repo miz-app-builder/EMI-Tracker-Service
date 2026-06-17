@@ -16,6 +16,6 @@ export const pool = new Pool({
   connectionString,
   ssl: process.env.SUPABASE_DATABASE_URL ? { rejectUnauthorized: false } : undefined,
 });
-export const db = drizzle(pool, { schema });
+export const db = drizzle(pool, { schema, prepare: false });
 
 export * from "./schema";
