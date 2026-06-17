@@ -22,14 +22,14 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   refetch: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   refetch: async () => {},
-  logout: async () => {},
+  logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -51,10 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function logout() {
-    try {
-      await authFetch(`${basePath}/api/auth/logout`, { method: "POST" });
-    } catch {}
+  function logout() {
+    authFetch(`${basePath}/api/auth/logout`, { method: "POST" }).catch(() => {});
     clearToken();
     document.documentElement.classList.remove("dark");
     localStorage.removeItem("emi-theme");
