@@ -287,26 +287,31 @@ export default function LandingPage() {
 
       {/* ───── MOBILE LAYOUT ───── */}
       <div className="md:hidden flex flex-col min-h-screen w-full">
-        {/* Top hero panel */}
-        <div className="relative bg-sidebar flex flex-col items-center justify-end px-6 pt-14 pb-10 overflow-hidden" style={{ minHeight: "40%" }}>
+        {/* Top hero panel — smaller when signup is active */}
+        <div
+          className="relative bg-sidebar flex flex-col items-center justify-end px-6 overflow-hidden transition-all duration-300"
+          style={{ minHeight: tab === "signup" ? "22%" : "40%", paddingTop: tab === "signup" ? "2.5rem" : "3.5rem", paddingBottom: tab === "signup" ? "1.5rem" : "2.5rem" }}
+        >
           <div className="absolute -top-16 -left-16 w-52 h-52 rounded-full bg-sidebar-primary/20" />
           <div className="absolute -top-8 right-4 w-32 h-32 rounded-full bg-sidebar-primary/15" />
           <div className="absolute bottom-0 -right-10 w-40 h-40 rounded-full bg-sidebar-primary/10" />
 
-          <div className="relative z-10 flex flex-col items-center gap-3 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold text-2xl shadow-xl">৳</div>
+          <div className="relative z-10 flex flex-col items-center gap-2 text-center">
+            <div className={`rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-xl transition-all duration-300 ${tab === "signup" ? "w-10 h-10 text-lg" : "w-14 h-14 text-2xl"}`}>৳</div>
             <div>
-              <h1 className="text-2xl font-bold text-sidebar-foreground tracking-tight">EMI Tracker</h1>
-              <p className="text-sidebar-foreground/60 text-sm mt-1">সব কিস্তি, এক জায়গায়</p>
+              <h1 className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-lg" : "text-2xl"}`}>EMI Tracker</h1>
+              {tab === "login" && <p className="text-sidebar-foreground/60 text-sm mt-1">সব কিস্তি, এক জায়গায়</p>}
             </div>
-            <div className="flex gap-6 mt-3">
-              {[{ label: "Active Users", value: "100+" }, { label: "EMIs Tracked", value: "500+" }].map((s) => (
-                <div key={s.label} className="text-center">
-                  <p className="text-sidebar-primary font-bold text-base">{s.value}</p>
-                  <p className="text-sidebar-foreground/50 text-[11px]">{s.label}</p>
-                </div>
-              ))}
-            </div>
+            {tab === "login" && (
+              <div className="flex gap-6 mt-2">
+                {[{ label: "Active Users", value: "100+" }, { label: "EMIs Tracked", value: "500+" }].map((s) => (
+                  <div key={s.label} className="text-center">
+                    <p className="text-sidebar-primary font-bold text-base">{s.value}</p>
+                    <p className="text-sidebar-foreground/50 text-[11px]">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
