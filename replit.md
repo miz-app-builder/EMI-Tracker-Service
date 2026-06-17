@@ -13,12 +13,12 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
+- pnpm workspaces, Node.js 22, TypeScript 5.9
 - API: Express 5 + custom JWT auth (bcryptjs + jsonwebtoken)
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - Build: esbuild (CJS bundle)
-- Frontend: React + Vite, Tailwind v4, shadcn/ui, wouter routing
+- Frontend: React + Vite, Tailwind v4, shadcn/ui (trimmed), wouter routing
 - Auth: Custom server-side auth (email + password, JWT in httpOnly cookie)
 
 ## Where things live
@@ -28,6 +28,7 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 - Auth routes: `artifacts/api-server/src/routes/auth.ts`
 - Auth middleware: `artifacts/api-server/src/middlewares/requireAuth.ts`
 - Frontend pages: `artifacts/emi-tracker/src/pages/`
+- Frontend UI components: `artifacts/emi-tracker/src/components/ui/` (trimmed — only what's in use)
 - Auth context: `artifacts/emi-tracker/src/contexts/AuthContext.tsx`
 - Theme/CSS: `artifacts/emi-tracker/src/index.css`
 
@@ -41,9 +42,10 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 - Home route (`/`) shows landing page for unauthenticated users; redirects to `/dashboard` for authenticated users.
 - `dueDayOfMonth` field on EMI orders: if set, due date snaps to that day of the month; otherwise falls back to purchase day-of-month.
 - `discount` field on EMI orders: `effectivePrice = totalPrice - discount`; monthly installment calculated from effective price.
-- Tailwind v4 with `@tailwindcss/vite`; `@layer theme, base, components, utilities` (no `clerk` layer needed).
+- Tailwind v4 with `@tailwindcss/vite`; `@layer theme, base, components, utilities`.
 - PIN Login: `pin_hash` column in `users` table; `hasPinLogin` returned by `/api/auth/me`; `emi_pin_login_active` + `emi_last_email` in localStorage for mobile PIN keypad.
 - App lock (PinLockScreen + usePinLock) was removed; replaced with server-side PIN Login.
+- Frontend proxies `/api` → `http://localhost:8080` via Vite proxy config — do NOT change API port from 8080.
 
 ## Product
 
@@ -56,21 +58,43 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- UI language: Bengali (বাংলা)
+- Keep the project lean — remove unused packages and components when found
 
-## Gotchas
+## ⚠️ Workflow & Port Configuration — READ BEFORE TOUCHING WORKFLOWS
 
-- Generated files (`packages/api-zod/`, `packages/api-client-react/`) are manually edited — do NOT run `codegen` unless you intend to overwrite manual changes.
-- DB schema was migrated manually (SQL) because drizzle-kit push requires TTY for destructive changes. Use the node migration script pattern if schema changes are needed.
-- `SUPABASE_DATABASE_URL` takes precedence over `DATABASE_URL`; Supabase connections require `ssl: { rejectUnauthorized: false }`.
+### Running workflows (do NOT remove or duplicate):
+| Workflow | Port | Role |
+|---|---|---|
+| `EMI Tracker Frontend` | **5000** | Webview entry point — custom workflow, PORT=5000 hardcoded in command |
+| `artifacts/api-server: API Server` | **8080** | API server — artifact-managed, Replit injects PORT |
+| `artifacts/emi-tracker: web` | ~19185 | Artifact workflow — runs alongside, ignore if it fails |
+| `artifacts/mockup-sandbox: Component Preview Server` | 8081 | Canvas tool — artifact-managed |
 
-## Workflow & Port Configuration (IMPORTANT)
+### Critical rules:
+1. **`EMI Tracker Frontend` command must be:** `PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev`
+   - `PORT=5000` is the Replit webview port — NEVER change this
+   - `BASE_PATH=/` is required by `vite.config.ts` — NEVER omit this
+2. **Do NOT create a second workflow for the frontend or API** — duplicate workflows cause `EADDRINUSE` port conflicts
+3. **`PORT` must NOT be added to shared env vars** — it would cause the artifact workflow to also grab port 5000 and conflict
+4. **`BASE_PATH=/` IS in shared env vars** — do not delete it
+5. **Artifact-managed workflows (`artifacts/*`) cannot be deleted or reconfigured** — they are Replit-controlled
+6. **Node.js version must be 22** (not 20, not 24) — `@supabase/supabase-js` requires native WebSocket available in Node 22+
 
-- **Node.js version: 22** (not 20) — required for native WebSocket support used by `@supabase/supabase-js`. Do NOT downgrade.
-- **Frontend workflow**: `artifacts/emi-tracker: web` — artifact-managed, runs `pnpm --filter @workspace/emi-tracker run dev`, Replit injects PORT and BASE_PATH automatically.
-- **API workflow**: `artifacts/api-server: API Server` — artifact-managed, runs `pnpm --filter @workspace/api-server run dev` on port 8080.
-- **`BASE_PATH=/`** is set as a shared env var — required by `vite.config.ts`, do not remove.
-- Replit artifact-managed workflows (`artifacts/emi-tracker: web`, `artifacts/api-server: API Server`, `artifacts/mockup-sandbox: Component Preview Server`) **cannot be deleted or reconfigured**. Do NOT create custom duplicate workflows for these — they will conflict on the same ports and cause EADDRINUSE failures.
+### Symptom → Fix:
+- `EADDRINUSE 5000`: two frontend workflows running. Remove the duplicate, keep `EMI Tracker Frontend`.
+- `EADDRINUSE 8080`: two API workflows running. Remove the duplicate, keep `artifacts/api-server: API Server`.
+- App not visible in preview pane: `EMI Tracker Frontend` must be on port 5000. Check workflow command.
+- `PORT environment variable is required`: `BASE_PATH` or `PORT` missing from workflow command.
+
+## ⚠️ Gotchas — READ BEFORE MAKING CHANGES
+
+- **Generated files** (`packages/api-zod/`, `packages/api-client-react/`) are manually edited — do NOT run `codegen`, it will overwrite manual changes.
+- **DB schema changes**: drizzle-kit push requires TTY for destructive changes. Use the inline node script pattern with pg client instead.
+- **`SUPABASE_DATABASE_URL` takes precedence** over `DATABASE_URL`; Supabase connections require `ssl: { rejectUnauthorized: false }`.
+- **shadcn/ui components**: Only the components currently in `artifacts/emi-tracker/src/components/ui/` are kept. Do NOT add new shadcn components without checking if they're actually needed. The following have been intentionally removed: accordion, alert, alert-dialog, aspect-ratio, breadcrumb, button-group, calendar, carousel, chart, checkbox, collapsible, command, context-menu, drawer, empty, field, form, hover-card, input-group, item, kbd, menubar, navigation-menu, pagination, progress, radio-group, resizable, scroll-area, sheet, sidebar, sonner, spinner, switch, tabs, toggle-group.
+- **Typecheck errors** for `@workspace/api-client-react` (TS6305 "output file not built") and implicit `any` (TS7006) are pre-existing and do not affect the running app — Vite ignores them.
+- **`framer-motion`, `react-hook-form`, `vaul`, `cmdk`, `react-day-picker`, `embla-carousel-react`, `react-resizable-panels`, `sonner`, `react-icons`** have been removed — do NOT re-add unless a feature explicitly needs them.
 
 ## Pointers
 
