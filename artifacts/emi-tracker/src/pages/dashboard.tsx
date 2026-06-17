@@ -65,7 +65,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-primary/5 border-primary/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active EMIs</CardTitle>
@@ -130,51 +130,12 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Link>
-
-        <Card className="col-span-2 lg:col-span-4">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">By Shop</CardTitle>
-            <CardDescription className="text-xs">Outstanding and paid amounts per shop.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingStats ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
-              </div>
-            ) : shopStats && shopStats.filter(s => s.totalOrders > 0).length > 0 ? (
-              <div className="space-y-3">
-                {shopStats.filter(s => s.totalOrders > 0).map((stat) => (
-                  <div key={stat.shopId} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium truncate">{stat.shopName}</span>
-                      <span className="text-muted-foreground ml-2 shrink-0">{stat.totalOrders} EMI(s)</span>
-                    </div>
-                    <div className="flex h-2 overflow-hidden rounded-full bg-secondary">
-                      {stat.totalPaid > 0 && stat.totalDue + stat.totalPaid > 0 && (
-                        <div
-                          className="bg-primary"
-                          style={{ width: `${(stat.totalPaid / (stat.totalDue + stat.totalPaid)) * 100}%` }}
-                        />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Paid: {formatCurrency(stat.totalPaid)}</span>
-                      <span>Left: {formatCurrency(stat.totalDue)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground text-center py-2">No shop data.</p>
-            )}
-          </CardContent>
-        </Card>
-
       </div>
 
       <SpendingTrendChart />
 
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Due This Month</CardTitle>
             <CardDescription>EMI payments pending in the current month.</CardDescription>
@@ -251,6 +212,47 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>By Shop</CardTitle>
+            <CardDescription>Outstanding and paid amounts per shop.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingStats ? (
+              <div className="space-y-4">
+                {[1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+              </div>
+            ) : shopStats && shopStats.length > 0 ? (
+              <div className="space-y-6">
+                {shopStats.filter(s => s.totalOrders > 0).map((stat) => (
+                  <div key={stat.shopId} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{stat.shopName}</span>
+                      <span className="text-muted-foreground">{stat.totalOrders} EMI(s)</span>
+                    </div>
+                    <div className="flex h-4 overflow-hidden rounded-full bg-secondary">
+                      {stat.totalPaid > 0 && stat.totalDue + stat.totalPaid > 0 && (
+                        <div
+                          className="bg-primary"
+                          style={{ width: `${(stat.totalPaid / (stat.totalDue + stat.totalPaid)) * 100}%` }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Paid: {formatCurrency(stat.totalPaid)}</span>
+                      <span>Remaining: {formatCurrency(stat.totalDue)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No shop data available.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {quickPayOrder && (
         <QuickPayDialog
