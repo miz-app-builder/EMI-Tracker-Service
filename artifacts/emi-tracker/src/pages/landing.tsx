@@ -24,6 +24,7 @@ function AuthForm({
   loginForm, setLoginForm, loginError, loginLoading, handleLogin,
   signupForm, setSignupForm, signupError, signupLoading, handleSignup,
   idPrefix,
+  compact = false,
 }: {
   tab: Tab; setTab: (t: Tab) => void;
   loginForm: { email: string; password: string };
@@ -35,49 +36,48 @@ function AuthForm({
   signupError: string; signupLoading: boolean;
   handleSignup: (e: React.FormEvent) => void;
   idPrefix: string;
+  compact?: boolean;
 }) {
+  const sp = compact ? "space-y-1" : "space-y-1.5";
+  const fieldGap = compact ? "space-y-2" : "space-y-4";
   return (
     <>
-      <div className="flex bg-muted rounded-xl p-1 mb-7">
-        <button
-          type="button"
-          onClick={() => setTab("login")}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === "login" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-        >
+      <div className={`flex bg-muted rounded-xl p-1 ${compact ? "mb-3" : "mb-7"}`}>
+        <button type="button" onClick={() => setTab("login")}
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === "login" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
           Login
         </button>
-        <button
-          type="button"
-          onClick={() => setTab("signup")}
-          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === "signup" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-        >
+        <button type="button" onClick={() => setTab("signup")}
+          className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${tab === "signup" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
           Sign Up
         </button>
       </div>
 
       {tab === "login" && (
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-1.5">
-            <p className="text-xl font-bold text-foreground">Welcome back!</p>
-            <p className="text-sm text-muted-foreground">Sign in to your account</p>
+        <form onSubmit={handleLogin} className={compact ? "space-y-3" : "space-y-4"}>
+          <div className={sp}>
+            <p className={`font-bold text-foreground ${compact ? "text-lg" : "text-xl"}`}>Welcome back!</p>
+            {!compact && <p className="text-sm text-muted-foreground">Sign in to your account</p>}
           </div>
-          <div className="space-y-4 pt-1">
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-login-email`}>Email</Label>
+          <div className={fieldGap}>
+            <div className={sp}>
+              <Label htmlFor={`${idPrefix}-login-email`} className={compact ? "text-xs" : ""}>Email</Label>
               <Input id={`${idPrefix}-login-email`} type="email" placeholder="example@gmail.com"
+                className={compact ? "h-9 text-sm" : ""}
                 value={loginForm.email} onChange={(e) => setLoginForm((p) => ({ ...p, email: e.target.value }))} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-login-password`}>Password</Label>
+            <div className={sp}>
+              <Label htmlFor={`${idPrefix}-login-password`} className={compact ? "text-xs" : ""}>Password</Label>
               <Input id={`${idPrefix}-login-password`} type="password" placeholder="Your password"
+                className={compact ? "h-9 text-sm" : ""}
                 value={loginForm.password} onChange={(e) => setLoginForm((p) => ({ ...p, password: e.target.value }))} />
             </div>
           </div>
-          {loginError && <p className="text-sm text-destructive">{loginError}</p>}
-          <Button type="submit" className="w-full" disabled={loginLoading}>
+          {loginError && <p className="text-xs text-destructive">{loginError}</p>}
+          <Button type="submit" className={`w-full ${compact ? "h-9 text-sm" : ""}`} disabled={loginLoading}>
             {loginLoading ? "Signing in..." : "Sign In"}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
+          <p className={`text-center text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
             Don't have an account?{" "}
             <button type="button" onClick={() => setTab("signup")} className="text-primary font-medium hover:underline">Sign up</button>
           </p>
@@ -85,50 +85,56 @@ function AuthForm({
       )}
 
       {tab === "signup" && (
-        <form onSubmit={handleSignup} className="space-y-3">
-          <div className="space-y-1.5">
-            <p className="text-xl font-bold text-foreground">Create Account</p>
-            <p className="text-sm text-muted-foreground">Join EMI Tracker</p>
+        <form onSubmit={handleSignup} className={compact ? "space-y-2" : "space-y-3"}>
+          <div className={sp}>
+            <p className={`font-bold text-foreground ${compact ? "text-base" : "text-xl"}`}>Create Account</p>
+            {!compact && <p className="text-sm text-muted-foreground">Join EMI Tracker</p>}
           </div>
-          <div className="space-y-3 pt-1">
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-su-name`}>Full Name <span className="text-destructive">*</span></Label>
+          <div className={compact ? "space-y-2" : "space-y-3"}>
+            <div className={sp}>
+              <Label htmlFor={`${idPrefix}-su-name`} className={compact ? "text-xs" : ""}>Full Name <span className="text-destructive">*</span></Label>
               <Input id={`${idPrefix}-su-name`} placeholder="e.g. John Smith" value={signupForm.name}
+                className={compact ? "h-9 text-sm" : ""}
                 onChange={(e) => setSignupForm((p) => ({ ...p, name: e.target.value }))} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-su-email`}>Email <span className="text-destructive">*</span></Label>
+            <div className={sp}>
+              <Label htmlFor={`${idPrefix}-su-email`} className={compact ? "text-xs" : ""}>Email <span className="text-destructive">*</span></Label>
               <Input id={`${idPrefix}-su-email`} type="email" placeholder="example@gmail.com" value={signupForm.email}
+                className={compact ? "h-9 text-sm" : ""}
                 onChange={(e) => setSignupForm((p) => ({ ...p, email: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${idPrefix}-su-phone`}>Phone</Label>
+            <div className={`grid grid-cols-2 ${compact ? "gap-2" : "gap-3"}`}>
+              <div className={sp}>
+                <Label htmlFor={`${idPrefix}-su-phone`} className={compact ? "text-xs" : ""}>Phone</Label>
                 <Input id={`${idPrefix}-su-phone`} type="tel" placeholder="01XXXXXXXXX" value={signupForm.phone}
+                  className={compact ? "h-9 text-sm" : ""}
                   onChange={(e) => setSignupForm((p) => ({ ...p, phone: e.target.value }))} />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${idPrefix}-su-address`}>Address</Label>
+              <div className={sp}>
+                <Label htmlFor={`${idPrefix}-su-address`} className={compact ? "text-xs" : ""}>Address</Label>
                 <Input id={`${idPrefix}-su-address`} placeholder="City" value={signupForm.address}
+                  className={compact ? "h-9 text-sm" : ""}
                   onChange={(e) => setSignupForm((p) => ({ ...p, address: e.target.value }))} />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-su-pass`}>Password <span className="text-destructive">*</span></Label>
+            <div className={sp}>
+              <Label htmlFor={`${idPrefix}-su-pass`} className={compact ? "text-xs" : ""}>Password <span className="text-destructive">*</span></Label>
               <Input id={`${idPrefix}-su-pass`} type="password" placeholder="At least 8 characters" value={signupForm.password}
+                className={compact ? "h-9 text-sm" : ""}
                 onChange={(e) => setSignupForm((p) => ({ ...p, password: e.target.value }))} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-su-confirm`}>Confirm Password <span className="text-destructive">*</span></Label>
+            <div className={sp}>
+              <Label htmlFor={`${idPrefix}-su-confirm`} className={compact ? "text-xs" : ""}>Confirm Password <span className="text-destructive">*</span></Label>
               <Input id={`${idPrefix}-su-confirm`} type="password" placeholder="Re-enter password" value={signupForm.confirmPassword}
+                className={compact ? "h-9 text-sm" : ""}
                 onChange={(e) => setSignupForm((p) => ({ ...p, confirmPassword: e.target.value }))} />
             </div>
           </div>
-          {signupError && <p className="text-sm text-destructive">{signupError}</p>}
-          <Button type="submit" className="w-full" disabled={signupLoading}>
+          {signupError && <p className="text-xs text-destructive">{signupError}</p>}
+          <Button type="submit" className={`w-full ${compact ? "h-9 text-sm" : ""}`} disabled={signupLoading}>
             {signupLoading ? "Creating account..." : "Create Account"}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
+          <p className={`text-center text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
             Already have an account?{" "}
             <button type="button" onClick={() => setTab("login")} className="text-primary font-medium hover:underline">Sign in</button>
           </p>
@@ -315,11 +321,16 @@ export default function LandingPage() {
       )}
 
       {/* ───── MOBILE LAYOUT ───── */}
-      <div className="md:hidden flex flex-col min-h-screen w-full">
-        {/* Top hero panel — smaller when signup is active */}
+      <div className="md:hidden flex flex-col w-full overflow-hidden" style={{ height: "100dvh" }}>
+
+        {/* Hero panel */}
         <div
-          className="relative bg-sidebar flex flex-col justify-start px-6 overflow-hidden transition-all duration-500"
-          style={{ minHeight: tab === "signup" ? "20%" : "42%", paddingTop: "env(safe-area-inset-top, 2.5rem)", paddingBottom: tab === "signup" ? "1.2rem" : "2.5rem" }}
+          className="relative bg-sidebar flex-shrink-0 flex flex-col justify-start px-6 overflow-hidden transition-all duration-500"
+          style={{
+            height: tab === "signup" ? "88px" : "42%",
+            paddingTop: tab === "signup" ? "1rem" : "2.75rem",
+            paddingBottom: tab === "signup" ? "0" : "2rem",
+          }}
         >
           {/* Decorative circles */}
           <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-sidebar-primary/25" />
@@ -327,9 +338,9 @@ export default function LandingPage() {
           <div className="absolute top-1/2 -right-16 w-52 h-52 rounded-full bg-white/5" />
           <div className="absolute bottom-2 left-1/3 w-20 h-20 rounded-full bg-sidebar-primary/10" />
 
-          <div className="relative z-10 w-full pt-10">
+          <div className="relative z-10 w-full">
             {/* Logo row */}
-            <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex items-center gap-2.5 mb-3">
               <div className={`rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-xl transition-all duration-300 ${tab === "signup" ? "w-8 h-8 text-base" : "w-11 h-11 text-xl"}`}>৳</div>
               <span className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-base" : "text-xl"}`}>EMI Tracker</span>
             </div>
@@ -340,7 +351,7 @@ export default function LandingPage() {
                   All your installments,<br />
                   <span className="text-sidebar-primary">in one place</span>
                 </h1>
-                <p className="text-sidebar-foreground/55 text-[13px] mt-2.5 leading-relaxed max-w-xs">
+                <p className="text-sidebar-foreground/55 text-[13px] mt-2 leading-relaxed max-w-xs">
                   Track monthly installments, view outstanding balances, and stay on top of payments — all in one app.
                 </p>
               </>
@@ -348,47 +359,52 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Form card — rounded top sheet */}
-        <div className="flex-1 bg-background rounded-t-3xl -mt-5 relative z-10 px-6 pt-7 pb-10 overflow-auto hide-scrollbar">
-          <div className="w-full max-w-sm mx-auto">
-            <AuthForm {...formProps} idPrefix="m" />
+        {/* Form card — fills remaining height, no scroll */}
+        <div className="flex-1 bg-background rounded-t-3xl -mt-5 relative z-10 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col px-6 pt-6 pb-4 overflow-hidden">
+            <div className="w-full max-w-sm mx-auto flex flex-col flex-1 overflow-hidden">
 
-            {/* Features row */}
-            <div className="mt-8 pt-6 border-t border-border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Features</p>
-              <div className="flex gap-2">
-                {features.map((f) => (
-                  <button
-                    key={f.title}
-                    onClick={() => setSelectedFeature(f)}
-                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center flex-1 min-w-0"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-                      <f.icon className="h-4 w-4 text-primary" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+              <AuthForm {...formProps} idPrefix="m" compact />
 
-            {/* Stats + footer */}
-            <div className="mt-5 pt-4 border-t border-border">
-              <div className="flex justify-center gap-8">
-                {[
-                  { label: "Active Users", value: "100+" },
-                  { label: "EMIs Tracked", value: "500+" },
-                  { label: "Smart Savings", value: "100%" },
-                ].map((s) => (
-                  <div key={s.label} className="text-center">
-                    <p className="text-primary font-bold text-sm">{s.value}</p>
-                    <p className="text-muted-foreground text-[10px]">{s.label}</p>
+              {/* Features + Stats — only on login tab */}
+              {tab === "login" && (
+                <div className="mt-auto pt-3 space-y-3">
+                  {/* Features row */}
+                  <div className="flex gap-2 pt-3 border-t border-border">
+                    {features.map((f) => (
+                      <button
+                        key={f.title}
+                        onClick={() => setSelectedFeature(f)}
+                        className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center flex-1 min-w-0"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                          <f.icon className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <p className="text-muted-foreground/40 text-[10px] mt-3 text-center">© {new Date().getFullYear()} EMI Tracker</p>
+
+                  {/* Stats */}
+                  <div className="flex justify-center gap-6 pt-3 border-t border-border">
+                    {[
+                      { label: "Active Users", value: "100+" },
+                      { label: "EMIs Tracked", value: "500+" },
+                      { label: "Smart Savings", value: "100%" },
+                    ].map((s) => (
+                      <div key={s.label} className="text-center">
+                        <p className="text-primary font-bold text-xs">{s.value}</p>
+                        <p className="text-muted-foreground text-[10px]">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground/40 text-[10px] text-center">© {new Date().getFullYear()} EMI Tracker</p>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
+
       </div>
 
     </div>
