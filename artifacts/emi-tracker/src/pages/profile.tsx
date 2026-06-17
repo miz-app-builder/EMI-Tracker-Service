@@ -432,7 +432,10 @@ export default function ProfilePage() {
             className="flex w-full items-center justify-between md:cursor-default"
             onClick={() => { if (window.innerWidth < 768) toggleSection("data"); }}
           >
-            <CardTitle className="text-base">Data Management</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Download className="h-4 w-4 text-primary" />
+              Data Management
+            </CardTitle>
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${openSection === "data" ? "rotate-180" : ""}`} />
           </button>
           <div className={`flex rounded-lg border border-border overflow-hidden w-fit mt-3 ${openSection === "data" ? "flex" : "hidden"} md:flex`}>
@@ -620,7 +623,10 @@ export default function ProfilePage() {
             className="flex w-full items-center justify-between md:cursor-default"
             onClick={() => { if (window.innerWidth < 768) toggleSection("password"); }}
           >
-            <CardTitle className="text-base">Change Password</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-primary" />
+              Change Password
+            </CardTitle>
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${openSection === "password" ? "rotate-180" : ""}`} />
           </button>
         </CardHeader>
@@ -854,7 +860,7 @@ function PinLoginCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => v
           </CardTitle>
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </button>
-        <CardDescription className="mt-0.5">
+        <CardDescription className={`mt-0.5 ${isOpen ? "block" : "hidden"}`}>
           Quick sign-in options for mobile
         </CardDescription>
       </CardHeader>
@@ -989,7 +995,7 @@ function AutoLogoutCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () =>
           </CardTitle>
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${isOpen ? "rotate-180" : ""}`} />
         </button>
-        <CardDescription>
+        <CardDescription className={`${isOpen ? "block" : "hidden"} md:block`}>
           Automatically log out after a period of inactivity.
         </CardDescription>
       </CardHeader>
@@ -1096,7 +1102,7 @@ function SessionsCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => v
               <Monitor className="h-4 w-4 text-primary" />
               Active Sessions
             </CardTitle>
-            <CardDescription className="mt-1">
+            <CardDescription className={`mt-1 ${isOpen ? "block" : "hidden"} md:block`}>
               All active login sessions on your account across devices. Revoke any session to sign it out.
             </CardDescription>
           </div>
