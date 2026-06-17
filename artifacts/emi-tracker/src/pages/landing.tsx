@@ -383,7 +383,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <p className="text-muted-foreground/50 text-[10px] mt-4">© {new Date().getFullYear()} EMI Tracker</p>
+            <p className="text-muted-foreground/50 text-[10px] mt-4 text-center">© {new Date().getFullYear()} EMI Tracker</p>
           </div>
         </div>
       </div>
