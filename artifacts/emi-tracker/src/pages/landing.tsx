@@ -296,21 +296,23 @@ export default function LandingPage() {
           <div className="absolute -top-8 right-4 w-32 h-32 rounded-full bg-sidebar-primary/15" />
           <div className="absolute bottom-0 -right-10 w-40 h-40 rounded-full bg-sidebar-primary/10" />
 
-          <div className="relative z-10 flex flex-col items-center gap-2 text-center">
-            <div className={`rounded-2xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-xl transition-all duration-300 ${tab === "signup" ? "w-10 h-10 text-lg" : "w-14 h-14 text-2xl"}`}>৳</div>
-            <div>
-              <h1 className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-lg" : "text-2xl"}`}>EMI Tracker</h1>
-              {tab === "login" && <p className="text-sidebar-foreground/60 text-sm mt-1">সব কিস্তি, এক জায়গায়</p>}
+          <div className="relative z-10 w-full">
+            {/* Logo row */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`rounded-xl bg-sidebar-primary flex items-center justify-center text-white font-bold shadow-lg transition-all duration-300 ${tab === "signup" ? "w-8 h-8 text-base" : "w-10 h-10 text-lg"}`}>৳</div>
+              <span className={`font-bold text-sidebar-foreground tracking-tight transition-all duration-300 ${tab === "signup" ? "text-base" : "text-lg"}`}>EMI Tracker</span>
             </div>
+
             {tab === "login" && (
-              <div className="flex gap-6 mt-2">
-                {[{ label: "Active Users", value: "100+" }, { label: "EMIs Tracked", value: "500+" }].map((s) => (
-                  <div key={s.label} className="text-center">
-                    <p className="text-sidebar-primary font-bold text-base">{s.value}</p>
-                    <p className="text-sidebar-foreground/50 text-[11px]">{s.label}</p>
-                  </div>
-                ))}
-              </div>
+              <>
+                <h1 className="text-3xl font-bold text-sidebar-foreground leading-snug">
+                  All your installments,<br />
+                  <span className="text-sidebar-primary">in one place</span>
+                </h1>
+                <p className="text-sidebar-foreground/60 text-sm mt-3 leading-relaxed max-w-xs">
+                  Track monthly installments, view outstanding balances, and stay on top of payments — all in one app.
+                </p>
+              </>
             )}
           </div>
         </div>
