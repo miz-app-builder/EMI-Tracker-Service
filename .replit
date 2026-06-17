@@ -9,7 +9,7 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
+runButton = "EMI Tracker Frontend"
 
 [[workflows.workflow]]
 name = "Project"
@@ -40,13 +40,13 @@ outputType = "webview"
 name = "API Server"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "PORT=8080 pnpm --filter @workspace/api-server run dev"
 waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [agent]
 stack = "BEST_EFFORT_FALLBACK"
