@@ -2,7 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db, usersTable, sessionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { logActivity } from "../lib/logActivity";
 import { requireAuth } from "../middlewares/requireAuth";
 
@@ -139,6 +139,8 @@ router.post("/auth/logout", async (req, res) => {
 });
 
 router.get("/auth/me", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
   const secret = process.env.SESSION_SECRET;
   if (!secret) { res.status(500).json({ error: "Server misconfigured" }); return; }
 
@@ -146,7 +148,23 @@ router.get("/auth/me", async (req, res) => {
   if (!token) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   try {
-    const payload = jwt.verify(token, secret) as { userId: string; email: string };
+    const payload = jwt.verify(token, secret) as { userId: string; email: string; sessionId?: string };
+
+    if (payload.sessionId) {
+      const now = new Date();
+      const [session] = await db
+        .select({ id: sessionsTable.id })
+        .from(sessionsTable)
+        .where(
+          and(
+            eq(sessionsTable.id, payload.sessionId),
+            eq(sessionsTable.isRevoked, false),
+            gt(sessionsTable.expiresAt, now)
+          )
+        );
+      if (!session) { res.status(401).json({ error: "Session revoked or expired" }); return; }
+    }
+
     const [user] = await db
       .select({
         id: usersTable.id,

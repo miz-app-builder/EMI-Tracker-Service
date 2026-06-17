@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchMe(isPolling = false) {
     try {
-      const res = await authFetch(`${basePath}/api/auth/me`);
+      const res = await authFetch(`${basePath}/api/auth/me`, { cache: "no-store" });
       if (res.ok) {
         setUser(await res.json());
       } else if (res.status === 401) {
