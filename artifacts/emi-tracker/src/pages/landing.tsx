@@ -492,7 +492,7 @@ export default function LandingPage() {
 
         {/* Form card — fills remaining height, no scroll */}
         <div className="flex-1 bg-background rounded-t-3xl -mt-5 relative z-10 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-col px-6 pt-6 overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}>
+          <div className="flex-1 flex flex-col px-6 pt-3 overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}>
             <div className="w-full max-w-sm mx-auto flex flex-col flex-1 overflow-hidden">
 
               {tab === "login" && pinMode ? (
@@ -597,36 +597,36 @@ export default function LandingPage() {
 
               {/* Features + Stats — show on login tab (both password and PIN mode) */}
               {tab === "login" && (
-                <div className="mt-auto pt-3 space-y-3">
+                <div className="mt-auto pt-4 space-y-1.5">
                   {/* Features row */}
-                  <div className="flex gap-2 pt-3 border-t border-border">
+                  <div className="flex gap-1.5 pt-2 border-t border-border">
                     {features.map((f) => (
                       <button
                         key={f.title}
                         onClick={() => setSelectedFeature(f)}
-                        className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center flex-1 min-w-0"
+                        className="flex flex-col items-center gap-1 p-1.5 rounded-lg bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center flex-1 min-w-0"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                          <f.icon className="h-3.5 w-3.5 text-primary" />
+                        <div className="w-6 h-6 rounded-md bg-primary/15 flex items-center justify-center">
+                          <f.icon className="h-3 w-3 text-primary" />
                         </div>
                       </button>
                     ))}
                   </div>
 
                   {/* Stats */}
-                  <div className="flex justify-center gap-6 pt-3 border-t border-border">
+                  <div className="flex justify-center gap-5 pt-1.5 border-t border-border">
                     {[
                       { label: "Active Users", value: "100+" },
                       { label: "EMIs Tracked", value: "500+" },
                       { label: "Smart Savings", value: "100%" },
                     ].map((s) => (
                       <div key={s.label} className="text-center">
-                        <p className="text-primary font-bold text-xs">{s.value}</p>
-                        <p className="text-muted-foreground text-[10px]">{s.label}</p>
+                        <p className="text-primary font-bold text-[10px]">{s.value}</p>
+                        <p className="text-muted-foreground text-[9px]">{s.label}</p>
                       </div>
                     ))}
                   </div>
-                  <p className="text-muted-foreground/40 text-[10px] text-center">© {new Date().getFullYear()} EMI Tracker</p>
+                  <p className="text-muted-foreground/40 text-[9px] text-center">© {new Date().getFullYear()} EMI Tracker</p>
                 </div>
               )}
 
