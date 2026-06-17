@@ -849,7 +849,7 @@ function PinLoginCard() {
         </div>
       </CardHeader>
 
-      {(success || error || mode === "set" || hasPin) && (
+      {(success || error || mode === "set" || hasPin || bioSupported) && (
         <CardContent className="space-y-4">
           {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
           {error && mode === "idle" && <p className="text-sm text-destructive">{error}</p>}
