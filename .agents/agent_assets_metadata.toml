@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "PpTacoSRLYc6HROQFDR8T"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "emi tracker mobile icon"

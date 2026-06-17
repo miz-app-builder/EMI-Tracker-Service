@@ -30,6 +30,12 @@ function getIp(req: any): string {
   );
 }
 
+function extractTokenFromReq(req: any): string | null {
+  const authHeader = req.headers["authorization"];
+  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
+  return req.cookies?.[COOKIE_NAME] ?? null;
+}
+
 async function createSession(userId: string, req: any): Promise<string> {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const [session] = await db
@@ -77,7 +83,7 @@ router.post("/auth/signup", async (req, res) => {
   const token = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
   logActivity(user.id, "signup", "Account created");
-  res.status(201).json({ id: user.id, email: user.email, name: user.name });
+  res.status(201).json({ id: user.id, email: user.email, name: user.name, token });
 });
 
 router.post("/auth/login", async (req, res) => {
@@ -107,14 +113,14 @@ router.post("/auth/login", async (req, res) => {
   const token = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
   logActivity(user.id, "login", "Logged in");
-  res.json({ id: user.id, email: user.email, name: user.name });
+  res.json({ id: user.id, email: user.email, name: user.name, token });
 });
 
 router.post("/auth/logout", async (req, res) => {
   const secret = process.env.SESSION_SECRET;
   if (secret) {
     try {
-      const token = (req as any).cookies?.[COOKIE_NAME];
+      const token = extractTokenFromReq(req);
       if (token) {
         const payload = jwt.verify(token, secret) as { userId: string; sessionId?: string };
         logActivity(payload.userId, "logout", "Logged out");
@@ -135,7 +141,7 @@ router.get("/auth/me", async (req, res) => {
   const secret = process.env.SESSION_SECRET;
   if (!secret) { res.status(500).json({ error: "Server misconfigured" }); return; }
 
-  const token = (req as any).cookies?.[COOKIE_NAME];
+  const token = extractTokenFromReq(req);
   if (!token) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   try {

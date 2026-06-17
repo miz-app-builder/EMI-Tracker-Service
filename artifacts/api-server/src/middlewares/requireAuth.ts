@@ -5,13 +5,21 @@ import { and, eq, gt } from "drizzle-orm";
 
 const COOKIE_NAME = "emi_token";
 
+export function extractToken(req: Request): string | null {
+  const authHeader = req.headers["authorization"];
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+  return (req as any).cookies?.[COOKIE_NAME] ?? null;
+}
+
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const secret = process.env.SESSION_SECRET;
   if (!secret) {
     res.status(500).json({ error: "Server misconfigured: SESSION_SECRET missing" });
     return;
   }
-  const token = (req as any).cookies?.[COOKIE_NAME];
+  const token = extractToken(req);
   if (!token) {
     res.status(401).json({ error: "Unauthorized" });
     return;
