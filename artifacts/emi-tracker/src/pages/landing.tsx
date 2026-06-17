@@ -312,6 +312,36 @@ export default function LandingPage() {
                 <p className="text-sidebar-foreground/60 text-sm mt-3 leading-relaxed max-w-xs">
                   Track monthly installments, view outstanding balances, and stay on top of payments — all in one app.
                 </p>
+
+                {/* Feature list */}
+                <div className="mt-4 space-y-3">
+                  {features.map((f) => (
+                    <div key={f.title} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-sidebar-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <f.icon className="h-3.5 w-3.5 text-sidebar-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sidebar-foreground font-semibold text-xs">{f.title}</p>
+                        <p className="text-sidebar-foreground/50 text-[11px] leading-snug">{f.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stats */}
+                <div className="flex gap-6 mt-5 pt-4 border-t border-sidebar-border/30">
+                  {[
+                    { label: "Active Users", value: "100+" },
+                    { label: "EMIs Tracked", value: "500+" },
+                    { label: "Smart Savings", value: "100%" },
+                  ].map((s) => (
+                    <div key={s.label}>
+                      <p className="text-sidebar-primary font-bold text-base">{s.value}</p>
+                      <p className="text-sidebar-foreground/50 text-[10px]">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sidebar-foreground/25 text-[10px] mt-3">© {new Date().getFullYear()} EMI Tracker</p>
               </>
             )}
           </div>
