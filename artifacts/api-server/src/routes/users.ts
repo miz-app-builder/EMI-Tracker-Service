@@ -98,34 +98,51 @@ router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
   }
 
   try {
-    await ensureBucket();
+    req.log.info({ userId, fileSize: file.size, mimetype: file.mimetype }, "Starting photo upload");
+
+    const { data: bucketData, error: bucketErr } = await supabase.storage.getBucket(PHOTO_BUCKET);
+    if (bucketErr || !bucketData) {
+      req.log.info("Bucket not found, creating...");
+      const { error: createErr } = await supabase.storage.createBucket(PHOTO_BUCKET, { public: true });
+      if (createErr) {
+        req.log.error({ err: createErr }, "Failed to create bucket");
+        res.status(500).json({ error: "Failed to create storage bucket", detail: createErr.message });
+        return;
+      }
+      req.log.info("Bucket created successfully");
+    } else {
+      req.log.info({ bucketPublic: bucketData.public }, "Bucket exists");
+    }
 
     const ext = file.mimetype === "image/png" ? "png" : "jpg";
     const objectPath = `${userId}/avatar.${ext}`;
 
-    await supabase.storage.from(PHOTO_BUCKET).remove([
+    const { error: removeErr } = await supabase.storage.from(PHOTO_BUCKET).remove([
       `${userId}/avatar.jpg`,
       `${userId}/avatar.png`,
     ]);
+    if (removeErr) req.log.warn({ err: removeErr }, "Remove old photo warning (non-fatal)");
+    else req.log.info("Old photos removed (or did not exist)");
 
-    const { error } = await supabase.storage
+    const { data: uploadData, error: uploadErr } = await supabase.storage
       .from(PHOTO_BUCKET)
       .upload(objectPath, file.buffer, {
         contentType: file.mimetype,
-        upsert: false,
+        upsert: true,
       });
 
-    if (error) {
-      req.log.error({ err: error }, "Supabase Storage upload failed");
-      res.status(500).json({ error: "Failed to upload photo" });
+    if (uploadErr) {
+      req.log.error({ err: uploadErr }, "Supabase Storage upload failed");
+      res.status(500).json({ error: "Failed to upload photo", detail: uploadErr.message });
       return;
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from(PHOTO_BUCKET)
-      .getPublicUrl(objectPath);
+    req.log.info({ uploadData }, "Upload succeeded");
 
+    const { data: publicUrlData } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(objectPath);
     const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+    req.log.info({ publicUrl }, "Public URL generated");
 
     const [user] = await db
       .update(usersTable)
@@ -138,7 +155,7 @@ router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
     logActivity(userId, "profile_updated", "Profile photo updated");
     res.json({ url: publicUrl, user });
   } catch (err) {
-    req.log.error({ err }, "Photo upload error");
+    req.log.error({ err }, "Photo upload unexpected error");
     res.status(500).json({ error: "Failed to upload photo" });
   }
 });
