@@ -56,7 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authFetch(`${basePath}/api/auth/logout`, { method: "POST" });
     } catch {}
     clearToken();
-    setUser(null);
+    document.documentElement.classList.remove("dark");
+    localStorage.removeItem("emi-theme");
     window.location.href = `${basePath}/`;
   }
 
