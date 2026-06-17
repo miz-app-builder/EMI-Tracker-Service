@@ -192,6 +192,59 @@ router.delete("/auth/pin-login", requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Biometric Login: store token hash (protected)
+router.post("/auth/set-biometric-token", requireAuth, async (req, res) => {
+  const { token } = req.body;
+  if (!token || typeof token !== "string" || token.length < 32) {
+    res.status(400).json({ error: "Invalid biometric token" });
+    return;
+  }
+  const userId = (req as any).userId as string;
+  const biometricTokenHash = await bcrypt.hash(token, 10);
+  await db.update(usersTable).set({ biometricTokenHash }).where(eq(usersTable.id, userId));
+  logActivity(userId, "biometric_token_set", "Biometric login enabled");
+  res.json({ ok: true });
+});
+
+// Biometric Login: remove token (protected)
+router.delete("/auth/biometric-token", requireAuth, async (req, res) => {
+  const userId = (req as any).userId as string;
+  await db.update(usersTable).set({ biometricTokenHash: null }).where(eq(usersTable.id, userId));
+  logActivity(userId, "biometric_token_removed", "Biometric login disabled");
+  res.json({ ok: true });
+});
+
+// Biometric Login: login with email + token (public)
+router.post("/auth/biometric-login", async (req, res) => {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) { res.status(500).json({ error: "Server misconfigured" }); return; }
+
+  const { email, token } = req.body;
+  if (!email || !token) {
+    res.status(400).json({ error: "email and token required" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+  if (!user || !user.biometricTokenHash) {
+    res.status(401).json({ error: "Biometric login not set up for this account" });
+    return;
+  }
+
+  const valid = await bcrypt.compare(token, user.biometricTokenHash);
+  if (!valid) {
+    res.status(401).json({ error: "Biometric token invalid" });
+    return;
+  }
+
+  await db.update(usersTable).set({ lastActiveAt: new Date() }).where(eq(usersTable.id, user.id));
+  const sessionId = await createSession(user.id, req);
+  const jwtToken = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
+  res.cookie(COOKIE_NAME, jwtToken, cookieOpts());
+  logActivity(user.id, "biometric_login", "Logged in via biometric");
+  res.json({ id: user.id, email: user.email, name: user.name, hasPinLogin: Boolean(user.pinHash), token: jwtToken });
+});
+
 // PIN Login: login with email + PIN (public)
 router.post("/auth/pin-login", async (req, res) => {
   const secret = process.env.SESSION_SECRET;

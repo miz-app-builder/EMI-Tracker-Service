@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 
 const BIOMETRIC_ENABLED_KEY = "emi_biometric_enabled";
 const BIOMETRIC_CREDENTIAL_KEY = "emi_biometric_credential_id";
+const BIOMETRIC_TOKEN_KEY = "emi_biometric_token";
 
 function base64Encode(buf: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
@@ -9,6 +10,11 @@ function base64Encode(buf: ArrayBuffer): string {
 
 function base64Decode(str: string): Uint8Array {
   return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+}
+
+export function generateBiometricToken(): string {
+  const arr = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function useBiometric() {
@@ -85,11 +91,20 @@ export function useBiometric() {
     }
   }, []);
 
+  const getStoredToken = useCallback((): string | null => {
+    return localStorage.getItem(BIOMETRIC_TOKEN_KEY);
+  }, []);
+
+  const storeToken = useCallback((token: string) => {
+    localStorage.setItem(BIOMETRIC_TOKEN_KEY, token);
+  }, []);
+
   const disable = useCallback(() => {
     localStorage.removeItem(BIOMETRIC_ENABLED_KEY);
     localStorage.removeItem(BIOMETRIC_CREDENTIAL_KEY);
+    localStorage.removeItem(BIOMETRIC_TOKEN_KEY);
     setEnabled(false);
   }, []);
 
-  return { supported, enabled, register, authenticate, disable };
+  return { supported, enabled, register, authenticate, getStoredToken, storeToken, disable };
 }

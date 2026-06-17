@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveToken } from "@/lib/token";
-import { useBiometric } from "@/hooks/useBiometric";
+import { useBiometric, generateBiometricToken } from "@/hooks/useBiometric";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -174,7 +174,7 @@ export default function LandingPage() {
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [, setLocation] = useLocation();
   const { refetch } = useAuth();
-  const { enabled: bioEnabled, authenticate: bioAuthenticate } = useBiometric();
+  const { enabled: bioEnabled, authenticate: bioAuthenticate, getStoredToken } = useBiometric();
   const [bioLoginLoading, setBioLoginLoading] = useState(false);
   const [bioLoginError, setBioLoginError] = useState("");
 
@@ -319,9 +319,29 @@ export default function LandingPage() {
         setBioLoginError("Biometric authentication failed");
         return;
       }
-      // Check if server session is still valid
-      const res = await fetch(`${basePath}/api/auth/me`, { credentials: "include" });
-      if (res.ok) {
+      // Try server-side biometric token login first
+      const storedToken = getStoredToken();
+      const email = loginForm.email || localStorage.getItem("emi_last_email") || "";
+      if (storedToken && email) {
+        const res = await fetch(`${basePath}/api/auth/biometric-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, token: storedToken }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.token) saveToken(data.token);
+          await refetch();
+          setLocation("/dashboard");
+          return;
+        }
+        setBioLoginError("Biometric login failed — please sign in with your password");
+        return;
+      }
+      // Fallback: check if server session is still active
+      const meRes = await fetch(`${basePath}/api/auth/me`, { credentials: "include" });
+      if (meRes.ok) {
         await refetch();
         setLocation("/dashboard");
       } else {

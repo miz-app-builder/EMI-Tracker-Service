@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package, Fingerprint } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useBiometric } from "@/hooks/useBiometric";
+import { useBiometric, generateBiometricToken } from "@/hooks/useBiometric";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -735,7 +735,7 @@ function ChangePinSection() {
 
 function PinLoginCard() {
   const { user, refetch } = useAuth();
-  const { supported: bioSupported, enabled: bioEnabled, register: bioRegister, disable: bioDisable } = useBiometric();
+  const { supported: bioSupported, enabled: bioEnabled, register: bioRegister, disable: bioDisable, storeToken } = useBiometric();
   const [bioLoading, setBioLoading] = useState(false);
   const [bioMsg, setBioMsg] = useState("");
   const [mode, setMode] = useState<"idle" | "set">("idle");
@@ -752,14 +752,33 @@ function PinLoginCard() {
     setBioMsg("");
     setBioLoading(true);
     if (bioEnabled) {
+      // Disable: clear local state + server token
       bioDisable();
+      authFetch(`${basePath}/api/auth/biometric-token`, { method: "DELETE" }).catch(() => {});
       setBioMsg("Biometric login disabled.");
     } else {
+      // Enable: register WebAuthn credential + generate server-side token
       const ok = await bioRegister();
-      setBioMsg(ok ? "Biometric login enabled!" : "Could not register biometric. Please try again.");
+      if (ok) {
+        const token = generateBiometricToken();
+        const res = await authFetch(`${basePath}/api/auth/set-biometric-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        if (res.ok) {
+          storeToken(token);
+          setBioMsg("Biometric login enabled!");
+        } else {
+          bioDisable();
+          setBioMsg("Could not activate biometric login. Please try again.");
+        }
+      } else {
+        setBioMsg("Could not register biometric. Please try again.");
+      }
     }
     setBioLoading(false);
-    setTimeout(() => setBioMsg(""), 3000);
+    setTimeout(() => setBioMsg(""), 4000);
   }
 
   function reset() { setMode("idle"); setStep("enter"); setPin1(""); setPin2(""); setError(""); }
