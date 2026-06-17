@@ -103,7 +103,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [navigate]);
-  const photoSrc = user?.profilePhotoUrl ? `${basePath}/api/users/me/photo` : undefined;
+  const photoSrc = user?.profilePhotoUrl ?? undefined;
 
   return (
     <>

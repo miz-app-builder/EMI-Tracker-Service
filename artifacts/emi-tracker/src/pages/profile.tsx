@@ -17,7 +17,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function photoUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
-  return `${basePath}/api/users/me/photo`;
+  return url;
 }
 
 function toCSV(rows: Record<string, unknown>[], headers: string[]): string {
@@ -252,32 +252,36 @@ export default function ProfilePage() {
     setPhotoError("");
     setPhotoLoading(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
+      const resizedBlob = await new Promise<Blob>((resolve, reject) => {
         const img = new Image();
         const objectUrl = URL.createObjectURL(file);
         img.onload = () => {
           URL.revokeObjectURL(objectUrl);
-          const MAX = 400;
+          const MAX = 800;
           const scale = Math.min(1, MAX / Math.max(img.width, img.height));
           const w = Math.round(img.width * scale);
           const h = Math.round(img.height * scale);
           const canvas = document.createElement("canvas");
           canvas.width = w;
           canvas.height = h;
-          const ctx = canvas.getContext("2d")!;
-          ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL("image/jpeg", 0.85));
+          canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Resize failed")), "image/jpeg", 0.85);
         };
         img.onerror = () => reject(new Error("Failed to load image"));
         img.src = objectUrl;
       });
 
-      const patchRes = await authFetch(`${basePath}/api/users/me`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profilePhotoUrl: dataUrl }),
+      const formData = new FormData();
+      formData.append("photo", resizedBlob, "avatar.jpg");
+
+      const { getToken } = await import("@/lib/token");
+      const token = getToken();
+      const res = await fetch(`${basePath}/api/users/me/photo`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
       });
-      if (!patchRes.ok) throw new Error("Save failed");
+      if (!res.ok) throw new Error("Upload failed");
 
       await refetch();
     } catch {

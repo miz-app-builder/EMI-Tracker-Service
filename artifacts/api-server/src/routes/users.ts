@@ -1,12 +1,13 @@
 import { Router } from "express";
+import multer from "multer";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { supabase, PHOTO_BUCKET, ensureBucket } from "../lib/supabase";
 import { logActivity } from "../lib/logActivity";
 
 const router = Router();
-const objectStorageService = new ObjectStorageService();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 const USER_SELECT = {
   id: usersTable.id,
@@ -83,13 +84,57 @@ router.post("/users/me/change-password", async (req, res) => {
   res.json({ ok: true });
 });
 
-router.post("/users/me/photo/request-url", async (req, res) => {
+router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
+  const userId = (req as any).userId;
+  const file = req.file;
+
+  if (!file) {
+    res.status(400).json({ error: "No photo file provided" });
+    return;
+  }
+  if (!file.mimetype.startsWith("image/")) {
+    res.status(400).json({ error: "File must be an image" });
+    return;
+  }
+
   try {
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
-    res.json({ uploadURL, objectPath });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to generate upload URL" });
+    await ensureBucket();
+
+    const ext = file.mimetype === "image/png" ? "png" : "jpg";
+    const objectPath = `${userId}/avatar.${ext}`;
+
+    const { error } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .upload(objectPath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (error) {
+      req.log.error({ err: error }, "Supabase Storage upload failed");
+      res.status(500).json({ error: "Failed to upload photo" });
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(PHOTO_BUCKET)
+      .getPublicUrl(objectPath);
+
+    const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+    const [user] = await db
+      .update(usersTable)
+      .set({ profilePhotoUrl: publicUrl })
+      .where(eq(usersTable.id, userId))
+      .returning(USER_SELECT);
+
+    if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+    logActivity(userId, "profile_updated", "Profile photo updated");
+    res.json({ url: publicUrl, user });
+  } catch (err) {
+    req.log.error({ err }, "Photo upload error");
+    res.status(500).json({ error: "Failed to upload photo" });
   }
 });
 
@@ -112,7 +157,7 @@ router.get("/users/me/photo", async (req, res) => {
       return;
     }
 
-    res.status(404).json({ error: "Photo not found" });
+    res.redirect(user.profilePhotoUrl);
   } catch {
     res.status(500).json({ error: "Failed to serve photo" });
   }
