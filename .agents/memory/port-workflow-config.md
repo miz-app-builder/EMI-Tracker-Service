@@ -17,14 +17,28 @@ description: Critical port and workflow setup for EMI Tracker on Replit — prev
 ## Rules — never break these
 
 1. `EMI Tracker Frontend` command must include `PORT=5000` AND `BASE_PATH=/` — both are required by `vite.config.ts` which throws on missing values.
-2. `PORT` must NOT be a shared env var — it would cause the artifact workflow to also try port 5000, causing EADDRINUSE.
-3. `BASE_PATH=/` IS a shared env var — do not delete it.
-4. Do NOT create a second frontend or API workflow — duplicate = port conflict.
-5. Node.js must be version 22 — Supabase JS requires native WebSocket (Node 22+). Do NOT downgrade.
-6. API port is 8080 — Vite proxy `/api` → `http://localhost:8080` is hardcoded. Do NOT change API port.
-7. Artifact-managed workflows cannot be deleted or reconfigured by the agent.
+2. **`EMI Tracker Frontend` MUST use `isCanvasWorkflow: true`** — without it, the canvas `artifact:v3:default-emi-tracker-frontend` iframe is blank even though the server runs fine. The external proxy (port 5000 → port 80) does not work in canvas mode; `isCanvasWorkflow: true` enables internal artifact routing that does.
+3. `PORT` must NOT be a shared env var — it would cause the artifact workflow to also try port 5000, causing EADDRINUSE.
+4. `BASE_PATH=/` IS a shared env var — do not delete it.
+5. Do NOT create a second frontend or API workflow — duplicate = port conflict.
+6. Node.js must be version 22 — Supabase JS requires native WebSocket (Node 22+). Do NOT downgrade.
+7. API port is 8080 — Vite proxy `/api` → `http://localhost:8080` is hardcoded. Do NOT change API port.
+8. Artifact-managed workflows cannot be deleted or reconfigured by the agent.
 
-**Why:** Replit artifacts inject their own PORT into artifact workflows. The custom `EMI Tracker Frontend` workflow must override with `PORT=5000` in the command (not env var) to avoid the artifact workflow grabbing port 5000 first.
+**Why:** Replit artifacts inject their own PORT into artifact workflows. The custom `EMI Tracker Frontend` workflow must override with `PORT=5000` in the command (not env var) to avoid the artifact workflow grabbing port 5000 first. And `isCanvasWorkflow: true` switches the canvas from external-proxy routing (broken for port 5000) to internal artifact routing (works).
+
+## How to (re)create EMI Tracker Frontend correctly
+
+```js
+await removeWorkflow({ name: "EMI Tracker Frontend" });
+await configureWorkflow({
+  name: "EMI Tracker Frontend",
+  command: "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev",
+  waitForPort: 5000,
+  outputType: "webview",
+  isCanvasWorkflow: true
+});
+```
 
 ## Symptom → Fix
 
@@ -34,4 +48,5 @@ description: Critical port and workflow setup for EMI Tracker on Replit — prev
 | EADDRINUSE 8080 | Two API workflows running. Remove the duplicate. |
 | Preview not visible | `EMI Tracker Frontend` must be PORT=5000. Check workflow command. |
 | PORT env var error | Workflow command missing `PORT=5000` or `BASE_PATH=/`. |
+| Canvas iframe blank (`artifact:v3:default-emi-tracker-frontend`) | `isCanvasWorkflow: true` missing. Remove and recreate the workflow with that flag. |
 | `artifacts/emi-tracker: web` FAILED | Expected if EMI Tracker Frontend grabs port first — ignore. |
