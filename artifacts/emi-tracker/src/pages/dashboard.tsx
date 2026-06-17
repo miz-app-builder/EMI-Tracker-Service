@@ -134,8 +134,8 @@ export default function Dashboard() {
 
       <SpendingTrendChart />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+      <div className="grid gap-4 lg:grid-cols-7">
+        <Card className="col-span-full lg:col-span-4">
           <CardHeader>
             <CardTitle>Due This Month</CardTitle>
             <CardDescription>EMI payments pending in the current month.</CardDescription>
@@ -212,7 +212,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3">
+        <Card className="col-span-full lg:col-span-3">
           <CardHeader>
             <CardTitle>By Shop</CardTitle>
             <CardDescription>Outstanding and paid amounts per shop.</CardDescription>
