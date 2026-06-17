@@ -87,10 +87,20 @@ await configureWorkflow({
 
 Note: Replit also auto-creates artifact-managed workflows when artifacts are registered:
 - `artifacts/api-server: API Server` (port 8080) — do NOT touch
-- `artifacts/emi-tracker: web` (~19185) — do NOT touch; it powers the `artifact:v3:artifacts/emi-tracker` canvas iframe
-- `artifacts/mockup-sandbox: Component Preview Server` (8081) — canvas tool
+- `artifacts/emi-tracker: web` (~19185) — **IGNORE THIS WORKFLOW COMPLETELY**. Replit manages it. It runs the same Vite app on a random port (19185). Agents must NOT try to start, stop, reconfigure, or duplicate it. If it fails or shows EADDRINUSE — ignore it. Do not treat it as a problem. Only `EMI Tracker Frontend` (port 5000) is the agent-managed frontend.
+- `artifacts/mockup-sandbox: Component Preview Server` (8081) — canvas tool, ignore
 
 Do NOT duplicate any of these. If you see `EADDRINUSE 5000` or `EADDRINUSE 8080`, a duplicate workflow exists — remove it.
+
+### ⚠️ `artifacts/emi-tracker: web` — AGENT WARNING
+
+This workflow will always appear in the workflow list. **Do not manage it.** Agents that see it sometimes:
+- Try to stop it thinking it's a duplicate → DON'T
+- Try to configure it → DON'T (Replit-managed, can't be changed)
+- Think it conflicts with `EMI Tracker Frontend` → It doesn't (different port: 19185 vs 5000)
+- Try to restart it when the canvas iframe is blank → NOT NEEDED; fix the canvas by ensuring `EMI Tracker Frontend` has `isCanvasWorkflow: true`
+
+The only agent-managed frontend is `EMI Tracker Frontend` on port 5000.
 
 ---
 

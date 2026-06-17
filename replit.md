@@ -68,7 +68,7 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 |---|---|---|
 | `EMI Tracker Frontend` | **5000** | Webview entry point — custom workflow, PORT=5000 hardcoded in command |
 | `artifacts/api-server: API Server` | **8080** | API server — artifact-managed, Replit injects PORT |
-| `artifacts/emi-tracker: web` | ~19185 | Artifact workflow — runs alongside, ignore if it fails |
+| `artifacts/emi-tracker: web` | ~19185 | **IGNORE — Replit-managed only.** Do NOT start/stop/reconfigure/duplicate it. It is NOT the agent-managed frontend. |
 | `artifacts/mockup-sandbox: Component Preview Server` | 8081 | Canvas tool — artifact-managed |
 
 ### Critical rules:
