@@ -43,6 +43,7 @@ export default function ProfilePage() {
 
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
   const photo = photoUrl(user?.profilePhotoUrl);
+  const hasPin = Boolean(user?.hasPinLogin);
 
   // ── Info form ──
   const [infoForm, setInfoForm] = useState({
@@ -603,12 +604,12 @@ export default function ProfilePage() {
       {/* ── Password card ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Change Password</CardTitle>
+          <CardTitle className="text-base">পাসওয়ার্ড পরিবর্তন</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="pw-current">Current Password</Label>
+              <Label htmlFor="pw-current">বর্তমান পাসওয়ার্ড</Label>
               <Input
                 id="pw-current"
                 type="password"
@@ -619,21 +620,21 @@ export default function ProfilePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="pw-new">New Password</Label>
+                <Label htmlFor="pw-new">নতুন পাসওয়ার্ড</Label>
                 <Input
                   id="pw-new"
                   type="password"
-                  placeholder="At least 8 characters"
+                  placeholder="কমপক্ষে ৮ অক্ষর"
                   value={pwForm.next}
                   onChange={(e) => setPwForm((p) => ({ ...p, next: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pw-confirm">Confirm</Label>
+                <Label htmlFor="pw-confirm">নিশ্চিত করুন</Label>
                 <Input
                   id="pw-confirm"
                   type="password"
-                  placeholder="Re-enter password"
+                  placeholder="পুনরায় লিখুন"
                   value={pwForm.confirm}
                   onChange={(e) => setPwForm((p) => ({ ...p, confirm: e.target.value }))}
                 />
@@ -643,15 +644,25 @@ export default function ProfilePage() {
             {pwError && <p className="text-sm text-destructive">{pwError}</p>}
             {pwSuccess && (
               <p className="text-sm text-green-600 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> Password changed successfully
+                <CheckCircle2 className="h-4 w-4" /> পাসওয়ার্ড পরিবর্তন হয়েছে
               </p>
             )}
 
             <Button type="submit" size="sm" variant="outline" disabled={pwLoading} className="gap-2">
               {pwLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              Change Password
+              পাসওয়ার্ড পরিবর্তন করুন
             </Button>
           </form>
+
+          {hasPin && (
+            <div className="md:hidden pt-4 border-t space-y-3">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                PIN পরিবর্তন
+              </p>
+              <ChangePinSection />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -662,12 +673,72 @@ export default function ProfilePage() {
   );
 }
 
+function ChangePinSection() {
+  const { refetch } = useAuth();
+  const [step, setStep] = useState<"enter" | "confirm">("enter");
+  const [pin1, setPin1] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function reset() { setStep("enter"); setPin1(""); setPin2(""); setError(""); }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (step === "enter") {
+      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("৪-digit সংখ্যা দিন"); return; }
+      setStep("confirm"); setPin2(""); setError(""); return;
+    }
+    if (pin1 !== pin2) { setError("PIN মিলছে না"); setPin2(""); return; }
+    setLoading(true);
+    const res = await authFetch(`${basePath}/api/auth/set-pin-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: pin1 }),
+    });
+    setLoading(false);
+    if (!res.ok) { setError("PIN সেভ করা যায়নি"); return; }
+    await refetch();
+    setSuccess("PIN পরিবর্তন হয়েছে!");
+    reset();
+    setTimeout(() => setSuccess(""), 3000);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 max-w-xs">
+      <Input
+        type="password"
+        inputMode="numeric"
+        maxLength={4}
+        placeholder={step === "enter" ? "নতুন PIN (৪ সংখ্যা)" : "PIN নিশ্চিত করুন"}
+        value={step === "enter" ? pin1 : pin2}
+        onChange={(e) => {
+          const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+          if (step === "enter") setPin1(v); else setPin2(v);
+          setError("");
+        }}
+        className="tracking-widest text-center text-lg"
+      />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" variant="outline" disabled={loading} className="gap-2">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+          {step === "enter" ? "পরবর্তী" : "সেভ করুন"}
+        </Button>
+        {step === "confirm" && <Button type="button" size="sm" variant="ghost" onClick={reset}>বাতিল</Button>}
+      </div>
+    </form>
+  );
+}
+
 function PinLoginCard() {
   const { user, refetch } = useAuth();
   const { supported: bioSupported, enabled: bioEnabled, register: bioRegister, disable: bioDisable } = useBiometric();
   const [bioLoading, setBioLoading] = useState(false);
   const [bioMsg, setBioMsg] = useState("");
-  const [mode, setMode] = useState<"idle" | "set" | "change" | "confirm_remove">("idle");
+  const [mode, setMode] = useState<"idle" | "set">("idle");
   const [step, setStep] = useState<"enter" | "confirm">("enter");
   const [pin1, setPin1] = useState("");
   const [pin2, setPin2] = useState("");
@@ -682,10 +753,10 @@ function PinLoginCard() {
     setBioLoading(true);
     if (bioEnabled) {
       bioDisable();
-      setBioMsg("Biometric login disabled.");
+      setBioMsg("Biometric login বন্ধ করা হয়েছে।");
     } else {
       const ok = await bioRegister();
-      setBioMsg(ok ? "Biometric login enabled!" : "Could not register biometric. Please try again.");
+      setBioMsg(ok ? "Biometric login চালু হয়েছে!" : "Biometric register করা যায়নি। আবার চেষ্টা করুন।");
     }
     setBioLoading(false);
     setTimeout(() => setBioMsg(""), 3000);
@@ -693,23 +764,31 @@ function PinLoginCard() {
 
   function reset() { setMode("idle"); setStep("enter"); setPin1(""); setPin2(""); setError(""); }
 
-  async function handleRemove() {
-    setLoading(true);
-    const res = await authFetch(`${basePath}/api/auth/pin-login`, { method: "DELETE" });
-    setLoading(false);
-    if (!res.ok) { setError("Failed to remove PIN"); return; }
-    localStorage.removeItem("emi_pin_login_active");
-    bioDisable();
-    await refetch();
-    setSuccess("PIN login removed."); reset();
+  async function handleToggle() {
+    if (hasPin) {
+      setLoading(true);
+      const res = await authFetch(`${basePath}/api/auth/pin-login`, { method: "DELETE" });
+      setLoading(false);
+      if (!res.ok) { setError("PIN সরানো যায়নি"); return; }
+      localStorage.removeItem("emi_pin_login_active");
+      bioDisable();
+      await refetch();
+      setSuccess("PIN login বন্ধ করা হয়েছে।");
+      setError("");
+    } else {
+      setMode("set");
+      setSuccess("");
+      setError("");
+    }
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     if (step === "enter") {
-      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("Please enter a 4-digit number"); return; }
+      if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("৪-digit সংখ্যা দিন"); return; }
       setStep("confirm"); setPin2(""); setError(""); return;
     }
-    if (pin1 !== pin2) { setError("PINs do not match"); setPin2(""); return; }
+    if (pin1 !== pin2) { setError("PIN মিলছে না"); setPin2(""); return; }
     setLoading(true);
     const res = await authFetch(`${basePath}/api/auth/set-pin-login`, {
       method: "POST",
@@ -717,68 +796,91 @@ function PinLoginCard() {
       body: JSON.stringify({ pin: pin1 }),
     });
     setLoading(false);
-    if (!res.ok) { setError("Failed to save PIN"); return; }
+    if (!res.ok) { setError("PIN সেভ করা যায়নি"); return; }
     localStorage.setItem("emi_pin_login_active", "true");
+    if (user?.email) localStorage.setItem("emi_last_email", user.email.toLowerCase());
     await refetch();
-    setSuccess(mode === "change" ? "PIN updated!" : "PIN login enabled!");
+    setSuccess("PIN login চালু হয়েছে!");
     reset();
   }
 
   return (
-    <Card>
+    <Card className="md:hidden">
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Shield className="h-4 w-4 text-primary" />
-          PIN Login
-        </CardTitle>
-        <CardDescription>
-          Mobile-এ 4-digit PIN দিয়ে login করুন।{" "}
-          {hasPin ? <span className="text-green-600 font-medium">PIN is active ✓</span> : <span className="text-muted-foreground">No PIN set</span>}
-        </CardDescription>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              PIN Login
+            </CardTitle>
+            <CardDescription className="mt-0.5">
+              Mobile-এ 4-digit PIN দিয়ে দ্রুত লগিন করুন
+            </CardDescription>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={hasPin}
+            onClick={handleToggle}
+            disabled={loading || mode === "set"}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${hasPin ? "bg-primary" : "bg-input"}`}
+          >
+            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${hasPin ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
 
-        {mode === "idle" ? (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {!hasPin && (
-                <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("set"); setSuccess(""); }}>
-                  <Shield className="h-4 w-4" /> Set PIN
+      {(success || error || mode === "set" || hasPin) && (
+        <CardContent className="space-y-4">
+          {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
+          {error && mode === "idle" && <p className="text-sm text-destructive">{error}</p>}
+
+          {mode === "set" && (
+            <form onSubmit={handleSubmit} className="space-y-3 max-w-xs">
+              <Label className="text-xs text-muted-foreground">
+                {step === "enter" ? "PIN লিখুন (৪ সংখ্যা)" : "PIN নিশ্চিত করুন"}
+              </Label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="••••"
+                value={step === "enter" ? pin1 : pin2}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  if (step === "enter") setPin1(v); else setPin2(v);
+                  setError("");
+                }}
+                className="tracking-widest text-center text-lg"
+                autoFocus
+              />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  {step === "enter" ? "পরবর্তী" : "সেভ করুন"}
                 </Button>
-              )}
-              {hasPin && (
-                <>
-                  <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("change"); setSuccess(""); }}>
-                    <KeyRound className="h-4 w-4" /> Change PIN
-                  </Button>
-                  <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("confirm_remove"); setSuccess(""); }}>
-                    <Trash2 className="h-4 w-4" /> Remove PIN
-                  </Button>
-                </>
-              )}
-            </div>
+                <Button type="button" size="sm" variant="ghost" onClick={reset}>বাতিল</Button>
+              </div>
+            </form>
+          )}
 
-            {/* Biometric option — mobile only */}
-            <div className="md:hidden border rounded-lg p-3 space-y-2">
+          {hasPin && mode === "idle" && (
+            <div className="border rounded-lg p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Fingerprint className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium">Biometric Login</span>
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                  {bioEnabled ? "On" : "Off"}
+                  {bioEnabled ? "চালু" : "বন্ধ"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {!hasPin
-                  ? "PIN set করলে biometric login enable করা যাবে।"
-                  : !bioSupported
-                  ? "Your device or browser does not support biometric authentication."
-                  : "Use fingerprint or Face ID to log in."}
+                {!bioSupported ? "আপনার device biometric সাপোর্ট করে না।" : "Fingerprint বা Face ID দিয়ে লগিন করুন।"}
               </p>
               {bioMsg && (
-                <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : bioMsg.includes("disabled") ? "text-muted-foreground" : "text-destructive"}`}>
+                <p className={`text-xs font-medium ${bioMsg.includes("চালু") ? "text-green-600" : "text-muted-foreground"}`}>
                   {bioMsg}
                 </p>
               )}
@@ -786,56 +888,16 @@ function PinLoginCard() {
                 size="sm"
                 variant={bioEnabled ? "destructive" : "outline"}
                 className="gap-2 w-full"
-                onClick={!hasPin ? () => { setMode("set"); setSuccess(""); } : handleBioToggle}
-                disabled={bioLoading || (!hasPin ? false : !bioSupported)}
+                onClick={handleBioToggle}
+                disabled={bioLoading || !bioSupported}
               >
                 {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                {!hasPin ? "Set PIN First" : bioEnabled ? "Disable Biometric" : "Enable Biometric"}
+                {bioEnabled ? "Biometric বন্ধ করুন" : "Biometric চালু করুন"}
               </Button>
             </div>
-          </div>
-        ) : mode === "confirm_remove" ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">PIN login remove করলে mobile-এ PIN দিয়ে login করা যাবে না।</p>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex gap-2">
-              <Button size="sm" variant="destructive" onClick={handleRemove} disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                Remove PIN
-              </Button>
-              <Button size="sm" variant="ghost" onClick={reset}>Cancel</Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3 max-w-xs">
-            <Label>
-              {step === "enter"
-                ? mode === "change" ? "Enter new PIN" : "Enter PIN (4 digits)"
-                : "Confirm PIN"}
-            </Label>
-            <Input
-              type="password"
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="••••"
-              value={step === "enter" ? pin1 : pin2}
-              onChange={(e) => {
-                const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                if (step === "enter") setPin1(v); else setPin2(v);
-              }}
-              className="tracking-widest text-center text-lg"
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSubmit} disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                {step === "enter" ? "Next" : "Save"}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={reset}>Cancel</Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }
