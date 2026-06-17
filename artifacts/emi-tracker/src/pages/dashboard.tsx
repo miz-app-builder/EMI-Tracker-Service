@@ -226,11 +226,11 @@ export default function Dashboard() {
               <div className="space-y-6">
                 {shopStats.filter(s => s.totalOrders > 0).map((stat) => (
                   <div key={stat.shopId} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-base md:text-sm">
                       <span className="font-medium">{stat.shopName}</span>
                       <span className="text-muted-foreground">{stat.totalOrders} EMI(s)</span>
                     </div>
-                    <div className="flex h-4 overflow-hidden rounded-full bg-secondary">
+                    <div className="flex h-5 md:h-4 overflow-hidden rounded-full bg-secondary">
                       {stat.totalPaid > 0 && stat.totalDue + stat.totalPaid > 0 && (
                         <div
                           className="bg-primary"
@@ -238,7 +238,7 @@ export default function Dashboard() {
                         />
                       )}
                     </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-sm md:text-xs text-muted-foreground">
                       <span>Paid: {formatCurrency(stat.totalPaid)}</span>
                       <span>Remaining: {formatCurrency(stat.totalDue)}</span>
                     </div>
