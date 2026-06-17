@@ -743,7 +743,7 @@ function PinSettingsCard() {
             </div>
 
             {/* Biometric option — mobile only, only when PIN is set */}
-            {hasPin && bioSupported && (
+            {hasPin && (
               <div className="md:hidden border rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -755,7 +755,9 @@ function PinSettingsCard() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Use fingerprint or Face ID instead of PIN to unlock the app.
+                  {bioSupported
+                    ? "Use fingerprint or Face ID instead of PIN to unlock the app."
+                    : "Your device or browser does not support biometric authentication."}
                 </p>
                 {bioMsg && (
                   <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : bioMsg.includes("disabled") ? "text-muted-foreground" : "text-destructive"}`}>
@@ -767,7 +769,7 @@ function PinSettingsCard() {
                   variant={bioEnabled ? "destructive" : "outline"}
                   className="gap-2 w-full"
                   onClick={handleBioToggle}
-                  disabled={bioLoading}
+                  disabled={bioLoading || !bioSupported}
                 >
                   {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
                   {bioEnabled ? "Disable Biometric" : "Enable Biometric"}
