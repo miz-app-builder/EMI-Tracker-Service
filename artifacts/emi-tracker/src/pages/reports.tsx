@@ -293,7 +293,7 @@ export default function ReportsPage() {
                 {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
               </div>
             ) : (
-              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[220px] overflow-y-auto hide-scrollbar pr-1">
                 {reversedMonthly.map((row) => {
                   const pct = maxPaid > 0 ? (row.totalPaid / maxPaid) * 100 : 0;
                   const isTop = row.totalPaid === maxPaid && row.totalPaid > 0;

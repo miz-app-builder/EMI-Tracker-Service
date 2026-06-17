@@ -61,7 +61,7 @@ export function NotificationBell() {
           )}
         </div>
 
-        <div className="max-h-[420px] overflow-y-auto">
+        <div className="max-h-[420px] overflow-y-auto hide-scrollbar">
           {totalCount === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
               <CheckCircle2 className="h-8 w-8 text-green-500 opacity-70" />
