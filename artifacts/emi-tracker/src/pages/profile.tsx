@@ -826,36 +826,47 @@ function PinLoginCard() {
   return (
     <Card className="md:hidden">
       <CardHeader>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Shield className="h-4 w-4 text-primary" />
-              PIN Login
-            </CardTitle>
-            <CardDescription className="mt-0.5">
-              Sign in quickly on mobile with a 4-digit PIN
-            </CardDescription>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={hasPin}
-            onClick={handleToggle}
-            disabled={loading || mode === "set"}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${hasPin ? "bg-primary" : "bg-input"}`}
-          >
-            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${hasPin ? "translate-x-6" : "translate-x-1"}`} />
-          </button>
-        </div>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Shield className="h-4 w-4 text-primary" />
+          Login Security
+        </CardTitle>
+        <CardDescription className="mt-0.5">
+          Quick sign-in options for mobile
+        </CardDescription>
       </CardHeader>
 
-      {(success || error || mode === "set" || hasPin || bioSupported) && (
-        <CardContent className="space-y-4">
-          {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
-          {error && mode === "idle" && <p className="text-sm text-destructive">{error}</p>}
+      <CardContent className="space-y-3">
+
+        {/* ── PIN Login inner card ── */}
+        <div className="border rounded-lg p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">PIN Login</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${hasPin ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                {hasPin ? "On" : "Off"}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={hasPin}
+                onClick={handleToggle}
+                disabled={loading || mode === "set"}
+                className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${hasPin ? "bg-primary" : "bg-input"}`}
+              >
+                <span className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-lg transition-transform ${hasPin ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">Sign in quickly with a 4-digit PIN.</p>
+
+          {success && <p className="text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" />{success}</p>}
+          {error && mode === "idle" && <p className="text-xs text-destructive">{error}</p>}
 
           {mode === "set" && (
-            <form onSubmit={handleSubmit} className="space-y-3 max-w-xs">
+            <form onSubmit={handleSubmit} className="space-y-2 pt-1">
               <Label className="text-xs text-muted-foreground">
                 {step === "enter" ? "Enter PIN (4 digits)" : "Confirm PIN"}
               </Label>
@@ -870,10 +881,10 @@ function PinLoginCard() {
                   if (step === "enter") setPin1(v); else setPin2(v);
                   setError("");
                 }}
-                className="tracking-widest text-center text-lg"
+                className="tracking-widest text-center text-lg h-9"
                 autoFocus
               />
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && <p className="text-xs text-destructive">{error}</p>}
               <div className="flex gap-2">
                 <Button type="submit" size="sm" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
@@ -883,40 +894,40 @@ function PinLoginCard() {
               </div>
             </form>
           )}
+        </div>
 
-          {mode === "idle" && (
-            <div className="border rounded-lg p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Fingerprint className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Biometric Login</span>
-                </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
-                  {bioEnabled ? "On" : "Off"}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {!bioSupported ? "Your device does not support biometric." : "Sign in with fingerprint or Face ID."}
-              </p>
-              {bioMsg && (
-                <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : "text-muted-foreground"}`}>
-                  {bioMsg}
-                </p>
-              )}
-              <Button
-                size="sm"
-                variant={bioEnabled ? "destructive" : "outline"}
-                className="gap-2 w-full"
-                onClick={handleBioToggle}
-                disabled={bioLoading || !bioSupported}
-              >
-                {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                {bioEnabled ? "Disable Biometric" : "Enable Biometric"}
-              </Button>
+        {/* ── Biometric Login inner card ── */}
+        <div className="border rounded-lg p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Fingerprint className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Biometric Login</span>
             </div>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
+              {bioEnabled ? "On" : "Off"}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {!bioSupported ? "Your device does not support biometric." : "Sign in with fingerprint or Face ID."}
+          </p>
+          {bioMsg && (
+            <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : "text-muted-foreground"}`}>
+              {bioMsg}
+            </p>
           )}
-        </CardContent>
-      )}
+          <Button
+            size="sm"
+            variant={bioEnabled ? "destructive" : "outline"}
+            className="gap-2 w-full"
+            onClick={handleBioToggle}
+            disabled={bioLoading || !bioSupported}
+          >
+            {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+            {bioEnabled ? "Disable Biometric" : "Enable Biometric"}
+          </Button>
+        </div>
+
+      </CardContent>
     </Card>
   );
 }
