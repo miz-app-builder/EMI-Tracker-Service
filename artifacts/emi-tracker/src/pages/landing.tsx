@@ -81,25 +81,23 @@ function AuthForm({
             </div>
           </div>
           {loginError && <p className="text-xs text-destructive">{loginError}</p>}
-          <div className={compact ? "space-y-2" : ""}>
-            <Button type="submit" className={`w-full ${compact ? "h-8 text-xs" : ""}`} disabled={loginLoading}>
+          <div className="flex gap-2">
+            <Button type="submit" className={`flex-1 ${compact ? "h-9 text-sm" : ""}`} disabled={loginLoading}>
               {loginLoading ? "Signing in..." : "Sign In"}
             </Button>
             {compact && bioEnabled && (
-              <div className="flex justify-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 w-11 p-0"
-                  onClick={onBiometricLogin}
-                  disabled={bioLoginLoading || loginLoading}
-                  title="Login with biometric"
-                >
-                  {bioLoginLoading
-                    ? <Loader2 className="h-5 w-5 animate-spin" />
-                    : <Fingerprint className="h-5 w-5 text-primary" />}
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 w-9 p-0 flex-shrink-0"
+                onClick={onBiometricLogin}
+                disabled={bioLoginLoading || loginLoading}
+                title="Login with biometric"
+              >
+                {bioLoginLoading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Fingerprint className="h-4 w-4 text-primary" />}
+              </Button>
             )}
           </div>
           <p className={`text-center text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
@@ -550,24 +548,22 @@ export default function LandingPage() {
                     <p className="text-xs text-destructive">{pinError || bioLoginError}</p>
                   )}
 
-                  {/* Sign In + Biometric stacked */}
-                  <div className="space-y-2">
-                    <Button type="submit" className="w-full h-8 text-xs" disabled={pinLoading}>
+                  {/* Sign In + Biometric inline */}
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1 h-9 text-sm" disabled={pinLoading}>
                       {pinLoading ? "Signing in..." : "Sign In"}
                     </Button>
                     {bioEnabled && (
-                      <div className="flex justify-center">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-11 w-11 p-0"
-                          onClick={handleBiometricLogin}
-                          disabled={bioLoginLoading || pinLoading}
-                          title="Login with biometric"
-                        >
-                          {bioLoginLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Fingerprint className="h-5 w-5 text-primary" />}
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 w-9 p-0 flex-shrink-0"
+                        onClick={handleBiometricLogin}
+                        disabled={bioLoginLoading || pinLoading}
+                        title="Login with biometric"
+                      >
+                        {bioLoginLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4 text-primary" />}
+                      </Button>
                     )}
                   </div>
 
