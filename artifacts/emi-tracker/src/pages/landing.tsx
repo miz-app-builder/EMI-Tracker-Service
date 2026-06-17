@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3, X } from "lucide-react";
+import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3, X, Fingerprint, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveToken } from "@/lib/token";
+import { useBiometric } from "@/hooks/useBiometric";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -25,6 +26,9 @@ function AuthForm({
   signupForm, setSignupForm, signupError, signupLoading, handleSignup,
   idPrefix,
   compact = false,
+  onBiometricLogin,
+  bioEnabled = false,
+  bioLoginLoading = false,
 }: {
   tab: Tab; setTab: (t: Tab) => void;
   loginForm: { email: string; password: string };
@@ -37,6 +41,9 @@ function AuthForm({
   handleSignup: (e: React.FormEvent) => void;
   idPrefix: string;
   compact?: boolean;
+  onBiometricLogin?: () => void;
+  bioEnabled?: boolean;
+  bioLoginLoading?: boolean;
 }) {
   const sp = compact ? "space-y-1" : "space-y-1.5";
   const fieldGap = compact ? "space-y-2" : "space-y-4";
@@ -74,9 +81,25 @@ function AuthForm({
             </div>
           </div>
           {loginError && <p className="text-xs text-destructive">{loginError}</p>}
-          <Button type="submit" className={`w-full ${compact ? "h-9 text-sm" : ""}`} disabled={loginLoading}>
-            {loginLoading ? "Signing in..." : "Sign In"}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" className={`flex-1 ${compact ? "h-9 text-sm" : ""}`} disabled={loginLoading}>
+              {loginLoading ? "Signing in..." : "Sign In"}
+            </Button>
+            {compact && bioEnabled && (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 w-9 p-0 flex-shrink-0"
+                onClick={onBiometricLogin}
+                disabled={bioLoginLoading || loginLoading}
+                title="Login with biometric"
+              >
+                {bioLoginLoading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Fingerprint className="h-4 w-4 text-primary" />}
+              </Button>
+            )}
+          </div>
           <p className={`text-center text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>
             Don't have an account?{" "}
             <button type="button" onClick={() => setTab("signup")} className="text-primary font-medium hover:underline">Sign up</button>
@@ -151,6 +174,9 @@ export default function LandingPage() {
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [, setLocation] = useLocation();
   const { refetch } = useAuth();
+  const { enabled: bioEnabled, authenticate: bioAuthenticate } = useBiometric();
+  const [bioLoginLoading, setBioLoginLoading] = useState(false);
+  const [bioLoginError, setBioLoginError] = useState("");
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
@@ -237,6 +263,30 @@ export default function LandingPage() {
       document.documentElement.style.overflow = "";
     };
   }, []);
+
+  async function handleBiometricLogin() {
+    setBioLoginError("");
+    setBioLoginLoading(true);
+    try {
+      const ok = await bioAuthenticate();
+      if (!ok) {
+        setBioLoginError("Biometric authentication failed");
+        return;
+      }
+      // Check if server session is still valid
+      const res = await fetch(`${basePath}/api/auth/me`, { credentials: "include" });
+      if (res.ok) {
+        await refetch();
+        setLocation("/dashboard");
+      } else {
+        setBioLoginError("Session expired — please sign in with your password");
+      }
+    } catch {
+      setBioLoginError("Something went wrong, please try again");
+    } finally {
+      setBioLoginLoading(false);
+    }
+  }
 
   const formProps = {
     tab, setTab,
@@ -379,7 +429,17 @@ export default function LandingPage() {
           <div className="flex-1 flex flex-col px-6 pt-6 overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}>
             <div className="w-full max-w-sm mx-auto flex flex-col flex-1 overflow-hidden">
 
-              <AuthForm {...formProps} idPrefix="m" compact />
+              <AuthForm
+                {...formProps}
+                idPrefix="m"
+                compact
+                onBiometricLogin={handleBiometricLogin}
+                bioEnabled={bioEnabled}
+                bioLoginLoading={bioLoginLoading}
+              />
+              {bioLoginError && tab === "login" && (
+                <p className="text-xs text-destructive -mt-1">{bioLoginError}</p>
+              )}
 
               {/* Features + Stats — only on login tab */}
               {tab === "login" && (
