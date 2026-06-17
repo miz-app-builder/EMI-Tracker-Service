@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package, Fingerprint } from "lucide-react";
+import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package, Fingerprint, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useBiometric, generateBiometricToken } from "@/hooks/useBiometric";
@@ -44,6 +44,12 @@ export default function ProfilePage() {
   const initials = user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U";
   const photo = photoUrl(user?.profilePhotoUrl);
   const hasPin = Boolean(user?.hasPinLogin);
+
+  // ── Accordion state (mobile only) ──
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  function toggleSection(id: string) {
+    setOpenSection((prev) => (prev === id ? null : id));
+  }
 
   // ── Info form ──
   const [infoForm, setInfoForm] = useState({
@@ -422,8 +428,14 @@ export default function ProfilePage() {
       {/* ── Export / Import card ── */}
       <Card>
         <CardHeader className="pb-0">
-          <CardTitle className="text-base">Data Management</CardTitle>
-          <div className="flex rounded-lg border border-border overflow-hidden w-fit mt-3">
+          <button
+            className="flex w-full items-center justify-between md:cursor-default"
+            onClick={() => { if (window.innerWidth < 768) toggleSection("data"); }}
+          >
+            <CardTitle className="text-base">Data Management</CardTitle>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${openSection === "data" ? "rotate-180" : ""}`} />
+          </button>
+          <div className={`flex rounded-lg border border-border overflow-hidden w-fit mt-3 ${openSection === "data" ? "flex" : "hidden"} md:flex`}>
             {(["export", "import"] as const).map((t) => (
               <button
                 key={t}
@@ -441,7 +453,7 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
 
-        <CardContent className="pt-4">
+        <CardContent className={`pt-4 ${openSection === "data" ? "block" : "hidden"} md:block`}>
           {dataTab === "export" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -604,9 +616,15 @@ export default function ProfilePage() {
       {/* ── Password card ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Change Password</CardTitle>
+          <button
+            className="flex w-full items-center justify-between md:cursor-default"
+            onClick={() => { if (window.innerWidth < 768) toggleSection("password"); }}
+          >
+            <CardTitle className="text-base">Change Password</CardTitle>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${openSection === "password" ? "rotate-180" : ""}`} />
+          </button>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className={`space-y-6 ${openSection === "password" ? "block" : "hidden"} md:block`}>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="pw-current">Current Password</Label>
@@ -666,9 +684,9 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <PinLoginCard />
-      <AutoLogoutCard />
-      <SessionsCard />
+      <PinLoginCard isOpen={openSection === "security"} onToggle={() => toggleSection("security")} />
+      <AutoLogoutCard isOpen={openSection === "autologout"} onToggle={() => toggleSection("autologout")} />
+      <SessionsCard isOpen={openSection === "sessions"} onToggle={() => toggleSection("sessions")} />
     </div>
   );
 }
@@ -733,7 +751,7 @@ function ChangePinSection() {
   );
 }
 
-function PinLoginCard() {
+function PinLoginCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
   const { user, refetch } = useAuth();
   const { supported: bioSupported, enabled: bioEnabled, register: bioRegister, disable: bioDisable, storeToken } = useBiometric();
   const [bioLoading, setBioLoading] = useState(false);
@@ -826,16 +844,22 @@ function PinLoginCard() {
   return (
     <Card className="md:hidden">
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Shield className="h-4 w-4 text-primary" />
-          Login Security
-        </CardTitle>
+        <button
+          className="flex w-full items-center justify-between"
+          onClick={onToggle}
+        >
+          <CardTitle className="text-base flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
+            Login Security
+          </CardTitle>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+        </button>
         <CardDescription className="mt-0.5">
           Quick sign-in options for mobile
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className={`space-y-3 ${isOpen ? "block" : "hidden"}`}>
 
         {/* ── PIN Login inner card ── */}
         <div className="border rounded-lg p-3 space-y-2">
@@ -941,7 +965,7 @@ const AUTO_LOGOUT_OPTIONS = [
   { label: "1 hour", value: "60" },
 ];
 
-function AutoLogoutCard() {
+function AutoLogoutCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
   const stored = parseInt(localStorage.getItem("emi_auto_logout_minutes") ?? "0", 10) || 0;
   const [minutes, setMinutes] = useState(String(stored));
   const [saved, setSaved] = useState(false);
@@ -955,15 +979,21 @@ function AutoLogoutCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="h-4 w-4 text-primary" />
-          Auto Logout
-        </CardTitle>
+        <button
+          className="flex w-full items-center justify-between md:cursor-default"
+          onClick={() => { if (window.innerWidth < 768) onToggle(); }}
+        >
+          <CardTitle className="text-base flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            Auto Logout
+          </CardTitle>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 md:hidden ${isOpen ? "rotate-180" : ""}`} />
+        </button>
         <CardDescription>
           Automatically log out after a period of inactivity.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-4 ${isOpen ? "block" : "hidden"} md:block`}>
         <div className="flex items-center gap-3 flex-wrap">
           <Select value={minutes} onValueChange={setMinutes}>
             <SelectTrigger className="w-52">
@@ -1020,7 +1050,7 @@ function getBrowser(ua: string | null | undefined): string {
   return "";
 }
 
-function SessionsCard() {
+function SessionsCard({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -1057,8 +1087,11 @@ function SessionsCard() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
+        <button
+          className="flex w-full items-center justify-between md:cursor-default"
+          onClick={() => { if (window.innerWidth < 768) onToggle(); }}
+        >
+          <div className="text-left">
             <CardTitle className="text-base flex items-center gap-2">
               <Monitor className="h-4 w-4 text-primary" />
               Active Sessions
@@ -1067,21 +1100,22 @@ function SessionsCard() {
               All active login sessions on your account across devices. Revoke any session to sign it out.
             </CardDescription>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={load} disabled={loading}>
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 shrink-0 ml-2 md:hidden ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+        <div className={`flex gap-2 flex-shrink-0 mt-2 ${isOpen ? "flex" : "hidden"} md:flex`}>
+          <Button size="sm" variant="ghost" className="gap-1.5 h-8" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          {others.length > 0 && (
+            <Button size="sm" variant="destructive" className="gap-1.5 h-8" onClick={revokeOthers} disabled={revokingAll}>
+              {revokingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+              Sign out all others
             </Button>
-            {others.length > 0 && (
-              <Button size="sm" variant="destructive" className="gap-1.5 h-8" onClick={revokeOthers} disabled={revokingAll}>
-                {revokingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
-                Sign out all others
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className={`p-0 ${isOpen ? "block" : "hidden"} md:block`}>
         {loading ? (
           <div className="px-6 pb-6 space-y-3">
             {[1, 2].map((i) => (
