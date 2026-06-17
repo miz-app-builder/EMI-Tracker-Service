@@ -26,8 +26,6 @@ import SearchPage from "@/pages/search";
 import ReceiptPage from "@/pages/receipt";
 import ExportPage from "@/pages/export";
 import ActivityLogPage from "@/pages/activity-log";
-import { PinLockScreen } from "@/components/PinLockScreen";
-import { usePinLock } from "@/hooks/usePinLock";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,22 +80,14 @@ function Routes() {
   );
 }
 
-function PinGate({ children }: { children: React.ReactNode }) {
-  const { unlocked, verifyPin, unlock } = usePinLock();
-  if (!unlocked) return <PinLockScreen onUnlock={verifyPin} onBiometricUnlock={unlock} />;
-  return <>{children}</>;
-}
-
 function App() {
   return (
     <WouterRouter base={basePath}>
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <PinGate>
-              <Routes />
-              <Toaster />
-            </PinGate>
+            <Routes />
+            <Toaster />
           </TooltipProvider>
         </QueryClientProvider>
       </AuthProvider>

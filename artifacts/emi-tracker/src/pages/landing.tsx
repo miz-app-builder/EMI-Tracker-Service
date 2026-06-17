@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3, X, Fingerprint, Loader2 } from "lucide-react";
+import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3, X, Fingerprint, Loader2, Delete } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -178,6 +178,14 @@ export default function LandingPage() {
   const [bioLoginLoading, setBioLoginLoading] = useState(false);
   const [bioLoginError, setBioLoginError] = useState("");
 
+  const lastEmail = localStorage.getItem("emi_last_email") ?? "";
+  const pinActive = localStorage.getItem("emi_pin_login_active") === "true" && Boolean(lastEmail);
+  const [showPinKeypad, setShowPinKeypad] = useState(pinActive);
+  const [pinValue, setPinValue] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinShake, setPinShake] = useState(false);
+
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -208,6 +216,8 @@ export default function LandingPage() {
       }
       const data = await res.json();
       if (data.token) saveToken(data.token);
+      localStorage.setItem("emi_last_email", loginForm.email.toLowerCase());
+      if (data.hasPinLogin) localStorage.setItem("emi_pin_login_active", "true");
       await refetch();
       setLocation("/dashboard");
     } catch {
@@ -242,6 +252,7 @@ export default function LandingPage() {
       }
       const data = await res.json();
       if (data.token) saveToken(data.token);
+      localStorage.setItem("emi_last_email", signupForm.email.toLowerCase());
       await refetch();
       setLocation("/dashboard");
     } catch {
@@ -263,6 +274,45 @@ export default function LandingPage() {
       document.documentElement.style.overflow = "";
     };
   }, []);
+
+  function maskEmail(email: string): string {
+    const [user, domain] = email.split("@");
+    if (!domain) return email;
+    return user.slice(0, 2) + "***@" + domain;
+  }
+
+  async function handlePinPress(digit: string) {
+    if (digit === "⌫") { setPinValue((p) => p.slice(0, -1)); setPinError(""); return; }
+    if (pinValue.length >= 4) return;
+    const next = pinValue + digit;
+    setPinValue(next);
+    if (next.length === 4) {
+      setPinLoading(true);
+      try {
+        const res = await fetch(`${basePath}/api/auth/pin-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email: lastEmail, pin: next }),
+        });
+        if (!res.ok) {
+          setPinShake(true);
+          setPinError("Incorrect PIN");
+          setTimeout(() => { setPinShake(false); setPinValue(""); setPinError(""); }, 800);
+          return;
+        }
+        const data = await res.json();
+        if (data.token) saveToken(data.token);
+        await refetch();
+        setLocation("/dashboard");
+      } catch {
+        setPinError("Something went wrong, please try again");
+        setPinValue("");
+      } finally {
+        setPinLoading(false);
+      }
+    }
+  }
 
   async function handleBiometricLogin() {
     setBioLoginError("");
@@ -429,20 +479,95 @@ export default function LandingPage() {
           <div className="flex-1 flex flex-col px-6 pt-6 overflow-hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}>
             <div className="w-full max-w-sm mx-auto flex flex-col flex-1 overflow-hidden">
 
-              <AuthForm
-                {...formProps}
-                idPrefix="m"
-                compact
-                onBiometricLogin={handleBiometricLogin}
-                bioEnabled={bioEnabled}
-                bioLoginLoading={bioLoginLoading}
-              />
-              {bioLoginError && tab === "login" && (
-                <p className="text-xs text-destructive -mt-1">{bioLoginError}</p>
+              {showPinKeypad ? (
+                /* ── PIN Keypad View ── */
+                <div className="flex flex-col flex-1 select-none">
+                  {/* Greeting */}
+                  <div className="text-center mb-4">
+                    <p className="text-base font-bold text-foreground">Welcome back!</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{maskEmail(lastEmail)}</p>
+                    <button
+                      type="button"
+                      className="text-[11px] text-primary underline mt-1"
+                      onClick={() => { setShowPinKeypad(false); setPinValue(""); setPinError(""); }}
+                    >
+                      Use a different account
+                    </button>
+                  </div>
+
+                  {/* PIN dots */}
+                  <div className={`flex justify-center gap-4 mb-2 ${pinShake ? "animate-[shake_0.4s_ease-in-out]" : ""}`}>
+                    {[0,1,2,3].map((i) => (
+                      <div key={i} className={`h-3.5 w-3.5 rounded-full border-2 transition-all duration-150 ${
+                        i < pinValue.length
+                          ? pinError ? "bg-destructive border-destructive" : "bg-primary border-primary"
+                          : "border-muted-foreground/40"
+                      }`} />
+                    ))}
+                  </div>
+                  {pinError && <p className="text-xs text-destructive text-center mb-1">{pinError}</p>}
+
+                  {/* Number pad */}
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {["1","2","3","4","5","6","7","8","9","","0","⌫"].map((d, i) => (
+                      d === "" ? <div key={i} /> : (
+                        <Button
+                          key={i}
+                          type="button"
+                          variant={d === "⌫" ? "ghost" : "outline"}
+                          className="h-12 text-lg font-semibold rounded-xl"
+                          onClick={() => handlePinPress(d)}
+                          disabled={pinLoading}
+                        >
+                          {d === "⌫" ? <Delete className="h-4 w-4" /> : d}
+                        </Button>
+                      )
+                    ))}
+                  </div>
+
+                  {/* Biometric button */}
+                  {bioEnabled && (
+                    <div className="flex justify-center mb-2">
+                      <button
+                        type="button"
+                        onClick={handleBiometricLogin}
+                        disabled={bioLoginLoading}
+                        className="flex flex-col items-center gap-1 text-primary disabled:opacity-50"
+                      >
+                        <div className="h-11 w-11 rounded-full border-2 border-primary/30 bg-primary/5 flex items-center justify-center">
+                          {bioLoginLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Fingerprint className="h-5 w-5" />}
+                        </div>
+                        <span className="text-[11px] font-medium">Biometric</span>
+                      </button>
+                    </div>
+                  )}
+                  {bioLoginError && <p className="text-xs text-destructive text-center -mt-1 mb-1">{bioLoginError}</p>}
+
+                  {/* Switch to password */}
+                  <p className="text-center text-xs text-muted-foreground">
+                    <button type="button" onClick={() => { setShowPinKeypad(false); setPinValue(""); setPinError(""); }} className="text-primary font-medium hover:underline">
+                      Use password instead
+                    </button>
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <AuthForm
+                    {...formProps}
+                    idPrefix="m"
+                    compact
+                    onBiometricLogin={handleBiometricLogin}
+                    bioEnabled={bioEnabled}
+                    bioLoginLoading={bioLoginLoading}
+                  />
+                  {bioLoginError && tab === "login" && (
+                    <p className="text-xs text-destructive -mt-1">{bioLoginError}</p>
+                  )}
+                </>
               )}
 
-              {/* Features + Stats — only on login tab */}
-              {tab === "login" && (
+              {/* Features + Stats — only on login tab and not pin keypad */}
+              {tab === "login" && !showPinKeypad && (
                 <div className="mt-auto pt-3 space-y-3">
                   {/* Features row */}
                   <div className="flex gap-2 pt-3 border-t border-border">

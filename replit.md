@@ -36,11 +36,14 @@ A full-stack app for tracking monthly EMI installment payments — add shops, pr
 - All API routes except `/api/health` and `/api/auth/*` are protected by `requireAuth` JWT middleware.
 - JWT stored in httpOnly cookie named `emi_token`, signed with `SESSION_SECRET`, 7-day expiry.
 - Auth endpoints: `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`.
+- PIN Login endpoints: `POST /api/auth/set-pin-login` (protected), `DELETE /api/auth/pin-login` (protected), `POST /api/auth/pin-login` (public, takes email+pin).
 - `resolveUserId` is now a passthrough (req.userId is the DB UUID directly from JWT payload).
 - Home route (`/`) shows landing page for unauthenticated users; redirects to `/dashboard` for authenticated users.
 - `dueDayOfMonth` field on EMI orders: if set, due date snaps to that day of the month; otherwise falls back to purchase day-of-month.
 - `discount` field on EMI orders: `effectivePrice = totalPrice - discount`; monthly installment calculated from effective price.
 - Tailwind v4 with `@tailwindcss/vite`; `@layer theme, base, components, utilities` (no `clerk` layer needed).
+- PIN Login: `pin_hash` column in `users` table; `hasPinLogin` returned by `/api/auth/me`; `emi_pin_login_active` + `emi_last_email` in localStorage for mobile PIN keypad.
+- App lock (PinLockScreen + usePinLock) was removed; replaced with server-side PIN Login.
 
 ## Product
 

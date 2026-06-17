@@ -10,7 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package, Fingerprint } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { usePinLock } from "@/hooks/usePinLock";
 import { useBiometric } from "@/hooks/useBiometric";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -656,24 +655,27 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <PinSettingsCard />
+      <PinLoginCard />
       <AutoLogoutCard />
       <SessionsCard />
     </div>
   );
 }
 
-function PinSettingsCard() {
-  const { hasPin, setPin, removePin } = usePinLock();
+function PinLoginCard() {
+  const { user, refetch } = useAuth();
   const { supported: bioSupported, enabled: bioEnabled, register: bioRegister, disable: bioDisable } = useBiometric();
   const [bioLoading, setBioLoading] = useState(false);
   const [bioMsg, setBioMsg] = useState("");
-  const [mode, setMode] = useState<"idle" | "set" | "change" | "remove">("idle");
+  const [mode, setMode] = useState<"idle" | "set" | "change" | "confirm_remove">("idle");
   const [step, setStep] = useState<"enter" | "confirm">("enter");
   const [pin1, setPin1] = useState("");
   const [pin2, setPin2] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const hasPin = Boolean(user?.hasPinLogin);
 
   async function handleBioToggle() {
     setBioMsg("");
@@ -691,19 +693,34 @@ function PinSettingsCard() {
 
   function reset() { setMode("idle"); setStep("enter"); setPin1(""); setPin2(""); setError(""); }
 
-  function handleSubmit() {
-    if (mode === "remove") {
-      const ok = removePin(pin1);
-      if (!ok) { setError("Incorrect PIN"); return; }
-      setSuccess("PIN removed successfully."); reset(); return;
-    }
+  async function handleRemove() {
+    setLoading(true);
+    const res = await authFetch(`${basePath}/api/auth/pin-login`, { method: "DELETE" });
+    setLoading(false);
+    if (!res.ok) { setError("Failed to remove PIN"); return; }
+    localStorage.removeItem("emi_pin_login_active");
+    bioDisable();
+    await refetch();
+    setSuccess("PIN login removed."); reset();
+  }
+
+  async function handleSubmit() {
     if (step === "enter") {
       if (pin1.length !== 4 || !/^\d{4}$/.test(pin1)) { setError("Please enter a 4-digit number"); return; }
       setStep("confirm"); setPin2(""); setError(""); return;
     }
     if (pin1 !== pin2) { setError("PINs do not match"); setPin2(""); return; }
-    setPin(pin1);
-    setSuccess("PIN set successfully!");
+    setLoading(true);
+    const res = await authFetch(`${basePath}/api/auth/set-pin-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: pin1 }),
+    });
+    setLoading(false);
+    if (!res.ok) { setError("Failed to save PIN"); return; }
+    localStorage.setItem("emi_pin_login_active", "true");
+    await refetch();
+    setSuccess(mode === "change" ? "PIN updated!" : "PIN login enabled!");
     reset();
   }
 
@@ -712,10 +729,10 @@ function PinSettingsCard() {
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Shield className="h-4 w-4 text-primary" />
-          PIN Lock
+          PIN Login
         </CardTitle>
         <CardDescription>
-          Protect the app with a 4-digit PIN when opening.{" "}
+          Mobile-এ 4-digit PIN দিয়ে login করুন।{" "}
           {hasPin ? <span className="text-green-600 font-medium">PIN is active ✓</span> : <span className="text-muted-foreground">No PIN set</span>}
         </CardDescription>
       </CardHeader>
@@ -735,7 +752,7 @@ function PinSettingsCard() {
                   <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("change"); setSuccess(""); }}>
                     <KeyRound className="h-4 w-4" /> Change PIN
                   </Button>
-                  <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("remove"); setSuccess(""); }}>
+                  <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("confirm_remove"); setSuccess(""); }}>
                     <Trash2 className="h-4 w-4" /> Remove PIN
                   </Button>
                 </>
@@ -758,7 +775,7 @@ function PinSettingsCard() {
                   ? "PIN set করলে biometric login enable করা যাবে।"
                   : !bioSupported
                   ? "Your device or browser does not support biometric authentication."
-                  : "Use fingerprint or Face ID instead of PIN to unlock the app."}
+                  : "Use fingerprint or Face ID to log in."}
               </p>
               {bioMsg && (
                 <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : bioMsg.includes("disabled") ? "text-muted-foreground" : "text-destructive"}`}>
@@ -777,12 +794,22 @@ function PinSettingsCard() {
               </Button>
             </div>
           </div>
+        ) : mode === "confirm_remove" ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">PIN login remove করলে mobile-এ PIN দিয়ে login করা যাবে না।</p>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <div className="flex gap-2">
+              <Button size="sm" variant="destructive" onClick={handleRemove} disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                Remove PIN
+              </Button>
+              <Button size="sm" variant="ghost" onClick={reset}>Cancel</Button>
+            </div>
+          </div>
         ) : (
           <div className="space-y-3 max-w-xs">
             <Label>
-              {mode === "remove"
-                ? "Enter current PIN"
-                : step === "enter"
+              {step === "enter"
                 ? mode === "change" ? "Enter new PIN" : "Enter PIN (4 digits)"
                 : "Confirm PIN"}
             </Label>
@@ -791,17 +818,18 @@ function PinSettingsCard() {
               inputMode="numeric"
               maxLength={4}
               placeholder="••••"
-              value={mode === "remove" ? pin1 : step === "enter" ? pin1 : pin2}
+              value={step === "enter" ? pin1 : pin2}
               onChange={(e) => {
                 const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                if (mode === "remove" || step === "enter") setPin1(v); else setPin2(v);
+                if (step === "enter") setPin1(v); else setPin2(v);
               }}
               className="tracking-widest text-center text-lg"
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleSubmit}>
-                {mode === "remove" ? "Remove" : step === "enter" ? "Next" : "Save"}
+              <Button size="sm" onClick={handleSubmit} disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {step === "enter" ? "Next" : "Save"}
               </Button>
               <Button size="sm" variant="ghost" onClick={reset}>Cancel</Button>
             </div>

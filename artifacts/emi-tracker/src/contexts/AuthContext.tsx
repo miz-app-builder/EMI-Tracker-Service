@@ -15,6 +15,7 @@ export interface AuthUser {
   passwordChangedAt?: string | null;
   lastActiveAt?: string | null;
   createdAt?: string;
+  hasPinLogin?: boolean;
 }
 
 interface AuthContextType {

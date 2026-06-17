@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { db, usersTable, sessionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logActivity } from "../lib/logActivity";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
 const COOKIE_NAME = "emi_token";
@@ -113,7 +114,7 @@ router.post("/auth/login", async (req, res) => {
   const token = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
   res.cookie(COOKIE_NAME, token, cookieOpts());
   logActivity(user.id, "login", "Logged in");
-  res.json({ id: user.id, email: user.email, name: user.name, token });
+  res.json({ id: user.id, email: user.email, name: user.name, hasPinLogin: Boolean(user.pinHash), token });
 });
 
 router.post("/auth/logout", async (req, res) => {
@@ -158,14 +159,68 @@ router.get("/auth/me", async (req, res) => {
         passwordChangedAt: usersTable.passwordChangedAt,
         lastActiveAt: usersTable.lastActiveAt,
         createdAt: usersTable.createdAt,
+        hasPinLogin: usersTable.pinHash,
       })
       .from(usersTable)
       .where(eq(usersTable.id, payload.userId));
     if (!user) { res.status(401).json({ error: "User not found" }); return; }
-    res.json(user);
+    res.json({ ...user, hasPinLogin: Boolean(user.hasPinLogin) });
   } catch {
     res.status(401).json({ error: "Invalid token" });
   }
+});
+
+// PIN Login: set or update PIN (protected)
+router.post("/auth/set-pin-login", requireAuth, async (req, res) => {
+  const { pin } = req.body;
+  if (!pin || !/^\d{4,6}$/.test(pin)) {
+    res.status(400).json({ error: "PIN must be 4–6 digits" });
+    return;
+  }
+  const userId = (req as any).userId as string;
+  const pinHash = await bcrypt.hash(pin, 10);
+  await db.update(usersTable).set({ pinHash }).where(eq(usersTable.id, userId));
+  logActivity(userId, "pin_set", "PIN login enabled");
+  res.json({ ok: true });
+});
+
+// PIN Login: remove PIN (protected)
+router.delete("/auth/pin-login", requireAuth, async (req, res) => {
+  const userId = (req as any).userId as string;
+  await db.update(usersTable).set({ pinHash: null }).where(eq(usersTable.id, userId));
+  logActivity(userId, "pin_removed", "PIN login disabled");
+  res.json({ ok: true });
+});
+
+// PIN Login: login with email + PIN (public)
+router.post("/auth/pin-login", async (req, res) => {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) { res.status(500).json({ error: "Server misconfigured" }); return; }
+
+  const { email, pin } = req.body;
+  if (!email || !pin) {
+    res.status(400).json({ error: "email and pin required" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase()));
+  if (!user || !user.pinHash) {
+    res.status(401).json({ error: "PIN login not set up for this account" });
+    return;
+  }
+
+  const valid = await bcrypt.compare(pin, user.pinHash);
+  if (!valid) {
+    res.status(401).json({ error: "Incorrect PIN" });
+    return;
+  }
+
+  await db.update(usersTable).set({ lastActiveAt: new Date() }).where(eq(usersTable.id, user.id));
+  const sessionId = await createSession(user.id, req);
+  const token = jwt.sign({ userId: user.id, email: user.email, sessionId }, secret, { expiresIn: "7d" });
+  res.cookie(COOKIE_NAME, token, cookieOpts());
+  logActivity(user.id, "pin_login", "Logged in via PIN");
+  res.json({ id: user.id, email: user.email, name: user.name, hasPinLogin: true, token });
 });
 
 export default router;
