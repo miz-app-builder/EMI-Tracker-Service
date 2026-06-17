@@ -103,11 +103,16 @@ router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
     const ext = file.mimetype === "image/png" ? "png" : "jpg";
     const objectPath = `${userId}/avatar.${ext}`;
 
+    await supabase.storage.from(PHOTO_BUCKET).remove([
+      `${userId}/avatar.jpg`,
+      `${userId}/avatar.png`,
+    ]);
+
     const { error } = await supabase.storage
       .from(PHOTO_BUCKET)
       .upload(objectPath, file.buffer, {
         contentType: file.mimetype,
-        upsert: true,
+        upsert: false,
       });
 
     if (error) {
