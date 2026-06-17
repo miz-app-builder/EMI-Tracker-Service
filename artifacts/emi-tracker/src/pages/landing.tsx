@@ -284,7 +284,7 @@ export default function LandingPage() {
   async function handlePinLogin(e: React.FormEvent) {
     e.preventDefault();
     setPinError("");
-    if (pinInput.length !== 4) { setPinError("৪-digit PIN দিন"); return; }
+    if (pinInput.length !== 4) { setPinError("Please enter a 4-digit PIN"); return; }
     setPinLoading(true);
     try {
       const res = await fetch(`${basePath}/api/auth/pin-login`, {
@@ -294,7 +294,7 @@ export default function LandingPage() {
         body: JSON.stringify({ email: loginForm.email, pin: pinInput }),
       });
       if (!res.ok) {
-        setPinError("ভুল PIN, আবার চেষ্টা করুন");
+        setPinError("Incorrect PIN, please try again");
         setPinInput("");
         return;
       }
@@ -303,7 +303,7 @@ export default function LandingPage() {
       await refetch();
       setLocation("/dashboard");
     } catch {
-      setPinError("কিছু একটা সমস্যা হয়েছে");
+      setPinError("Something went wrong, please try again");
       setPinInput("");
     } finally {
       setPinLoading(false);
@@ -476,65 +476,86 @@ export default function LandingPage() {
             <div className="w-full max-w-sm mx-auto flex flex-col flex-1 overflow-hidden">
 
               {tab === "login" && pinMode ? (
-                /* ── PIN keyboard login (mobile only) ── */
+                /* ── PIN login — same visual layout as password login ── */
                 <form onSubmit={handlePinLogin} className="space-y-3">
-                  <div className="space-y-0.5">
-                    <p className="font-bold text-foreground text-lg">স্বাগতম!</p>
+                  {/* Same tab bar */}
+                  <div className="flex bg-muted rounded-xl p-1 mb-3">
+                    <span className="flex-1 py-2 text-sm font-medium rounded-lg bg-white text-foreground shadow-sm text-center">Login</span>
+                    <button
+                      type="button"
+                      onClick={() => { setOverridePasswordMode(true); setTab("signup"); setPinError(""); }}
+                      className="flex-1 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      Sign Up
+                    </button>
                   </div>
+
+                  {/* Same heading */}
                   <div className="space-y-1">
-                    <Label htmlFor="m-pin-email" className="text-xs">Email</Label>
-                    <Input
-                      id="m-pin-email"
-                      type="email"
-                      className="h-9 text-sm text-muted-foreground"
-                      value={loginForm.email}
-                      onChange={(e) => {
-                        setLoginForm((p) => ({ ...p, email: e.target.value }));
-                        setPinError("");
-                      }}
-                    />
+                    <p className="font-bold text-foreground text-lg">Welcome back!</p>
+                    <p className="text-xs text-muted-foreground">Sign in with your PIN</p>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="m-pin-field" className="text-xs">PIN</Label>
-                    <Input
-                      id="m-pin-field"
-                      type="password"
-                      inputMode="numeric"
-                      maxLength={4}
-                      placeholder="••••"
-                      className="h-9 text-sm tracking-widest text-center"
-                      value={pinInput}
-                      onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(""); }}
-                      autoFocus
-                    />
-                  </div>
-                  {pinError && <p className="text-xs text-destructive">{pinError}</p>}
-                  <Button type="submit" className="w-full h-9 text-sm" disabled={pinLoading}>
-                    {pinLoading ? "লগিন হচ্ছে..." : "লগিন করুন"}
-                  </Button>
-                  {bioEnabled && (
-                    <div className="flex justify-center">
-                      <button
-                        type="button"
-                        onClick={handleBiometricLogin}
-                        disabled={bioLoginLoading}
-                        className="flex flex-col items-center gap-1 text-primary disabled:opacity-50"
-                      >
-                        <div className="h-10 w-10 rounded-full border-2 border-primary/30 bg-primary/5 flex items-center justify-center">
-                          {bioLoginLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
-                        </div>
-                        <span className="text-[11px] font-medium">Biometric</span>
-                      </button>
+
+                  {/* Email + PIN fields */}
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="m-pin-email" className="text-xs">Email</Label>
+                      <Input
+                        id="m-pin-email"
+                        type="email"
+                        className="h-9 text-sm"
+                        value={loginForm.email}
+                        onChange={(e) => { setLoginForm((p) => ({ ...p, email: e.target.value })); setPinError(""); }}
+                      />
                     </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="m-pin-field" className="text-xs">PIN</Label>
+                      <Input
+                        id="m-pin-field"
+                        type="password"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="Your PIN"
+                        className="h-9 text-sm"
+                        value={pinInput}
+                        onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(""); }}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  {(pinError || bioLoginError) && (
+                    <p className="text-xs text-destructive">{pinError || bioLoginError}</p>
                   )}
-                  {bioLoginError && <p className="text-xs text-destructive text-center">{bioLoginError}</p>}
+
+                  {/* Sign In + Biometric inline — same as password login */}
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1 h-9 text-sm" disabled={pinLoading}>
+                      {pinLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                    {bioEnabled && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 w-9 p-0 flex-shrink-0"
+                        onClick={handleBiometricLogin}
+                        disabled={bioLoginLoading || pinLoading}
+                        title="Login with biometric"
+                      >
+                        {bioLoginLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4 text-primary" />}
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Use password instead — same style as "Don't have an account?" */}
                   <p className="text-center text-xs text-muted-foreground">
+                    Use password instead?{" "}
                     <button
                       type="button"
                       onClick={() => { setOverridePasswordMode(true); setPinError(""); }}
                       className="text-primary font-medium hover:underline"
                     >
-                      পাসওয়ার্ড দিয়ে লগিন করুন
+                      Sign in
                     </button>
                   </p>
                 </form>
@@ -554,8 +575,8 @@ export default function LandingPage() {
                 </>
               )}
 
-              {/* Features + Stats — only on login tab and not pin mode */}
-              {tab === "login" && !pinMode && (
+              {/* Features + Stats — show on login tab (both password and PIN mode) */}
+              {tab === "login" && (
                 <div className="mt-auto pt-3 space-y-3">
                   {/* Features row */}
                   <div className="flex gap-2 pt-3 border-t border-border">
