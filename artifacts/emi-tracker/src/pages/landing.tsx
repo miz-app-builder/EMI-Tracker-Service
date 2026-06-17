@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -225,6 +225,19 @@ export default function LandingPage() {
     }
   }
 
+  // Lock body scroll on mobile so page can't scroll behind the fixed layout
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
+
   const formProps = {
     tab, setTab,
     loginForm, setLoginForm, loginError, loginLoading, handleLogin,
@@ -321,7 +334,7 @@ export default function LandingPage() {
       )}
 
       {/* ───── MOBILE LAYOUT ───── */}
-      <div className="md:hidden flex flex-col w-full overflow-hidden" style={{ height: "100dvh" }}>
+      <div className="md:hidden fixed inset-0 flex flex-col overflow-hidden z-10">
 
         {/* Hero panel */}
         <div
