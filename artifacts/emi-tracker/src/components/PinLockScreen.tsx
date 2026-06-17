@@ -1,17 +1,38 @@
-import { useState, useRef, useEffect } from "react";
-import { Shield, Delete } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Shield, Delete, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBiometric } from "@/hooks/useBiometric";
 
 type Props = {
   onUnlock: (pin: string) => boolean;
+  onBiometricUnlock?: () => void;
 };
 
 const DIGITS = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
 
-export function PinLockScreen({ onUnlock }: Props) {
+export function PinLockScreen({ onUnlock, onBiometricUnlock }: Props) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
+  const [bioLoading, setBioLoading] = useState(false);
+  const { enabled: bioEnabled, authenticate } = useBiometric();
+
+  async function handleBiometric() {
+    setBioLoading(true);
+    try {
+      const ok = await authenticate();
+      if (ok && onBiometricUnlock) {
+        onBiometricUnlock();
+      } else if (!ok) {
+        setError(true);
+        setTimeout(() => setError(false), 1500);
+      }
+    } catch {
+      setError(true);
+      setTimeout(() => setError(false), 1500);
+    }
+    setBioLoading(false);
+  }
 
   useEffect(() => {
     if (pin.length === 4) {
@@ -84,6 +105,24 @@ export function PinLockScreen({ onUnlock }: Props) {
           )
         ))}
       </div>
+
+      {/* Biometric button — mobile only */}
+      {bioEnabled && onBiometricUnlock && (
+        <button
+          onClick={handleBiometric}
+          disabled={bioLoading}
+          className="md:hidden flex flex-col items-center gap-1.5 text-primary disabled:opacity-50 transition-opacity mt-2"
+        >
+          <div className="h-14 w-14 rounded-full border-2 border-primary/30 flex items-center justify-center bg-primary/5">
+            {bioLoading ? (
+              <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            ) : (
+              <Fingerprint className="h-7 w-7" />
+            )}
+          </div>
+          <span className="text-xs font-medium">Use Biometric</span>
+        </button>
+      )}
 
       <style>{`
         @keyframes shake {

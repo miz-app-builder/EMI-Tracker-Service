@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package } from "lucide-react";
+import { Camera, Save, KeyRound, CheckCircle2, Loader2, Download, Upload, Store, FileText, CreditCard, Shield, Clock, Trash2, Monitor, MapPin, LogOut, RefreshCw, AlertCircle, Package, Fingerprint } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { usePinLock } from "@/hooks/usePinLock";
+import { useBiometric } from "@/hooks/useBiometric";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -664,12 +665,29 @@ export default function ProfilePage() {
 
 function PinSettingsCard() {
   const { hasPin, setPin, removePin } = usePinLock();
+  const { supported: bioSupported, enabled: bioEnabled, register: bioRegister, disable: bioDisable } = useBiometric();
+  const [bioLoading, setBioLoading] = useState(false);
+  const [bioMsg, setBioMsg] = useState("");
   const [mode, setMode] = useState<"idle" | "set" | "change" | "remove">("idle");
   const [step, setStep] = useState<"enter" | "confirm">("enter");
   const [pin1, setPin1] = useState("");
   const [pin2, setPin2] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  async function handleBioToggle() {
+    setBioMsg("");
+    setBioLoading(true);
+    if (bioEnabled) {
+      bioDisable();
+      setBioMsg("Biometric login disabled.");
+    } else {
+      const ok = await bioRegister();
+      setBioMsg(ok ? "Biometric login enabled!" : "Could not register biometric. Please try again.");
+    }
+    setBioLoading(false);
+    setTimeout(() => setBioMsg(""), 3000);
+  }
 
   function reset() { setMode("idle"); setStep("enter"); setPin1(""); setPin2(""); setError(""); }
 
@@ -705,21 +723,56 @@ function PinSettingsCard() {
         {success && <p className="text-sm text-green-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" />{success}</p>}
 
         {mode === "idle" ? (
-          <div className="flex flex-wrap gap-2">
-            {!hasPin && (
-              <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("set"); setSuccess(""); }}>
-                <Shield className="h-4 w-4" /> Set PIN
-              </Button>
-            )}
-            {hasPin && (
-              <>
-                <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("change"); setSuccess(""); }}>
-                  <KeyRound className="h-4 w-4" /> Change PIN
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {!hasPin && (
+                <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("set"); setSuccess(""); }}>
+                  <Shield className="h-4 w-4" /> Set PIN
                 </Button>
-                <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("remove"); setSuccess(""); }}>
-                  <Trash2 className="h-4 w-4" /> Remove PIN
+              )}
+              {hasPin && (
+                <>
+                  <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMode("change"); setSuccess(""); }}>
+                    <KeyRound className="h-4 w-4" /> Change PIN
+                  </Button>
+                  <Button size="sm" variant="destructive" className="gap-2" onClick={() => { setMode("remove"); setSuccess(""); }}>
+                    <Trash2 className="h-4 w-4" /> Remove PIN
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Biometric option — mobile only, only when PIN is set */}
+            {hasPin && bioSupported && (
+              <div className="md:hidden border rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Fingerprint className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Biometric Login</span>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bioEnabled ? "bg-green-500/15 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                    {bioEnabled ? "On" : "Off"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use fingerprint or Face ID instead of PIN to unlock the app.
+                </p>
+                {bioMsg && (
+                  <p className={`text-xs font-medium ${bioMsg.includes("enabled") ? "text-green-600" : bioMsg.includes("disabled") ? "text-muted-foreground" : "text-destructive"}`}>
+                    {bioMsg}
+                  </p>
+                )}
+                <Button
+                  size="sm"
+                  variant={bioEnabled ? "destructive" : "outline"}
+                  className="gap-2 w-full"
+                  onClick={handleBioToggle}
+                  disabled={bioLoading}
+                >
+                  {bioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
+                  {bioEnabled ? "Disable Biometric" : "Enable Biometric"}
                 </Button>
-              </>
+              </div>
             )}
           </div>
         ) : (

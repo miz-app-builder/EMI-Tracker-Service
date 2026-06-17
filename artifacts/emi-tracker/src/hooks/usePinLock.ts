@@ -42,5 +42,9 @@ export function usePinLock() {
     if (localStorage.getItem(PIN_KEY)) setUnlocked(false);
   }, []);
 
-  return { hasPin, unlocked, verifyPin, setPin, removePin, lock };
+  const unlock = useCallback(() => {
+    setUnlocked(true);
+  }, []);
+
+  return { hasPin, unlocked, verifyPin, setPin, removePin, lock, unlock };
 }

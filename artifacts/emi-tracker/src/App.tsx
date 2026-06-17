@@ -83,8 +83,8 @@ function Routes() {
 }
 
 function PinGate({ children }: { children: React.ReactNode }) {
-  const { unlocked, verifyPin } = usePinLock();
-  if (!unlocked) return <PinLockScreen onUnlock={verifyPin} />;
+  const { unlocked, verifyPin, unlock } = usePinLock();
+  if (!unlocked) return <PinLockScreen onUnlock={verifyPin} onBiometricUnlock={unlock} />;
   return <>{children}</>;
 }
 
