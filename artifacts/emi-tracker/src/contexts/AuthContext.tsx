@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearToken();
     document.documentElement.classList.remove("dark");
     localStorage.removeItem("emi-theme");
-    window.location.href = `${basePath}/`;
+    setUser(null);
   }
 
   useEffect(() => {
