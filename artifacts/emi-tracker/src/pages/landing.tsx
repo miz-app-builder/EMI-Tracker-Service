@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3 } from "lucide-react";
+import { CreditCard, Calendar, TrendingDown, ShoppingBag, BarChart3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -138,8 +138,11 @@ function AuthForm({
   );
 }
 
+type Feature = typeof features[number];
+
 export default function LandingPage() {
   const [tab, setTab] = useState<Tab>("login");
+  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [, setLocation] = useLocation();
   const { refetch } = useAuth();
 
@@ -285,6 +288,32 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* ───── FEATURE POPUP (mobile) ───── */}
+      {selectedFeature && (
+        <>
+          <div className="md:hidden fixed inset-0 z-50 bg-black/50 flex items-end" onClick={() => setSelectedFeature(null)}>
+            <div className="w-full bg-card rounded-t-3xl p-6 pb-10" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
+                    <selectedFeature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-foreground">{selectedFeature.title}</h3>
+                    <p className="text-[11px] text-primary font-medium">EMI Tracker</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedFeature(null)} className="p-1.5 rounded-full hover:bg-muted transition-colors">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">{selectedFeature.desc}</p>
+              <div className="mt-5 w-12 h-1 bg-border rounded-full mx-auto" />
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ───── MOBILE LAYOUT ───── */}
       <div className="md:hidden flex flex-col min-h-screen w-full">
         {/* Top hero panel — smaller when signup is active */}
@@ -323,19 +352,23 @@ export default function LandingPage() {
           <div className="w-full max-w-sm mx-auto">
             <AuthForm {...formProps} idPrefix="m" />
 
-            {/* Features below form */}
-            <div className="mt-8 pt-6 border-t border-border space-y-4">
-              {features.map((f) => (
-                <div key={f.title} className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <f.icon className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-foreground font-semibold text-sm">{f.title}</p>
-                    <p className="text-muted-foreground text-xs mt-0.5 leading-snug">{f.desc}</p>
-                  </div>
-                </div>
-              ))}
+            {/* Features grid */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Features</p>
+              <div className="grid grid-cols-3 gap-2">
+                {features.map((f) => (
+                  <button
+                    key={f.title}
+                    onClick={() => setSelectedFeature(f)}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-primary/10 active:scale-95 transition-all text-center"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+                      <f.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-[10px] font-medium text-foreground leading-tight">{f.title}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Stats */}
