@@ -6,25 +6,19 @@ description: Critical port and workflow setup for EMI Tracker on Replit — prev
 # Port & Workflow Configuration
 
 ## Rule
-- Frontend MUST run on port 5000 with `PORT=5000 BASE_PATH=/` — this is the Replit webview port.
+- All workflows are now artifact-managed — do NOT create custom duplicate workflows for frontend or API.
 - API server runs on port 8080.
 - Node.js version must be 22 (not 20) — Supabase JS requires native WebSocket (Node 22+).
-- `BASE_PATH=/` must exist as a shared env var.
+- `BASE_PATH=/` must exist as a shared env var (Replit injects it into artifact workflows automatically).
 
-**Why:** Replit's webview only works on port 5000 (maps to external port 80). The old config used port 3000 → external 3001, which broke the webview. `@supabase/realtime-js` crashes on Node 20 with no native WebSocket.
+**Why:** When Replit adds artifact workflows, they inject PORT and BASE_PATH automatically. Any custom workflow with the same command will grab the same port first (EADDRINUSE), causing the artifact workflow to fail.
 
-**How to apply:** If the frontend workflow is ever recreated or reconfigured, always use:
-- command: `PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev`
-- waitForPort: 5000
-- outputType: webview
-
-## Artifact-managed workflows (cannot delete/reconfigure)
-Replit auto-creates these — they run alongside the custom workflow and cannot be removed:
-- `artifacts/emi-tracker: web` — runs on a random internal port, not the webview port. Harmless.
-- `artifacts/api-server: API Server` — runs on port 8080 (same as needed). If it conflicts with a custom API Server workflow, remove the custom one.
-- `artifacts/mockup-sandbox: Component Preview Server` — canvas tool, port 8081.
+**How to apply:** Do NOT create custom `EMI Tracker Frontend` or `API Server` workflows — use the artifact-managed ones exclusively:
+- `artifacts/emi-tracker: web` — frontend, Replit-injected PORT (~19185) + BASE_PATH
+- `artifacts/api-server: API Server` — API, port 8080
+- `artifacts/mockup-sandbox: Component Preview Server` — canvas, port 8081
 
 ## Symptom → Fix
-- Webview shows port 3001: frontend is on port 3000, not 5000. Reconfigure `EMI Tracker Frontend` to `PORT=5000`.
-- API server EADDRINUSE 8080: two API server workflows running at once. Remove the custom one, keep artifact-managed.
-- `artifacts/emi-tracker: web` finishes with SIGTERM: expected when `EMI Tracker Frontend` occupies port 5000. Not a problem.
+- `artifacts/emi-tracker: web` FAILED "Port XXXXX already in use": a custom frontend workflow is squatting on the same port. Remove the custom workflow.
+- `artifacts/api-server: API Server` FAILED "EADDRINUSE 8080": a custom API Server workflow is running. Remove it.
+- `vite.config.ts` throws "PORT environment variable is required": only happens if running outside the artifact context; Replit injects PORT for artifact workflows automatically.

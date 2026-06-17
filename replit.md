@@ -67,12 +67,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 ## Workflow & Port Configuration (IMPORTANT)
 
 - **Node.js version: 22** (not 20) — required for native WebSocket support used by `@supabase/supabase-js`. Do NOT downgrade.
-- **Frontend workflow**: `EMI Tracker Frontend` — command `PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev`, port 5000, outputType `webview`. This is the Replit webview entry point. Do NOT change the port.
-- **API workflow**: handled by artifact-managed `artifacts/api-server: API Server` on port 8080.
+- **Frontend workflow**: `artifacts/emi-tracker: web` — artifact-managed, runs `pnpm --filter @workspace/emi-tracker run dev`, Replit injects PORT and BASE_PATH automatically.
+- **API workflow**: `artifacts/api-server: API Server` — artifact-managed, runs `pnpm --filter @workspace/api-server run dev` on port 8080.
 - **`BASE_PATH=/`** is set as a shared env var — required by `vite.config.ts`, do not remove.
-- **Port mapping**: 5000 → external 80 (webview), 8080 → external 8080 (API).
-- Replit auto-creates artifact-managed workflows (`artifacts/emi-tracker: web`, `artifacts/api-server: API Server`, `artifacts/mockup-sandbox: Component Preview Server`) that **cannot be deleted or reconfigured**. They run alongside the custom `EMI Tracker Frontend` workflow — this is expected and fine.
-- If the webview shows port 3001, it means the frontend is incorrectly running on port 3000 instead of 5000. Fix: reconfigure `EMI Tracker Frontend` to use `PORT=5000`.
+- Replit artifact-managed workflows (`artifacts/emi-tracker: web`, `artifacts/api-server: API Server`, `artifacts/mockup-sandbox: Component Preview Server`) **cannot be deleted or reconfigured**. Do NOT create custom duplicate workflows for these — they will conflict on the same ports and cause EADDRINUSE failures.
 
 ## Pointers
 
