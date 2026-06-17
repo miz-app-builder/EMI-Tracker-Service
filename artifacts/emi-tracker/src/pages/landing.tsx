@@ -81,22 +81,22 @@ function AuthForm({
             </div>
           </div>
           {loginError && <p className="text-xs text-destructive">{loginError}</p>}
-          <div className="flex gap-2">
-            <Button type="submit" className={`flex-1 ${compact ? "h-9 text-sm" : ""}`} disabled={loginLoading}>
+          <div className="flex gap-2 items-center">
+            <Button type="submit" className={`flex-1 ${compact ? "h-8 text-xs" : ""}`} disabled={loginLoading}>
               {loginLoading ? "Signing in..." : "Sign In"}
             </Button>
             {compact && bioEnabled && (
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 w-9 p-0 flex-shrink-0"
+                className="h-11 w-11 p-0 flex-shrink-0"
                 onClick={onBiometricLogin}
                 disabled={bioLoginLoading || loginLoading}
                 title="Login with biometric"
               >
                 {bioLoginLoading
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <Fingerprint className="h-4 w-4 text-primary" />}
+                  ? <Loader2 className="h-5 w-5 animate-spin" />
+                  : <Fingerprint className="h-5 w-5 text-primary" />}
               </Button>
             )}
           </div>
@@ -549,20 +549,20 @@ export default function LandingPage() {
                   )}
 
                   {/* Sign In + Biometric inline — same as password login */}
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1 h-9 text-sm" disabled={pinLoading}>
+                  <div className="flex gap-2 items-center">
+                    <Button type="submit" className="flex-1 h-8 text-xs" disabled={pinLoading}>
                       {pinLoading ? "Signing in..." : "Sign In"}
                     </Button>
                     {bioEnabled && (
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-9 w-9 p-0 flex-shrink-0"
+                        className="h-11 w-11 p-0 flex-shrink-0"
                         onClick={handleBiometricLogin}
                         disabled={bioLoginLoading || pinLoading}
                         title="Login with biometric"
                       >
-                        {bioLoginLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4 text-primary" />}
+                        {bioLoginLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Fingerprint className="h-5 w-5 text-primary" />}
                       </Button>
                     )}
                   </div>
