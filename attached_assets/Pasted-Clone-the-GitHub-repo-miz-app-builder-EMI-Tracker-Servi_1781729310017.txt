@@ -1,0 +1,66 @@
+Clone the GitHub repo miz-app-builder/EMI-Tracker-Service and get it running
+in Replit. Follow these exact steps — do NOT deviate, also 1st read the replit.md file.
+---
+STEP 1 — Clone the repo
+Copy all files from the repo into the Replit workspace root.
+(Git init is blocked in Replit; clone to /tmp first, then copy files over.)
+STEP 2 — Check required secrets
+The following env secrets MUST exist before anything will work.
+Check with viewEnvVars(). If any are missing, ask the user:
+- SUPABASE_DATABASE_URL (Postgres connection string)
+- SESSION_SECRET (JWT signing secret)
+- SUPABASE_URL
+- SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+STEP 3 — Install dependencies
+pnpm install
+Node.js version MUST be 22. Do not change it.
+STEP 4 — Shared env var
+BASE_PATH=/ must be in shared env vars. Do NOT add PORT to shared env vars.
+STEP 5 — Configure workflows (READ CAREFULLY)
+5a. Frontend workflow — MUST have isCanvasWorkflow: true or canvas will be blank:
+await removeWorkflow({ name: "EMI Tracker Frontend" }); // remove if exists
+await configureWorkflow({
+name: "EMI Tracker Frontend",
+command: "PORT=5000 BASE_PATH=/ pnpm --filter @workspace/emi-tracker run dev",
+waitForPort: 5000,
+outputType: "webview",
+isCanvasWorkflow: true
+});
+5b. API Server workflow:
+await configureWorkflow({
+name: "API Server",
+command: "PORT=8080 pnpm --filter @workspace/api-server run dev",
+waitForPort: 8080,
+outputType: "console"
+});
+STEP 6 — Verify
+Confirm these logs appear:
+API Server: [INFO] Server listening { port: 8080 }
+EMI Tracker Frontend: VITE ready Local: http://localhost:5000/
+---
+⚠️ CRITICAL RULES — DO NOT BREAK:
+1. EMI Tracker Frontend command MUST include PORT=5000 AND BASE_PATH=/
+— vite.config.ts throws if either is missing.
+2. isCanvasWorkflow: true is MANDATORY on EMI Tracker Frontend
+— without it, the canvas iframe artifact:v3:default-emi-tracker-frontend
+is blank even though the server runs fine.
+3. Do NOT add PORT to shared env vars
+— it causes artifacts/emi-tracker: web to also grab port 5000 → EADDRINUSE.
+4. Do NOT touch artifacts/emi-tracker: web (port ~19185)
+— this is Replit-managed. IGNORE it completely. Do not start/stop/reconfigure
+or duplicate it. It is NOT the agent-managed frontend.
+5. Do NOT run codegen
+— packages/api-zod/ and packages/api-client-react/ are manually edited.
+Running codegen will overwrite them.
+6. Do NOT change API port from 8080
+— it is hardcoded in Vite proxy config.
+7. Node.js must stay at version 22
+— @supabase/supabase-js requires native WebSocket (Node 22+).
+---
+SYMPTOM → FIX:
+Canvas iframe blank → isCanvasWorkflow: true missing (re-run step 5a)
+EADDRINUSE 5000 → duplicate frontend workflow; remove the extra one
+EADDRINUSE 8080 → duplicate API workflow; remove the extra one
+BASE_PATH/PORT error → workflow command incomplete (check step 5a)
+DB connection error → check SUPABASE_DATABASE_URL secret
