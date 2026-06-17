@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, Activity, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Store, FileText, LogOut, User, Settings, AlertCircle, BarChart2, Layers, Calculator, Moon, Sun, CalendarDays, Search, Activity, ShieldAlert, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -51,6 +51,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { data: summary } = useGetDashboardSummary({ query: { queryKey: getGetDashboardSummaryQueryKey() } });
   const overdueCount = summary?.overdueOrders ?? 0;
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const bottomNavItems = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/emi-orders", label: "My EMIs", icon: FileText },
+    { href: "/overdue", label: "Overdue", icon: AlertCircle, badge: overdueCount > 0 ? overdueCount : null },
+    { href: "/shops", label: "Shops", icon: Store },
+  ];
+
+  const moreNavItems = [
+    { href: "/calendar", label: "Calendar", icon: CalendarDays },
+    { href: "/reports", label: "Reports", icon: BarChart2 },
+    { href: "/debt-overview", label: "Debt Overview", icon: Layers },
+    { href: "/calculator", label: "Calculator", icon: Calculator },
+    { href: "/activity-log", label: "Activity Log", icon: Activity },
+    { href: "/search", label: "Search", icon: Search },
+  ];
 
   const navGroups = [
     {
@@ -244,33 +261,74 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <LogOut className="h-4 w-4" />
                   Log Out
                 </DropdownMenuItem>
-
-                <div className="md:hidden">
-                  <DropdownMenuSeparator />
-                  {navGroups.flatMap((g) => g.items).map((item) => (
-                    <Link key={item.href} href={item.href}>
-                      <DropdownMenuItem className="gap-2 cursor-pointer">
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                        {"badge" in item && item.badge ? (
-                          <span className="ml-auto text-xs font-bold bg-destructive text-white px-1.5 py-0.5 rounded-full">
-                            {item.badge}
-                          </span>
-                        ) : null}
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-4 md:p-6 print:overflow-visible print:p-0">
+        <div className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6 print:overflow-visible print:p-0">
           {children}
         </div>
       </main>
     </div>
+
+    {/* Mobile Bottom Nav */}
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border print:hidden">
+      <div className="flex items-stretch">
+        {bottomNavItems.map((item) => {
+          const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+          return (
+            <Link key={item.href} href={item.href} className="flex-1">
+              <div className={`flex flex-col items-center justify-center gap-0.5 py-2 relative transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                <div className="relative">
+                  <item.icon className="h-5 w-5" />
+                  {"badge" in item && item.badge ? (
+                    <span className="absolute -top-1.5 -right-1.5 text-[10px] font-bold bg-destructive text-white w-4 h-4 flex items-center justify-center rounded-full leading-none">
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </div>
+                <span className="text-[10px] leading-tight font-medium">{item.label}</span>
+                {isActive && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />}
+              </div>
+            </Link>
+          );
+        })}
+
+        {/* More button */}
+        <div className="flex-1 relative">
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className={`w-full flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${moreOpen ? "text-primary" : "text-muted-foreground"}`}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+            <span className="text-[10px] leading-tight font-medium">More</span>
+          </button>
+
+          {moreOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+              <div className="absolute bottom-full right-0 mb-2 z-50 bg-card border border-border rounded-xl shadow-xl w-52 overflow-hidden">
+                {moreNavItems.map((item) => {
+                  const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <div
+                        onClick={() => setMoreOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer ${isActive ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-muted"}`}
+                      >
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
     </>
   );
 }
