@@ -370,20 +370,22 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-6 mt-6 pt-4 border-t border-border justify-center">
-              {[
-                { label: "Active Users", value: "100+" },
-                { label: "EMIs Tracked", value: "500+" },
-                { label: "Smart Savings", value: "100%" },
-              ].map((s) => (
-                <div key={s.label}>
-                  <p className="text-primary font-bold text-base">{s.value}</p>
-                  <p className="text-muted-foreground text-[10px]">{s.label}</p>
-                </div>
-              ))}
+            {/* Stats + footer */}
+            <div className="mt-5 pt-4 border-t border-border">
+              <div className="flex justify-center gap-8">
+                {[
+                  { label: "Active Users", value: "100+" },
+                  { label: "EMIs Tracked", value: "500+" },
+                  { label: "Smart Savings", value: "100%" },
+                ].map((s) => (
+                  <div key={s.label} className="text-center">
+                    <p className="text-primary font-bold text-sm">{s.value}</p>
+                    <p className="text-muted-foreground text-[10px]">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-muted-foreground/40 text-[10px] mt-3 text-center">© {new Date().getFullYear()} EMI Tracker</p>
             </div>
-            <p className="text-muted-foreground/50 text-[10px] mt-4 text-center">© {new Date().getFullYear()} EMI Tracker</p>
           </div>
         </div>
       </div>
