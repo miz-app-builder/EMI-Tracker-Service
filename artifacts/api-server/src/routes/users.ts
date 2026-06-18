@@ -3,7 +3,7 @@ import multer from "multer";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { supabase, PHOTO_BUCKET, ensureBucket } from "../lib/supabase";
+import { supabaseAdmin, PHOTO_BUCKET, ensureBucket } from "../lib/supabase";
 import { logActivity } from "../lib/logActivity";
 
 const router = Router();
@@ -100,10 +100,10 @@ router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
   try {
     req.log.info({ userId, fileSize: file.size, mimetype: file.mimetype }, "Starting photo upload");
 
-    const { data: bucketData, error: bucketErr } = await supabase.storage.getBucket(PHOTO_BUCKET);
+    const { data: bucketData, error: bucketErr } = await supabaseAdmin.storage.getBucket(PHOTO_BUCKET);
     if (bucketErr || !bucketData) {
       req.log.info("Bucket not found, creating...");
-      const { error: createErr } = await supabase.storage.createBucket(PHOTO_BUCKET, { public: true });
+      const { error: createErr } = await supabaseAdmin.storage.createBucket(PHOTO_BUCKET, { public: true });
       if (createErr) {
         req.log.error({ err: createErr }, "Failed to create bucket");
         res.status(500).json({ error: "Failed to create storage bucket", detail: createErr.message });
@@ -117,14 +117,14 @@ router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
     const ext = file.mimetype === "image/png" ? "png" : "jpg";
     const objectPath = `${userId}/avatar.${ext}`;
 
-    const { error: removeErr } = await supabase.storage.from(PHOTO_BUCKET).remove([
+    const { error: removeErr } = await supabaseAdmin.storage.from(PHOTO_BUCKET).remove([
       `${userId}/avatar.jpg`,
       `${userId}/avatar.png`,
     ]);
     if (removeErr) req.log.warn({ err: removeErr }, "Remove old photo warning (non-fatal)");
     else req.log.info("Old photos removed (or did not exist)");
 
-    const { data: uploadData, error: uploadErr } = await supabase.storage
+    const { data: uploadData, error: uploadErr } = await supabaseAdmin.storage
       .from(PHOTO_BUCKET)
       .upload(objectPath, file.buffer, {
         contentType: file.mimetype,
@@ -139,7 +139,7 @@ router.post("/users/me/photo", upload.single("photo"), async (req, res) => {
 
     req.log.info({ uploadData }, "Upload succeeded");
 
-    const { data: publicUrlData } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(objectPath);
+    const { data: publicUrlData } = supabaseAdmin.storage.from(PHOTO_BUCKET).getPublicUrl(objectPath);
     const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
     req.log.info({ publicUrl }, "Public URL generated");
