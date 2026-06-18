@@ -2,20 +2,33 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set");
+if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+  throw new Error("SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and SUPABASE_ANON_KEY must be set");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false },
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
 });
 
 export const PHOTO_BUCKET = "profile-photos";
 
 export async function ensureBucket() {
-  const { data: existing } = await supabase.storage.getBucket(PHOTO_BUCKET);
+  const { data: existing } = await supabaseAdmin.storage.getBucket(PHOTO_BUCKET);
   if (!existing) {
-    await supabase.storage.createBucket(PHOTO_BUCKET, { public: true });
+    await supabaseAdmin.storage.createBucket(PHOTO_BUCKET, { public: true });
+  }
+}
+
+export function decodeJwtPayload(token: string): Record<string, unknown> {
+  try {
+    return JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+  } catch {
+    return {};
   }
 }

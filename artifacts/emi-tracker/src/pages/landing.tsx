@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveToken } from "@/lib/token";
+import { saveToken, saveRefreshToken } from "@/lib/token";
 import { useBiometric, generateBiometricToken } from "@/hooks/useBiometric";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -346,6 +346,7 @@ export default function LandingPage() {
       }
       const data = await res.json();
       if (data.token) saveToken(data.token);
+      if (data.refresh_token) saveRefreshToken(data.refresh_token);
       localStorage.setItem("emi_last_email", loginForm.email.toLowerCase());
       if (data.hasPinLogin) localStorage.setItem("emi_pin_login_active", "true");
       await refetch();
@@ -382,6 +383,7 @@ export default function LandingPage() {
       }
       const data = await res.json();
       if (data.token) saveToken(data.token);
+      if (data.refresh_token) saveRefreshToken(data.refresh_token);
       localStorage.setItem("emi_last_email", signupForm.email.toLowerCase());
       await refetch();
       setLocation("/dashboard");

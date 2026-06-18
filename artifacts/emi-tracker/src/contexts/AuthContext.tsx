@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
-import { saveToken, clearToken, authFetch } from "@/lib/token";
+import { saveToken, clearToken, authFetch, getRefreshToken, saveRefreshToken } from "@/lib/token";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -46,13 +46,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  async function tryRefreshToken(): Promise<boolean> {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+    try {
+      const res = await fetch(`${basePath}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data.token) {
+        saveToken(data.token);
+        if (data.refresh_token) saveRefreshToken(data.refresh_token);
+        return true;
+      }
+    } catch {}
+    return false;
+  }
+
   async function fetchMe(isPolling = false) {
     try {
       const res = await authFetch(`${basePath}/api/auth/me`, { cache: "no-store" });
       if (res.ok) {
         setUser(await res.json());
       } else if (res.status === 401) {
-        doLogout();
+        // Try refreshing the token before giving up
+        const refreshed = await tryRefreshToken();
+        if (refreshed) {
+          const res2 = await authFetch(`${basePath}/api/auth/me`, { cache: "no-store" });
+          if (res2.ok) {
+            setUser(await res2.json());
+          } else {
+            doLogout();
+          }
+        } else {
+          doLogout();
+        }
       } else if (!isPolling) {
         setUser(null);
       }
